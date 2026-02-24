@@ -9,7 +9,7 @@
 
 #define TEST_LINE_BUFFER_SIZE 256
 #define RESULT_COLUMN_WIDTH 8
-#define MAX_PROFILE_TICKS 8U
+#define MAX_PROFILE_TICKS 10U
 #define MAX_SCRIPT_TICKS 64U
 #define SCRIPT_LINE_BUFFER_SIZE 192
 
@@ -277,9 +277,22 @@ static int execute_profile(EngineState *engine,
         *tick_report_count = 0U;
     }
 
-    if ((tick_reports != (TickReport *)0) && (tick_report_capacity < tick_count))
+    if ((tick_reports != (TickReport *)0) && (tick_report_capacity < tick_count + 1U))
     {
         return ENGINE_ERROR;
+    }
+
+    /* Record tick 0: INIT state before engine_start */
+    if (tick_reports != (TickReport *)0)
+    {
+        tick_reports[0U].tick = 0U;
+        tick_reports[0U].rpm = engine->rpm;
+        tick_reports[0U].temp = engine->temperature;
+        tick_reports[0U].oil = engine->oil_pressure;
+        tick_reports[0U].run = engine->is_running;
+        tick_reports[0U].result = ENGINE_OK;
+        tick_reports[0U].control = 0.0f;
+        tick_reports[0U].mode = engine->mode;
     }
 
     status = engine_start(engine);
@@ -320,21 +333,22 @@ static int execute_profile(EngineState *engine,
         if (tick_reports != (TickReport *)0)
         {
             float control_output = 0.0f;
+            unsigned int report_index = tick_index + 1U; /* +1: index 0 is the pre-start INIT tick */
 
             if (compute_control_output(engine, &control_output) != ENGINE_OK)
             {
                 return ENGINE_ERROR;
             }
 
-            tick_reports[tick_index].tick =
+            tick_reports[report_index].tick =
                 (tick_values == (const unsigned int *)0) ? (tick_index + 1U) : tick_values[tick_index];
-            tick_reports[tick_index].rpm = rpm_values[tick_index];
-            tick_reports[tick_index].temp = temp_values[tick_index];
-            tick_reports[tick_index].oil = oil_values[tick_index];
-            tick_reports[tick_index].run = run_flag;
-            tick_reports[tick_index].result = result;
-            tick_reports[tick_index].control = control_output;
-            tick_reports[tick_index].mode = engine->mode;
+            tick_reports[report_index].rpm = rpm_values[tick_index];
+            tick_reports[report_index].temp = temp_values[tick_index];
+            tick_reports[report_index].oil = oil_values[tick_index];
+            tick_reports[report_index].run = run_flag;
+            tick_reports[report_index].result = result;
+            tick_reports[report_index].control = control_output;
+            tick_reports[report_index].mode = engine->mode;
         }
 
         if ((show_sim != 0) || (show_control != 0) || (show_state != 0))
@@ -357,7 +371,7 @@ static int execute_profile(EngineState *engine,
 
     if (tick_report_count != (unsigned int *)0)
     {
-        *tick_report_count = tick_count;
+        *tick_report_count = tick_count + 1U; /* +1 for the pre-start INIT tick at index 0 */
     }
 
     return result;
@@ -1239,7 +1253,7 @@ int run_scripted_scenario_with_json(const char *script_path,
     float oil_values[MAX_SCRIPT_TICKS];
     int run_values[MAX_SCRIPT_TICKS];
     unsigned int tick_count = 0U;
-    TickReport tick_reports[MAX_SCRIPT_TICKS];
+    TickReport tick_reports[MAX_SCRIPT_TICKS + 1U];
     unsigned int tick_report_count = 0U;
     int status;
     int result;
@@ -1281,7 +1295,7 @@ int run_scripted_scenario_with_json(const char *script_path,
                              (json_output != 0) ? 0 : show_control,
                              (json_output != 0) ? 0 : show_state,
                              tick_reports,
-                             MAX_SCRIPT_TICKS,
+                             MAX_SCRIPT_TICKS + 1U,
                              &tick_report_count);
     if (result == ENGINE_ERROR)
     {

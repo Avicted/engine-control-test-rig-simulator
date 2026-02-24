@@ -789,57 +789,91 @@ static void draw_text_font(const Font *font, const char *text, float x, float y,
     DrawTextEx(*font, text, (Vector2){x, y}, size, 1.0f, color);
 }
 
+static float draw_key_hint(const Font *font,
+                           const char *key,
+                           const char *desc,
+                           float x,
+                           float y,
+                           float font_size)
+{
+    Color key_color  = (Color){90, 170, 255, 255};
+    Color brak_color = (Color){50, 62, 94, 255};
+    Color desc_color = (Color){110, 124, 155, 255};
+    float cx = x;
+    float w;
+
+    w = MeasureTextEx(*font, "[", font_size, 1.0f).x;
+    draw_text_font(font, "[", cx, y, font_size, brak_color);
+    cx += w;
+    w = MeasureTextEx(*font, key, font_size, 1.0f).x;
+    draw_text_font(font, key, cx, y, font_size, key_color);
+    cx += w;
+    w = MeasureTextEx(*font, "]", font_size, 1.0f).x;
+    draw_text_font(font, "]", cx, y, font_size, brak_color);
+    cx += w + 4.0f;
+    w = MeasureTextEx(*font, desc, font_size, 1.0f).x;
+    draw_text_font(font, desc, cx, y, font_size, desc_color);
+    cx += w;
+    return cx - x;
+}
+
 static void draw_meter(const Font *font,
                        const char *label,
                        float value,
                        float max_value,
-                       Rectangle area,
+                       Rectangle bar_area,
+                       Rectangle value_area,
                        SeverityLevel level,
                        const char *unit,
                        float warn_threshold,
                        float shutdown_threshold,
-                       float value_right_x)
+                       float scale)
 {
     float ratio;
     int fill_width;
     char value_text[64];
-    float value_font_size = 24.0f;
+    float lbl_fs   = 13.0f * scale;
+    float val_fs   = 16.0f * scale;
     Vector2 value_size;
     float value_x;
+    float value_y;
 
     ratio = (max_value > 0.0f) ? (value / max_value) : 0.0f;
     ratio = clamp01(ratio);
-    fill_width = (int)(ratio * area.width);
+    fill_width = (int)(ratio * bar_area.width);
 
-    draw_text_font(font, label, area.x, area.y - 22.0f, 18.0f, RAYWHITE);
-    DrawRectangleRec(area, (Color){30, 34, 44, 255});
-    DrawRectangle((int)area.x, (int)area.y, fill_width, (int)area.height, level_color(level));
-    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, (Color){95, 100, 118, 255});
+    draw_text_font(font, label, bar_area.x, bar_area.y - lbl_fs - 3.0f * scale, lbl_fs,
+                   (Color){120, 134, 165, 255});
+    DrawRectangleRec(bar_area, (Color){18, 22, 34, 255});
+    if (fill_width > 0)
+    {
+        DrawRectangle((int)bar_area.x, (int)bar_area.y, fill_width, (int)bar_area.height, level_color(level));
+    }
+    DrawRectangleLines((int)bar_area.x, (int)bar_area.y, (int)bar_area.width, (int)bar_area.height,
+                       (Color){40, 46, 66, 255});
 
     if ((warn_threshold > 0.0f) && (warn_threshold < max_value))
     {
-        int warn_x = (int)(area.x + (warn_threshold / max_value) * area.width);
-        DrawLine(warn_x, (int)area.y, warn_x, (int)(area.y + area.height), (Color){255, 193, 7, 220});
+        int warn_x = (int)(bar_area.x + (warn_threshold / max_value) * bar_area.width);
+        DrawLine(warn_x, (int)(bar_area.y + 2), warn_x, (int)(bar_area.y + bar_area.height - 2),
+                 (Color){255, 193, 7, 200});
     }
     if ((shutdown_threshold > 0.0f) && (shutdown_threshold < max_value))
     {
-        int shut_x = (int)(area.x + (shutdown_threshold / max_value) * area.width);
-        DrawLine(shut_x, (int)area.y, shut_x, (int)(area.y + area.height), (Color){220, 53, 69, 230});
+        int shut_x = (int)(bar_area.x + (shutdown_threshold / max_value) * bar_area.width);
+        DrawLine(shut_x, (int)(bar_area.y + 2), shut_x, (int)(bar_area.y + bar_area.height - 2),
+                 (Color){220, 53, 69, 210});
     }
 
     (void)snprintf(value_text, sizeof(value_text), "%.2f %s", value, unit);
-    value_size = MeasureTextEx(*font, value_text, value_font_size, 1.0f);
-    value_x = value_right_x - value_size.x;
-    if (value_x < (area.x + area.width + 10.0f))
+    value_size = MeasureTextEx(*font, value_text, val_fs, 1.0f);
+    value_x = value_area.x + value_area.width - value_size.x;
+    if (value_x < value_area.x)
     {
-        value_x = area.x + area.width + 10.0f;
+        value_x = value_area.x;
     }
-    draw_text_font(font,
-                   value_text,
-                   value_x,
-                   area.y + ((area.height - value_font_size) * 0.5f),
-                   value_font_size,
-                   RAYWHITE);
+    value_y = bar_area.y + (bar_area.height - val_fs) * 0.5f;
+    draw_text_font(font, value_text, value_x, value_y, val_fs, RAYWHITE);
 }
 
 static void draw_timeline(const Font *font, const ScenarioData *scenario, float playhead, Rectangle area)
@@ -857,27 +891,30 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         return;
     }
 
-    DrawRectangleRec(area, (Color){15, 18, 25, 255});
-    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, (Color){95, 100, 118, 255});
-    draw_text_font(font, "Timeline", area.x + 12.0f, area.y + 10.0f, 20.0f, RAYWHITE);
+    DrawRectangleRec(area, (Color){12, 15, 24, 255});
+    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, (Color){32, 38, 58, 255});
+
+    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 10.0f, 13.0f, (Color){72, 85, 120, 255});
+    DrawLine((int)(area.x + 1), (int)(area.y + 32.0f),
+             (int)(area.x + area.width - 1), (int)(area.y + 32.0f),
+             (Color){26, 31, 50, 255});
 
     {
-        Vector2 title_size = MeasureTextEx(*font, "Timeline", 20.0f, 1.0f);
         unsigned int active_tick = scenario->ticks[(unsigned int)(playhead + 0.5f)].tick;
         char tick_label[48];
-        (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick, scenario->ticks[scenario->tick_count - 1U].tick);
-        draw_text_font(font,
-                       tick_label,
-                       area.x + 12.0f + title_size.x + 18.0f,
-                       area.y + 11.0f,
-                       16.0f,
-                       (Color){170, 178, 194, 255});
+        Vector2 tl_sz;
+        float tl_x;
+        (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick,
+                       scenario->ticks[scenario->tick_count - 1U].tick);
+        tl_sz = MeasureTextEx(*font, tick_label, 14.0f, 1.0f);
+        tl_x = area.x + area.width * 0.5f - tl_sz.x * 0.5f;
+        draw_text_font(font, tick_label, tl_x, area.y + 10.0f, 14.0f, (Color){140, 155, 186, 255});
     }
 
-    plot_left = (int)area.x + 52;
+    plot_left  = (int)area.x + 52;
     plot_right = (int)(area.x + area.width) - 24;
-    plot_top = (int)area.y + 50;
-    plot_bottom = (int)(area.y + area.height) - 74;
+    plot_top   = (int)area.y + 48;
+    plot_bottom = (int)(area.y + area.height) - 50;
     plot_w = plot_right - plot_left;
     plot_h = plot_bottom - plot_top;
 
@@ -965,29 +1002,60 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             int yc0 = plot_bottom - (int)(ctrl0 * (float)plot_h);
             int yc1 = plot_bottom - (int)(ctrl1 * (float)plot_h);
 
-            DrawLine(x0, yr0, x1, yr1, (Color){52, 152, 219, 255});
-            DrawLine(x0, yt0, x1, yt1, (Color){255, 99, 132, 255});
-            DrawLine(x0, yo0, x1, yo1, (Color){46, 204, 113, 255});
-            DrawLine(x0, yc0, x1, yc1, (Color){176, 132, 255, 255});
+            DrawLineEx((Vector2){(float)x0, (float)yr0}, (Vector2){(float)x1, (float)yr1}, 2.0f,
+                       (Color){52, 152, 219, 255});
+            DrawLineEx((Vector2){(float)x0, (float)yt0}, (Vector2){(float)x1, (float)yt1}, 2.0f,
+                       (Color){255, 99, 132, 255});
+            DrawLineEx((Vector2){(float)x0, (float)yo0}, (Vector2){(float)x1, (float)yo1}, 2.0f,
+                       (Color){46, 204, 113, 255});
+            DrawLineEx((Vector2){(float)x0, (float)yc0}, (Vector2){(float)x1, (float)yc1}, 2.0f,
+                       (Color){176, 132, 255, 255});
         }
 
         {
             float marker_t = clamp01(playhead / (float)(scenario->tick_count - 1U));
             int marker_x = plot_left + (int)(marker_t * (float)plot_w);
-            DrawLine(marker_x, plot_top, marker_x, plot_bottom, (Color){255, 255, 255, 190});
+            DrawLineEx((Vector2){(float)marker_x, (float)plot_top},
+                       (Vector2){(float)marker_x, (float)plot_bottom},
+                       2.0f, (Color){255, 255, 255, 210});
         }
     }
 
-    draw_text_font(font, "RPM", area.x + area.width - 286.0f, area.y + 12.0f, 16.0f, (Color){52, 152, 219, 255});
-    draw_text_font(font, "TEMP", area.x + area.width - 238.0f, area.y + 12.0f, 16.0f, (Color){255, 99, 132, 255});
-    draw_text_font(font, "OIL", area.x + area.width - 180.0f, area.y + 12.0f, 16.0f, (Color){46, 204, 113, 255});
-    draw_text_font(font, "CTRL", area.x + area.width - 132.0f, area.y + 12.0f, 16.0f, (Color){176, 132, 255, 255});
-    draw_text_font(font,
-                   "Fault Overlay: WARNING/SHUTDOWN",
-                   area.x + 12.0f,
-                   area.y + area.height - 26.0f,
-                   14.0f,
-                   (Color){190, 196, 210, 255});
+    /* Compact right-to-left legend with colour dots */
+    {
+        float ley  = area.y + 10.0f;
+        float lfs2 = 13.0f;
+        float dot_r = 4.0f;
+        float lx = area.x + area.width - 12.0f;
+        Vector2 lsz;
+
+        lsz = MeasureTextEx(*font, "CTRL", lfs2, 1.0f);
+        lx -= lsz.x;
+        draw_text_font(font, "CTRL", lx, ley, lfs2, (Color){176, 132, 255, 255});
+        lx -= dot_r * 2.0f + 6.0f;
+        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){176, 132, 255, 255});
+        lx -= 18.0f;
+
+        lsz = MeasureTextEx(*font, "OIL", lfs2, 1.0f);
+        lx -= lsz.x;
+        draw_text_font(font, "OIL", lx, ley, lfs2, (Color){46, 204, 113, 255});
+        lx -= dot_r * 2.0f + 6.0f;
+        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){46, 204, 113, 255});
+        lx -= 18.0f;
+
+        lsz = MeasureTextEx(*font, "TEMP", lfs2, 1.0f);
+        lx -= lsz.x;
+        draw_text_font(font, "TEMP", lx, ley, lfs2, (Color){255, 99, 132, 255});
+        lx -= dot_r * 2.0f + 6.0f;
+        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){255, 99, 132, 255});
+        lx -= 18.0f;
+
+        lsz = MeasureTextEx(*font, "RPM", lfs2, 1.0f);
+        lx -= lsz.x;
+        draw_text_font(font, "RPM", lx, ley, lfs2, (Color){52, 152, 219, 255});
+        lx -= dot_r * 2.0f + 6.0f;
+        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){52, 152, 219, 255});
+    }
 }
 
 static void draw_slider(const Font *font,
@@ -1007,22 +1075,37 @@ static void draw_slider(const Font *font,
 
     (void)font;
 
-    DrawRectangleRec(slider, (Color){32, 36, 48, 255});
-    DrawRectangleLines((int)slider.x, (int)slider.y, (int)slider.width, (int)slider.height, (Color){96, 104, 122, 255});
+    /* Track + knob */
+    {
+        int cy  = (int)(slider.y + slider.height * 0.5f);
+        int th  = 6;
+        int tx  = (int)slider.x;
+        int tw  = (int)slider.width;
+        int rx  = 3;
 
-    knob_t = (scenario->tick_count > 1U) ? clamp01(playhead / (float)(scenario->tick_count - 1U)) : 0.0f;
-    DrawRectangle((int)slider.x,
-                  (int)slider.y,
-                  (int)(slider.width * knob_t),
-                  (int)slider.height,
-                  (Color){83, 168, 255, 70});
-    knob_x = (int)(slider.x + (slider.width * knob_t));
-    DrawCircle(knob_x, (int)(slider.y + slider.height * 0.5f), 8.0f, RAYWHITE);
+        knob_t = (scenario->tick_count > 1U) ? clamp01(playhead / (float)(scenario->tick_count - 1U)) : 0.0f;
+        knob_x = (int)(slider.x + (slider.width * knob_t));
+
+        /* Background track */
+        DrawRectangle(tx, cy - th / 2, tw, th, (Color){22, 27, 44, 255});
+        DrawRectangleLines(tx, cy - th / 2, tw, th, (Color){44, 52, 76, 255});
+        /* Filled progress */
+        if (knob_t > 0.0f)
+        {
+            int fw = (int)(tw * knob_t);
+            DrawRectangle(tx + rx, cy - th / 2, fw - rx, th, (Color){48, 128, 220, 255});
+        }
+
+        /* Knob: shadow ring, white fill, blue accent */
+        DrawCircle(knob_x, cy, 11.0f, (Color){8, 10, 18, 180});
+        DrawCircle(knob_x, cy, 9.0f, (Color){220, 228, 245, 255});
+        DrawCircleLines(knob_x, cy, 11.0f, (Color){48, 128, 220, 200});
+    }
 
     pulse = clamp01(restart_feedback_timer / 0.6f);
     if (pulse > 0.0f)
     {
-        Color flash = (Color){80, 180, 255, (unsigned char)(70 + (int)(150.0f * pulse))};
+        Color flash = (Color){80, 180, 255, (unsigned char)(50 + (int)(120.0f * pulse))};
         DrawRectangle((int)slider.x, (int)slider.y, (int)slider.width, (int)slider.height, flash);
     }
 }
@@ -1104,36 +1187,48 @@ static void run_visualizer(ScenarioSet *scenario_set)
         ScenarioData *scenario = &scenario_set->scenarios[scenario_set->active_index];
         TickData interpolated_tick;
         const TickData *tick;
-        char header[196];
-        char control_text[64];
-        char run_text[64];
-        char metric_text[96];
         int screen_w = GetScreenWidth();
         int screen_h = GetScreenHeight();
-        float scale = screen_scale(screen_w, screen_h);
-        float pad = 26.0f * scale;
-        float top_h = 300.0f * scale;
-        float panel_w = ((float)screen_w - (pad * 3.0f)) * 0.47f;
-        float status_x = pad + panel_w + (pad * 2.2f);
-        float status_w = (float)screen_w - status_x - pad;
-        float meter_value_right = status_x - (36.0f * scale);
-        float meter_bar_left = pad + 12.0f * scale;
-        float meter_bar_right = meter_value_right - (132.0f * scale);
-        float meter_bar_width = meter_bar_right - meter_bar_left;
-        if (meter_bar_width < (140.0f * scale))
-        {
-            meter_bar_width = 140.0f * scale;
-        }
-        Rectangle timeline = {pad, top_h + (pad * 1.1f), (float)screen_w - (pad * 2.0f), (float)screen_h - top_h - (pad * 2.3f)};
-        Rectangle slider = {timeline.x + 52.0f,
-                            timeline.y + timeline.height - 34.0f * scale,
-                            timeline.width - 76.0f,
-                            12.0f * scale};
-        Rectangle rpm_area = {meter_bar_left, 116.0f * scale, meter_bar_width, 22.0f * scale};
-        Rectangle temp_area = {meter_bar_left, 166.0f * scale, meter_bar_width, 22.0f * scale};
-        Rectangle oil_area = {meter_bar_left, 216.0f * scale, meter_bar_width, 22.0f * scale};
-        Rectangle metrics_area = {status_x, 96.0f * scale, status_w, 220.0f * scale};
-        float warning_pct = 0.0f;
+        float scale          = screen_scale(screen_w, screen_h);
+        float pad            = 16.0f * scale;
+        float hdr_h          = 50.0f * scale;
+        float nav_h          = 30.0f * scale;
+        float content_y      = hdr_h + nav_h + 8.0f * scale;
+        float main_h         = 252.0f * scale;
+        float status_panel_w = 310.0f * scale;
+        float col_gap        = 12.0f * scale;
+        float gauges_x       = pad;
+        float gauges_w       = (float)screen_w - (pad * 2.0f) - status_panel_w - col_gap;
+        float status_x       = gauges_x + gauges_w + col_gap;
+        float gc_x           = gauges_x + 14.0f * scale;
+        float gc_w           = gauges_w  - 28.0f * scale;
+        float bar_col_w      = gc_w * 0.68f;
+        float val_col_w      = gc_w - bar_col_w - 10.0f * scale;
+        float val_col_x      = gc_x + bar_col_w + 10.0f * scale;
+        float bar_h          = 22.0f * scale;
+        float row_step       = 42.0f * scale;
+        float m_row0_y       = content_y + 44.0f * scale;
+        float m_row1_y       = m_row0_y + row_step;
+        float m_row2_y       = m_row1_y + row_step;
+        float m_row3_y       = m_row2_y + row_step;
+        Rectangle gauges_panel = {gauges_x, content_y, gauges_w, main_h};
+        Rectangle metrics_area = {status_x, content_y, status_panel_w, main_h};
+        Rectangle rpm_bar  = {gc_x, m_row0_y, bar_col_w, bar_h};
+        Rectangle rpm_val  = {val_col_x, m_row0_y, val_col_w, bar_h};
+        Rectangle temp_bar = {gc_x, m_row1_y, bar_col_w, bar_h};
+        Rectangle temp_val = {val_col_x, m_row1_y, val_col_w, bar_h};
+        Rectangle oil_bar  = {gc_x, m_row2_y, bar_col_w, bar_h};
+        Rectangle oil_val  = {val_col_x, m_row2_y, val_col_w, bar_h};
+        Rectangle ctrl_bar = {gc_x, m_row3_y, bar_col_w, bar_h};
+        Rectangle ctrl_val = {val_col_x, m_row3_y, val_col_w, bar_h};
+        float timeline_y   = content_y + main_h + 10.0f * scale;
+        float timeline_h_val = (float)screen_h - timeline_y - pad;
+        Rectangle timeline = {pad, timeline_y, (float)screen_w - 2.0f * pad, timeline_h_val};
+        Rectangle slider   = {timeline.x + 54.0f * scale,
+                              timeline.y + timeline.height - 30.0f * scale,
+                              timeline.width - 80.0f * scale,
+                              24.0f * scale};
+        float warning_pct  = 0.0f;
         float shutdown_pct = 0.0f;
 
         compute_cumulative_metrics(scenario, &warning_pct, &shutdown_pct);
@@ -1233,124 +1328,213 @@ static void run_visualizer(ScenarioSet *scenario_set)
         animated_mode_color = lerp_color(animated_mode_color, mode_color(tick->engine_mode), GetFrameTime() * 8.0f);
 
         BeginDrawing();
-        ClearBackground((Color){10, 12, 18, 255});
+        ClearBackground((Color){9, 11, 18, 255});
+        DrawRectangleGradientV(0, 0, screen_w, screen_h, (Color){11, 14, 22, 255}, (Color){7, 9, 16, 255});
 
-        DrawRectangleGradientV(0, 0, screen_w, screen_h, (Color){11, 15, 24, 255}, (Color){8, 10, 16, 255});
+        /* ── HEADER BAR ────────────────────────────────── */
+        DrawRectangle(0, 0, screen_w, (int)hdr_h, (Color){13, 16, 26, 255});
+        DrawLine(0, (int)hdr_h - 1, screen_w, (int)hdr_h - 1, (Color){30, 36, 58, 255});
+        {
+            char scen_label[48];
+            char tick_str[48];
+            Vector2 tick_sz;
+            float badge_w;
+            float badge_x;
+            float badge_y;
+            float badge_h = 28.0f * scale;
 
-        (void)snprintf(header,
-                       sizeof(header),
-                       "Scenario %u/%u: %s  |  Tick %u / %u",
-                       scenario_set->active_index + 1U,
-                       scenario_set->count,
-                       scenario->scenario,
-                       tick->tick,
-                       scenario->tick_count);
-        draw_text_font(&ui_font, header, pad, 20.0f * scale, 24.0f * scale, RAYWHITE);
+            (void)snprintf(scen_label, sizeof(scen_label),
+                           "SCENARIO  %u / %u",
+                           scenario_set->active_index + 1U, scenario_set->count);
+            draw_text_font(&ui_font, scen_label, pad, 7.0f * scale, 11.0f * scale,
+                           (Color){78, 94, 136, 255});
+            draw_text_font(&ui_font, scenario->scenario, pad, 21.0f * scale, 20.0f * scale,
+                           RAYWHITE);
 
-        draw_text_font(&ui_font,
-                       "SPACE pause  R restart  UP/DOWN speed  LEFT/RIGHT step  TAB switch scenario",
-                       pad,
-                       54.0f * scale,
-                       16.0f * scale,
-                       (Color){180, 186, 200, 255});
+            (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
+                           tick->tick, scenario->tick_count);
+            tick_sz   = MeasureTextEx(ui_font, tick_str, 15.0f * scale, 1.0f);
+            badge_w   = tick_sz.x + 20.0f * scale;
+            badge_x   = (float)screen_w - badge_w - pad;
+            badge_y   = (hdr_h - badge_h) * 0.5f;
+            DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
+                          (Color){20, 25, 40, 255});
+            DrawRectangleLines((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
+                               (Color){44, 54, 84, 255});
+            draw_text_font(&ui_font, tick_str,
+                           badge_x + 10.0f * scale,
+                           badge_y + (badge_h - 15.0f * scale) * 0.5f,
+                           15.0f * scale, (Color){148, 165, 205, 255});
+        }
 
-        draw_meter(&ui_font,
-                   "RPM",
-                   tick->rpm,
-                   5000.0f,
-                   rpm_area,
+        /* ── CONTROLS BAR ──────────────────────────────── */
+        DrawRectangle(0, (int)hdr_h, screen_w, (int)nav_h, (Color){10, 12, 20, 255});
+        DrawLine(0, (int)(hdr_h + nav_h), screen_w, (int)(hdr_h + nav_h), (Color){24, 29, 48, 255});
+        {
+            float kx   = pad;
+            float ky   = hdr_h + (nav_h - 13.0f * scale) * 0.5f;
+            float kfs  = 13.0f * scale;
+            float gap2 = 20.0f * scale;
+            char  speed_str[32];
+            Vector2 sp_sz;
+
+            kx += draw_key_hint(&ui_font, "SPC",   "Pause",   kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "R",     "Restart", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "UP DN", "Speed",   kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "LT RT", "Step",    kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "TAB",   "Switch",  kx, ky, kfs);
+            (void)kx;
+
+            (void)snprintf(speed_str, sizeof(speed_str), "%.0f tk/s%s",
+                           ticks_per_second, (paused != 0) ? "  PAUSED" : "");
+            sp_sz = MeasureTextEx(ui_font, speed_str, kfs, 1.0f);
+            draw_text_font(&ui_font, speed_str,
+                           (float)screen_w - sp_sz.x - pad, ky, kfs,
+                           (paused != 0) ? (Color){255, 193, 7, 220} : (Color){72, 86, 120, 255});
+        }
+
+        /* ── GAUGES PANEL ──────────────────────────────── */
+        DrawRectangleRec(gauges_panel, (Color){13, 16, 26, 255});
+        DrawRectangleLines((int)gauges_panel.x, (int)gauges_panel.y,
+                           (int)gauges_panel.width, (int)gauges_panel.height,
+                           (Color){30, 36, 56, 255});
+        draw_text_font(&ui_font, "SENSOR READINGS",
+                       gauges_panel.x + 14.0f * scale, gauges_panel.y + 10.0f * scale,
+                       12.0f * scale, (Color){68, 82, 118, 255});
+        DrawLine((int)(gauges_panel.x + 1), (int)(gauges_panel.y + 31.0f * scale),
+                 (int)(gauges_panel.x + gauges_panel.width - 1), (int)(gauges_panel.y + 31.0f * scale),
+                 (Color){24, 29, 48, 255});
+
+        draw_meter(&ui_font, "RPM", tick->rpm, 5000.0f,
+                   rpm_bar, rpm_val,
                    rpm_to_level(tick->rpm, tick->temp),
-                   "rpm",
-                   RPM_WARNING_THRESHOLD,
-                   0.0f,
-                   meter_value_right);
-        draw_meter(&ui_font,
-                   "Temperature",
-                   tick->temp,
-                   120.0f,
-                   temp_area,
+                   "rpm", RPM_WARNING_THRESHOLD, 0.0f, scale);
+        draw_meter(&ui_font, "Temperature", tick->temp, 120.0f,
+                   temp_bar, temp_val,
                    temp_to_level(tick->temp),
-                   "C",
-                   TEMP_WARNING_THRESHOLD,
-                   TEMP_SHUTDOWN_THRESHOLD,
-                   meter_value_right);
-        draw_meter(&ui_font,
-                   "Oil Pressure",
-                   tick->oil,
-                   5.0f,
-                   oil_area,
+                   "C", TEMP_WARNING_THRESHOLD, TEMP_SHUTDOWN_THRESHOLD, scale);
+        draw_meter(&ui_font, "Oil Pressure", tick->oil, 5.0f,
+                   oil_bar, oil_val,
                    oil_to_level(tick->oil),
-                   "bar",
-                   0.0f,
-                   OIL_SHUTDOWN_THRESHOLD,
-                   meter_value_right);
+                   "bar", 0.0f, OIL_SHUTDOWN_THRESHOLD, scale);
+        draw_meter(&ui_font, "Control Output", tick->control, 100.0f,
+                   ctrl_bar, ctrl_val,
+                   LEVEL_OK,
+                   "%", 0.0f, 0.0f, scale);
 
-        DrawRectangleRec(metrics_area, (Color){18, 21, 31, 255});
-        DrawRectangleLines((int)metrics_area.x,
-                           (int)metrics_area.y,
-                           (int)metrics_area.width,
-                           (int)metrics_area.height,
-                           (Color){95, 100, 118, 255});
+        /* ── STATUS PANEL ──────────────────────────────── */
+        DrawRectangleRec(metrics_area, (Color){13, 16, 26, 255});
+        DrawRectangleLines((int)metrics_area.x, (int)metrics_area.y,
+                           (int)metrics_area.width, (int)metrics_area.height,
+                           (Color){30, 36, 56, 255});
+        draw_text_font(&ui_font, "ENGINE STATUS",
+                       metrics_area.x + 14.0f * scale, metrics_area.y + 10.0f * scale,
+                       12.0f * scale, (Color){68, 82, 118, 255});
+        DrawLine((int)(metrics_area.x + 1), (int)(metrics_area.y + 31.0f * scale),
+                 (int)(metrics_area.x + metrics_area.width - 1), (int)(metrics_area.y + 31.0f * scale),
+                 (Color){24, 29, 48, 255});
 
-        draw_text_font(&ui_font, "Engine Mode", metrics_area.x + 20.0f * scale, metrics_area.y + 18.0f * scale, 22.0f * scale, RAYWHITE);
-        draw_text_font(&ui_font,
-                       tick->engine_mode,
-                       metrics_area.x + 20.0f * scale,
-                       metrics_area.y + 60.0f * scale,
-                       36.0f * scale,
-                       animated_mode_color);
+        /* Mode (left) + Result/Run (right), same horizontal band */
+        {
+            float lx    = metrics_area.x + 14.0f * scale;
+            float rx    = metrics_area.x + metrics_area.width * 0.54f;
+            float cap_y = metrics_area.y + 38.0f * scale;
+            float cap_fs = 11.0f * scale;
+            float val_fs = 13.0f * scale;
+            float mode_fs = 22.0f * scale;
+            char  run_val[16];
+            Color result_c;
 
-        (void)snprintf(control_text,
-                       sizeof(control_text),
-                       "Result: %s",
-                       tick->result);
+            result_c = (strcmp(tick->result, "OK") == 0)
+                           ? (Color){46, 204, 113, 255}
+                           : (strcmp(tick->result, "WARNING") == 0)
+                                 ? (Color){255, 193, 7, 255}
+                                 : (Color){220, 53, 69, 255};
 
-        draw_text_font(&ui_font,
-                       control_text,
-                       metrics_area.x + 20.0f * scale,
-                       metrics_area.y + 112.0f * scale,
-                       18.0f * scale,
-                       RAYWHITE);
+            /* Left: MODE caption + big mode text */
+            draw_text_font(&ui_font, "MODE", lx, cap_y, cap_fs, (Color){68, 82, 118, 255});
+            draw_text_font(&ui_font, tick->engine_mode, lx, cap_y + cap_fs + 4.0f * scale,
+                           mode_fs, animated_mode_color);
 
-        (void)snprintf(run_text, sizeof(run_text), "Run: %d", tick->run);
-        draw_text_font(&ui_font,
-                       run_text,
-                       metrics_area.x + 20.0f * scale,
-                       metrics_area.y + 132.0f * scale,
-                       17.0f * scale,
-                       (Color){200, 205, 218, 255});
+            /* Right: RESULT caption + value, then RUN caption + value */
+            draw_text_font(&ui_font, "RESULT", rx, cap_y, cap_fs, (Color){68, 82, 118, 255});
+            draw_text_font(&ui_font, tick->result, rx, cap_y + cap_fs + 4.0f * scale, val_fs, result_c);
+            draw_text_font(&ui_font, "RUN", rx, cap_y + cap_fs + 4.0f * scale + val_fs + 10.0f * scale,
+                           cap_fs, (Color){68, 82, 118, 255});
+            (void)snprintf(run_val, sizeof(run_val), "%d", tick->run);
+            draw_text_font(&ui_font, run_val,
+                           rx, cap_y + cap_fs * 2.0f + val_fs + 14.0f * scale + 10.0f * scale,
+                           val_fs, RAYWHITE);
+        }
 
-        (void)snprintf(metric_text, sizeof(metric_text), "WARNING: %.1f%%   SHUTDOWN: %.1f%%", warning_pct, shutdown_pct);
-        draw_text_font(&ui_font,
-                       metric_text,
-                       metrics_area.x + 20.0f * scale,
-                       metrics_area.y + 152.0f * scale,
-                       16.0f * scale,
-                       (Color){200, 205, 218, 255});
+        /* Divider */
+        DrawLine((int)(metrics_area.x + 14.0f * scale), (int)(metrics_area.y + 110.0f * scale),
+                 (int)(metrics_area.x + metrics_area.width - 14.0f * scale),
+                 (int)(metrics_area.y + 110.0f * scale),
+                 (Color){24, 29, 48, 255});
 
-        DrawRectangle((int)(metrics_area.x + 20.0f * scale),
-                      (int)(metrics_area.y + 172.0f * scale),
-                      (int)((metrics_area.width - 40.0f * scale) * (warning_pct / 100.0f)),
-                      (int)(8.0f * scale),
-                      (Color){255, 193, 7, 220});
-        DrawRectangle((int)(metrics_area.x + 20.0f * scale),
-                      (int)(metrics_area.y + 184.0f * scale),
-                      (int)((metrics_area.width - 40.0f * scale) * (shutdown_pct / 100.0f)),
-                      (int)(8.0f * scale),
-                      (Color){220, 53, 69, 230});
+        /* Session fault rate */
+        draw_text_font(&ui_font, "SESSION FAULT RATE",
+                       metrics_area.x + 14.0f * scale, metrics_area.y + 118.0f * scale,
+                       11.0f * scale, (Color){68, 82, 118, 255});
+        {
+            float bx2     = metrics_area.x + 14.0f * scale;
+            float bw2     = metrics_area.width - 28.0f * scale;
+            float bh2     = 9.0f * scale;
+            float lbl_w2  = 68.0f * scale;
+            float tr_x    = bx2 + lbl_w2;
+            float tr_w    = bw2 - lbl_w2 - 52.0f * scale;
+            char  warn_txt[20];
+            char  shut_txt[20];
 
-        draw_timeline(&ui_font, scenario, playhead, timeline);
-        draw_slider(&ui_font, slider, scenario, playhead, restart_feedback_timer);
+            (void)snprintf(warn_txt, sizeof(warn_txt), "%.1f%%", warning_pct);
+            (void)snprintf(shut_txt, sizeof(shut_txt), "%.1f%%", shutdown_pct);
 
+            draw_text_font(&ui_font, "WARNING", bx2, metrics_area.y + 130.0f * scale,
+                           11.0f * scale, (Color){90, 106, 148, 255});
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+                          (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+                          (int)(tr_w * (warning_pct / 100.0f)), (int)bh2,
+                          (Color){255, 193, 7, 200});
+            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+                               (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
+            draw_text_font(&ui_font, warn_txt, tr_x + tr_w + 6.0f * scale,
+                           metrics_area.y + 130.0f * scale, 11.0f * scale,
+                           (Color){170, 182, 212, 255});
+
+            draw_text_font(&ui_font, "SHUTDOWN", bx2, metrics_area.y + 151.0f * scale,
+                           11.0f * scale, (Color){90, 106, 148, 255});
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+                          (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+                          (int)(tr_w * (shutdown_pct / 100.0f)), (int)bh2,
+                          (Color){220, 53, 69, 210});
+            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+                               (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
+            draw_text_font(&ui_font, shut_txt, tr_x + tr_w + 6.0f * scale,
+                           metrics_area.y + 151.0f * scale, 11.0f * scale,
+                           (Color){170, 182, 212, 255});
+        }
+
+        /* End of scenario notice */
         if (playhead >= (float)(scenario->tick_count - 1U))
         {
-            draw_text_font(&ui_font,
-                           "End of scenario - press R to replay",
-                           metrics_area.x + 20.0f * scale,
-                           metrics_area.y + metrics_area.height - 24.0f * scale,
-                           15.0f * scale,
-                           (Color){255, 220, 130, 255});
+            DrawLine((int)(metrics_area.x + 14.0f * scale), (int)(metrics_area.y + 172.0f * scale),
+                     (int)(metrics_area.x + metrics_area.width - 14.0f * scale),
+                     (int)(metrics_area.y + 172.0f * scale),
+                     (Color){24, 29, 48, 255});
+            draw_text_font(&ui_font, "End of scenario",
+                           metrics_area.x + 14.0f * scale, metrics_area.y + 180.0f * scale,
+                           12.0f * scale, (Color){255, 220, 100, 255});
+            draw_text_font(&ui_font, "Press  R  to replay",
+                           metrics_area.x + 14.0f * scale, metrics_area.y + 194.0f * scale,
+                           12.0f * scale, (Color){160, 174, 210, 255});
         }
+
+        /* ── TIMELINE + SLIDER ─────────────────────────── */
+        draw_timeline(&ui_font, scenario, playhead, timeline);
+        draw_slider(&ui_font, slider, scenario, playhead, restart_feedback_timer);
 
         EndDrawing();
     }
