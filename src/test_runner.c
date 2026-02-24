@@ -23,33 +23,6 @@ static int print_test_separator(void)
     return print_line("------------------------------------------------------------\n");
 }
 
-static int print_engine_state(const char *context, const EngineState *engine)
-{
-    char line[TEST_LINE_BUFFER_SIZE];
-    int written;
-
-    if ((context == (const char *)0) || (engine == (const EngineState *)0))
-    {
-        return ENGINE_ERROR;
-    }
-
-    written = snprintf(line,
-                       sizeof(line),
-                       "SIM  | %-*s | rpm=%7.2f | temp=%6.2f | oil=%5.2f | run=%d\n",
-                       TEST_NAME_COLUMN_WIDTH,
-                       context,
-                       engine->rpm,
-                       engine->temperature,
-                       engine->oil_pressure,
-                       engine->is_running);
-    if ((written < 0) || (written >= (int)sizeof(line)))
-    {
-        return ENGINE_ERROR;
-    }
-
-    return print_line(line);
-}
-
 static const char *result_to_string(int result)
 {
     if (result == ENGINE_OK)
@@ -168,11 +141,13 @@ static int scenario_oil_threshold_ok(EngineState *engine)
     return ENGINE_OK;
 }
 
-static int run_test_case(const TestCase *test_case, int show_sim, int use_color)
+static int run_test_case(const TestCase *test_case, int show_sim, int use_color, int show_control)
 {
     EngineState engine;
     int actual_result;
     int status;
+    int control_status;
+    float control_output = 0.0f;
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
 
@@ -192,6 +167,15 @@ static int run_test_case(const TestCase *test_case, int show_sim, int use_color)
     if (status != ENGINE_OK)
     {
         return 0;
+    }
+
+    if (show_control != 0)
+    {
+        control_status = compute_control_output(&engine, &control_output);
+        if (control_status != ENGINE_OK)
+        {
+            return 0;
+        }
     }
 
     if (print_test_separator() != ENGINE_OK)
@@ -218,6 +202,19 @@ static int run_test_case(const TestCase *test_case, int show_sim, int use_color)
                            engine.temperature,
                            engine.oil_pressure,
                            engine.is_running);
+        if ((written < 0) || (written >= (int)sizeof(line)))
+        {
+            return 0;
+        }
+        if (print_line(line) != ENGINE_OK)
+        {
+            return 0;
+        }
+    }
+
+    if (show_control != 0)
+    {
+        written = snprintf(line, sizeof(line), "CTRL | output=%6.2f%%\n", control_output);
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
             return 0;
@@ -275,7 +272,7 @@ static int run_test_case(const TestCase *test_case, int show_sim, int use_color)
     return 0;
 }
 
-int run_all_tests_with_options(int show_sim, int use_color)
+int run_all_tests_with_full_options(int show_sim, int use_color, int show_control)
 {
     const TestCase tests[MAX_TESTS] = {
         {"normal_operation", scenario_normal_ramp_up, ENGINE_OK},
@@ -297,7 +294,7 @@ int run_all_tests_with_options(int show_sim, int use_color)
 
     for (index = 0; index < MAX_TESTS; ++index)
     {
-        passed += run_test_case(&tests[index], show_sim, use_color);
+        passed += run_test_case(&tests[index], show_sim, use_color, show_control);
     }
 
     if (print_test_separator() != ENGINE_OK)
@@ -334,12 +331,17 @@ int run_all_tests_with_options(int show_sim, int use_color)
 
 int run_all_tests(void)
 {
-    return run_all_tests_with_options(0, 0);
+    return run_all_tests_with_full_options(0, 0, 0);
 }
 
 int run_all_tests_with_output(int show_sim)
 {
-    return run_all_tests_with_options(show_sim, 0);
+    return run_all_tests_with_full_options(show_sim, 0, 0);
+}
+
+int run_all_tests_with_options(int show_sim, int use_color)
+{
+    return run_all_tests_with_full_options(show_sim, use_color, 0);
 }
 
 static int valid_scenario_name(const char *name)
@@ -360,12 +362,14 @@ static int valid_scenario_name(const char *name)
     return 1;
 }
 
-int run_named_scenario_with_options(const char *name, int show_sim, int use_color)
+int run_named_scenario_with_full_options(const char *name, int show_sim, int use_color, int show_control)
 {
     EngineState engine;
     int result;
     int status;
+    int control_status;
     int log_status;
+    float control_output = 0.0f;
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
 
@@ -402,9 +406,65 @@ int run_named_scenario_with_options(const char *name, int show_sim, int use_colo
         return ENGINE_ERROR;
     }
 
+    if ((show_sim != 0) || (show_control != 0))
+    {
+        if (print_test_separator() != ENGINE_OK)
+        {
+            return ENGINE_ERROR;
+        }
+
+        written = snprintf(line, sizeof(line), "TEST | %s\n", name);
+        if ((written < 0) || (written >= (int)sizeof(line)))
+        {
+            return ENGINE_ERROR;
+        }
+        if (print_line(line) != ENGINE_OK)
+        {
+            return ENGINE_ERROR;
+        }
+    }
+
     if (show_sim != 0)
     {
-        if (print_engine_state(name, &engine) != ENGINE_OK)
+        written = snprintf(line,
+                           sizeof(line),
+                           "SIM  | rpm=%7.2f  temp=%6.2f  oil=%5.2f  run=%d\n",
+                           engine.rpm,
+                           engine.temperature,
+                           engine.oil_pressure,
+                           engine.is_running);
+        if ((written < 0) || (written >= (int)sizeof(line)))
+        {
+            return ENGINE_ERROR;
+        }
+        if (print_line(line) != ENGINE_OK)
+        {
+            return ENGINE_ERROR;
+        }
+    }
+
+    if (show_control != 0)
+    {
+        control_status = compute_control_output(&engine, &control_output);
+        if (control_status != ENGINE_OK)
+        {
+            return ENGINE_ERROR;
+        }
+
+        written = snprintf(line, sizeof(line), "CTRL | output=%6.2f%%\n", control_output);
+        if ((written < 0) || (written >= (int)sizeof(line)))
+        {
+            return ENGINE_ERROR;
+        }
+        if (print_line(line) != ENGINE_OK)
+        {
+            return ENGINE_ERROR;
+        }
+    }
+
+    if ((show_sim != 0) || (show_control != 0))
+    {
+        if (print_test_separator() != ENGINE_OK)
         {
             return ENGINE_ERROR;
         }
@@ -452,10 +512,15 @@ int run_named_scenario_with_options(const char *name, int show_sim, int use_colo
 
 int run_named_scenario(const char *name)
 {
-    return run_named_scenario_with_options(name, 0, 0);
+    return run_named_scenario_with_full_options(name, 0, 0, 0);
 }
 
 int run_named_scenario_with_output(const char *name, int show_sim)
 {
-    return run_named_scenario_with_options(name, show_sim, 0);
+    return run_named_scenario_with_full_options(name, show_sim, 0, 0);
+}
+
+int run_named_scenario_with_options(const char *name, int show_sim, int use_color)
+{
+    return run_named_scenario_with_full_options(name, show_sim, use_color, 0);
 }

@@ -9,5 +9,6 @@
 #define HIGH_TEMP_WARNING_THRESHOLD 85.0f
 
 int evaluate_engine(const EngineState *engine);
+int compute_control_output(const EngineState *engine, float *control_output);
 
 #endif

@@ -54,8 +54,9 @@ Run full automated validation suite:
 ```bash
 ./testrig --run-all
 ./testrig --run-all --show-sim
+./testrig --run-all --show-control
 ./testrig --run-all --color
-./testrig --run-all --show-sim --color
+./testrig --run-all --show-sim --show-control --color
 ```
 
 Run a single scenario:
@@ -65,8 +66,9 @@ Run a single scenario:
 ./testrig --scenario normal
 ./testrig --scenario pressure_failure
 ./testrig --scenario normal --show-sim
+./testrig --scenario normal --show-control
 ./testrig --scenario overheat --color
-./testrig --scenario normal --show-sim --color
+./testrig --scenario normal --show-sim --show-control --color
 ```
 
 ## Example Output
@@ -89,6 +91,12 @@ Summary: 6/6 tests passed
 
 ```text
 SIM: normal_operation rpm=120.00 temp=25.70 oil=3.60 running=1
+```
+
+`--show-control` prints the deterministic control output computed from engine state:
+
+```text
+CTRL | output= 18.57%
 ```
 
 `--color` optionally colorizes PASS/FAIL, result statuses, and `[INFO]/[WARN]/[ERROR]` log levels for readability in interactive terminals. It is disabled by default for CI-safe plain output.
