@@ -209,6 +209,8 @@ The visualizer reads the first scenario object in the JSON payload
 
 ### Build Visualizer
 
+![Visualizer screenshot](visualization/visualizer_example.png)
+
 Install Raylib first (distribution package name usually `raylib`), then
 build:
 
