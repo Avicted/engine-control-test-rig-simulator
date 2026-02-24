@@ -9,7 +9,7 @@
 
 #define TEST_LINE_BUFFER_SIZE 256
 #define RESULT_COLUMN_WIDTH 8
-#define MAX_PROFILE_TICKS 10U
+#define MAX_PROFILE_TICKS 26U
 #define MAX_SCRIPT_TICKS 64U
 #define SCRIPT_LINE_BUFFER_SIZE 192
 
@@ -512,6 +512,201 @@ static int scenario_combined_warning_persistent(EngineState *engine,
                            tick_report_count);
 }
 
+static int scenario_cold_start_warmup_and_ramp(EngineState *engine,
+                                               int show_sim,
+                                               int show_control,
+                                               int show_state,
+                                               void *tick_reports,
+                                               unsigned int tick_report_capacity,
+                                               unsigned int *tick_report_count)
+{
+    static const float rpm_values[] = {
+        800.0f, 1100.0f, 1400.0f, 1700.0f, 2000.0f,
+        2200.0f, 2400.0f, 2600.0f, 2800.0f, 3000.0f,
+        3100.0f, 3200.0f, 3300.0f, 3400.0f, 3400.0f,
+        3400.0f, 3400.0f, 3300.0f, 3100.0f, 2900.0f,
+        2700.0f, 2400.0f, 2100.0f, 1700.0f, 1300.0f};
+    static const float temp_values[] = {
+        44.0f, 49.0f, 54.0f, 58.5f, 62.0f,
+        65.5f, 68.0f, 70.5f, 73.0f, 75.0f,
+        77.0f, 78.5f, 80.0f, 81.0f, 82.0f,
+        82.5f, 82.0f, 81.0f, 80.0f, 78.5f,
+        77.0f, 74.5f, 71.0f, 67.5f, 63.0f};
+    static const float oil_values[] = {
+        3.8f, 3.7f, 3.7f, 3.6f, 3.5f,
+        3.4f, 3.4f, 3.3f, 3.2f, 3.2f,
+        3.1f, 3.1f, 3.0f, 3.0f, 3.0f,
+        3.0f, 3.0f, 3.0f, 3.0f, 3.1f,
+        3.1f, 3.2f, 3.3f, 3.4f, 3.5f};
+
+    return execute_profile(engine,
+                           (const unsigned int *)0,
+                           rpm_values,
+                           temp_values,
+                           oil_values,
+                           (const int *)0,
+                           (unsigned int)(sizeof(rpm_values) / sizeof(rpm_values[0])),
+                           show_sim,
+                           show_control,
+                           show_state,
+                           (TickReport *)tick_reports,
+                           tick_report_capacity,
+                           tick_report_count);
+}
+
+static int scenario_high_load_warning_then_recovery(EngineState *engine,
+                                                    int show_sim,
+                                                    int show_control,
+                                                    int show_state,
+                                                    void *tick_reports,
+                                                    unsigned int tick_report_capacity,
+                                                    unsigned int *tick_report_count)
+{
+    static const float rpm_values[] = {
+        2000.0f, 2400.0f, 2700.0f, 3000.0f, 3200.0f,
+        3400.0f, 3500.0f, 3600.0f, 3700.0f, 3500.0f,
+        3300.0f, 3100.0f, 2900.0f, 2700.0f, 2500.0f,
+        2300.0f, 2100.0f, 2000.0f};
+    static const float temp_values[] = {
+        70.0f, 73.0f, 75.5f, 78.0f, 80.5f,
+        82.5f, 85.0f, 87.0f, 88.0f, 87.0f,
+        86.0f, 84.5f, 82.0f, 79.5f, 77.0f,
+        74.5f, 72.0f, 70.0f};
+    static const float oil_values[] = {
+        3.2f, 3.2f, 3.1f, 3.1f, 3.0f,
+        3.0f, 3.0f, 3.0f, 3.0f, 3.0f,
+        3.0f, 3.1f, 3.1f, 3.2f, 3.2f,
+        3.2f, 3.3f, 3.3f};
+
+    return execute_profile(engine,
+                           (const unsigned int *)0,
+                           rpm_values,
+                           temp_values,
+                           oil_values,
+                           (const int *)0,
+                           (unsigned int)(sizeof(rpm_values) / sizeof(rpm_values[0])),
+                           show_sim,
+                           show_control,
+                           show_state,
+                           (TickReport *)tick_reports,
+                           tick_report_capacity,
+                           tick_report_count);
+}
+
+static int scenario_oil_pressure_gradual_drain(EngineState *engine,
+                                               int show_sim,
+                                               int show_control,
+                                               int show_state,
+                                               void *tick_reports,
+                                               unsigned int tick_report_capacity,
+                                               unsigned int *tick_report_count)
+{
+    static const float rpm_values[] = {
+        2500.0f, 2700.0f, 2900.0f, 3000.0f, 3000.0f,
+        3000.0f, 3000.0f, 3000.0f, 2900.0f, 2800.0f,
+        2700.0f, 2600.0f, 2500.0f, 2500.0f, 2500.0f,
+        2500.0f};
+    static const float temp_values[] = {
+        74.0f, 76.0f, 77.5f, 78.5f, 79.5f,
+        80.0f, 80.0f, 80.5f, 80.0f, 79.5f,
+        79.0f, 78.5f, 77.5f, 77.0f, 76.5f,
+        76.0f};
+    static const float oil_values[] = {
+        3.5f, 3.4f, 3.3f, 3.2f, 3.1f,
+        3.0f, 2.9f, 2.8f, 2.7f, 2.6f,
+        2.5f, 2.4f, 2.3f, 2.2f, 2.1f,
+        2.0f};
+
+    return execute_profile(engine,
+                           (const unsigned int *)0,
+                           rpm_values,
+                           temp_values,
+                           oil_values,
+                           (const int *)0,
+                           (unsigned int)(sizeof(rpm_values) / sizeof(rpm_values[0])),
+                           show_sim,
+                           show_control,
+                           show_state,
+                           (TickReport *)tick_reports,
+                           tick_report_capacity,
+                           tick_report_count);
+}
+
+static int scenario_thermal_runaway_with_load_surge(EngineState *engine,
+                                                    int show_sim,
+                                                    int show_control,
+                                                    int show_state,
+                                                    void *tick_reports,
+                                                    unsigned int tick_report_capacity,
+                                                    unsigned int *tick_report_count)
+{
+    static const float rpm_values[] = {
+        2200.0f, 2500.0f, 2800.0f, 3000.0f, 3200.0f,
+        3400.0f, 3400.0f, 3400.0f, 3400.0f, 3400.0f,
+        3400.0f, 3400.0f, 3400.0f, 3400.0f, 3400.0f};
+    static const float temp_values[] = {
+        68.0f, 71.0f, 74.0f, 76.5f, 79.0f,
+        81.5f, 84.0f, 87.5f, 90.5f, 93.0f,
+        95.5f, 97.0f, 98.5f, 99.0f, 99.5f};
+    static const float oil_values[] = {
+        3.3f, 3.2f, 3.1f, 3.1f, 3.0f,
+        3.0f, 3.0f, 3.0f, 3.0f, 3.0f,
+        3.0f, 3.0f, 3.0f, 3.0f, 3.0f};
+
+    return execute_profile(engine,
+                           (const unsigned int *)0,
+                           rpm_values,
+                           temp_values,
+                           oil_values,
+                           (const int *)0,
+                           (unsigned int)(sizeof(rpm_values) / sizeof(rpm_values[0])),
+                           show_sim,
+                           show_control,
+                           show_state,
+                           (TickReport *)tick_reports,
+                           tick_report_capacity,
+                           tick_report_count);
+}
+
+static int scenario_intermittent_oil_then_combined_fault(EngineState *engine,
+                                                         int show_sim,
+                                                         int show_control,
+                                                         int show_state,
+                                                         void *tick_reports,
+                                                         unsigned int tick_report_capacity,
+                                                         unsigned int *tick_report_count)
+{
+    static const float rpm_values[] = {
+        2000.0f, 2200.0f, 2400.0f, 2500.0f, 2500.0f,
+        2700.0f, 2900.0f, 3100.0f, 3300.0f, 3500.0f,
+        3600.0f, 3500.0f, 3200.0f, 3000.0f, 2800.0f,
+        2600.0f};
+    static const float temp_values[] = {
+        70.0f, 72.0f, 74.0f, 76.0f, 76.0f,
+        78.0f, 80.0f, 82.0f, 83.0f, 85.0f,
+        86.0f, 87.0f, 85.0f, 83.0f, 80.0f,
+        77.0f};
+    static const float oil_values[] = {
+        3.4f, 3.3f, 2.4f, 2.3f, 2.6f,
+        2.8f, 3.0f, 3.0f, 3.0f, 3.0f,
+        3.0f, 3.0f, 3.0f, 3.0f, 3.0f,
+        3.1f};
+
+    return execute_profile(engine,
+                           (const unsigned int *)0,
+                           rpm_values,
+                           temp_values,
+                           oil_values,
+                           (const int *)0,
+                           (unsigned int)(sizeof(rpm_values) / sizeof(rpm_values[0])),
+                           show_sim,
+                           show_control,
+                           show_state,
+                           (TickReport *)tick_reports,
+                           tick_report_capacity,
+                           tick_report_count);
+}
+
 static int print_json_scenario_object(const char *scenario_name,
                                       const TickReport *tick_reports,
                                       unsigned int tick_count,
@@ -964,7 +1159,12 @@ int run_all_tests_with_json(int show_sim, int use_color, int show_control, int s
         {"overheat_lt_persistence", scenario_overheat_short_duration, ENGINE_OK},
         {"overheat_ge_persistence", scenario_overheat_persistent, ENGINE_SHUTDOWN},
         {"oil_low_ge_persistence", scenario_oil_pressure_persistent, ENGINE_SHUTDOWN},
-        {"combined_warning_persistence", scenario_combined_warning_persistent, ENGINE_WARNING}};
+        {"combined_warning_persistence", scenario_combined_warning_persistent, ENGINE_WARNING},
+        {"cold_start", scenario_cold_start_warmup_and_ramp, ENGINE_OK},
+        {"high_load", scenario_high_load_warning_then_recovery, ENGINE_WARNING},
+        {"oil_drain", scenario_oil_pressure_gradual_drain, ENGINE_SHUTDOWN},
+        {"thermal_runaway", scenario_thermal_runaway_with_load_surge, ENGINE_SHUTDOWN},
+        {"intermittent_oil", scenario_intermittent_oil_then_combined_fault, ENGINE_WARNING}};
     int passed = 0;
     const int total = MAX_TESTS;
     int index;
@@ -1141,6 +1341,61 @@ int run_named_scenario_with_json(const char *name,
                                                   tick_reports,
                                                   MAX_PROFILE_TICKS,
                                                   &tick_report_count);
+    }
+    else if (strncmp(name, "cold_start", MAX_SCENARIO_NAME_LEN) == 0)
+    {
+        expected_result = ENGINE_OK;
+        result = scenario_cold_start_warmup_and_ramp(&engine,
+                                                     local_show_sim,
+                                                     local_show_control,
+                                                     local_show_state,
+                                                     tick_reports,
+                                                     MAX_PROFILE_TICKS,
+                                                     &tick_report_count);
+    }
+    else if (strncmp(name, "high_load", MAX_SCENARIO_NAME_LEN) == 0)
+    {
+        expected_result = ENGINE_WARNING;
+        result = scenario_high_load_warning_then_recovery(&engine,
+                                                          local_show_sim,
+                                                          local_show_control,
+                                                          local_show_state,
+                                                          tick_reports,
+                                                          MAX_PROFILE_TICKS,
+                                                          &tick_report_count);
+    }
+    else if (strncmp(name, "oil_drain", MAX_SCENARIO_NAME_LEN) == 0)
+    {
+        expected_result = ENGINE_SHUTDOWN;
+        result = scenario_oil_pressure_gradual_drain(&engine,
+                                                     local_show_sim,
+                                                     local_show_control,
+                                                     local_show_state,
+                                                     tick_reports,
+                                                     MAX_PROFILE_TICKS,
+                                                     &tick_report_count);
+    }
+    else if (strncmp(name, "thermal_runaway", MAX_SCENARIO_NAME_LEN) == 0)
+    {
+        expected_result = ENGINE_SHUTDOWN;
+        result = scenario_thermal_runaway_with_load_surge(&engine,
+                                                          local_show_sim,
+                                                          local_show_control,
+                                                          local_show_state,
+                                                          tick_reports,
+                                                          MAX_PROFILE_TICKS,
+                                                          &tick_report_count);
+    }
+    else if (strncmp(name, "intermittent_oil", MAX_SCENARIO_NAME_LEN) == 0)
+    {
+        expected_result = ENGINE_WARNING;
+        result = scenario_intermittent_oil_then_combined_fault(&engine,
+                                                               local_show_sim,
+                                                               local_show_control,
+                                                               local_show_state,
+                                                               tick_reports,
+                                                               MAX_PROFILE_TICKS,
+                                                               &tick_report_count);
     }
     else
     {
