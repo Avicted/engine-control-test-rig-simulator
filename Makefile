@@ -21,4 +21,30 @@ $(BUILD_DIR):
 clean:
 	rm -f $(TARGET)
 
-.PHONY: all clean
+run-script: $(TARGET)
+	@if [ -z "$(SCRIPT)" ]; then \
+		echo "Usage: make run-script SCRIPT=scenarios/normal_operation.txt"; \
+		exit 1; \
+	fi
+	$(TARGET) --script "$(SCRIPT)"
+
+run-script-json: $(TARGET)
+	@if [ -z "$(SCRIPT)" ]; then \
+		echo "Usage: make run-script-json SCRIPT=scenarios/normal_operation.txt"; \
+		exit 1; \
+	fi
+	$(TARGET) --script "$(SCRIPT)" --json
+
+run-scenarios: $(TARGET)
+	@set -e; \
+	files=$$(find scenarios -maxdepth 1 -type f -name '*.txt' | sort); \
+	if [ -z "$$files" ]; then \
+		echo "No scenario scripts found in scenarios/"; \
+		exit 1; \
+	fi; \
+	for file in $$files; do \
+		echo "=== $$file ==="; \
+		$(TARGET) --script "$$file"; \
+	done
+
+.PHONY: all clean run-script run-script-json run-scenarios

@@ -147,12 +147,47 @@ Optional debugging flags:
 -   `--show-state` → print engine mode and fault counters per tick
 -   `--color` → interactive terminal readability (disabled by default
     for CI)
+-   `--json` → emit machine-readable deterministic JSON output
 
 Run individual scenario:
 
 ``` bash
 ./build/testrig --scenario overheat
 ```
+
+Run scripted scenario input file:
+
+``` bash
+./build/testrig --script scenario.txt
+```
+
+Convenience Make targets:
+
+``` bash
+make run-script SCRIPT=scenarios/normal_operation.txt
+make run-script-json SCRIPT=scenarios/normal_operation.txt
+make run-scenarios
+```
+
+Script format (one deterministic tick per line):
+
+```text
+TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1
+TICK 2 RPM 2600 TEMP 80 OIL 3.1 RUN 1
+TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1
+TICK 4 RPM 3200 TEMP 84.5 OIL 2.9 RUN 1
+```
+
+Machine-readable output mode:
+
+``` bash
+./build/testrig --run-all --json
+./build/testrig --script scenario.txt --json
+```
+
+The JSON output includes per-tick sensor input, control output,
+evaluation result, and engine mode, plus scenario-level expected/actual
+and pass/fail fields.
 
 
 

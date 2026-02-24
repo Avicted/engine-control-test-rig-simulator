@@ -1,5 +1,7 @@
 #include "engine.h"
 
+static const char *const engine_mode_str[] = {"INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN"};
+
 static int is_legal_transition(EngineStateMode from_mode, EngineStateMode to_mode)
 {
     if (from_mode == to_mode)
@@ -42,35 +44,20 @@ int engine_transition_mode(EngineState *engine, EngineStateMode target_mode)
 
 int engine_get_mode_string(const EngineState *engine, const char **mode_string)
 {
+    unsigned int mode_index;
+
     if ((engine == (const EngineState *)0) || (mode_string == (const char **)0))
     {
         return ENGINE_ERROR;
     }
 
-    if (engine->mode == ENGINE_STATE_INIT)
-    {
-        *mode_string = "INIT";
-    }
-    else if (engine->mode == ENGINE_STATE_STARTING)
-    {
-        *mode_string = "STARTING";
-    }
-    else if (engine->mode == ENGINE_STATE_RUNNING)
-    {
-        *mode_string = "RUNNING";
-    }
-    else if (engine->mode == ENGINE_STATE_WARNING)
-    {
-        *mode_string = "WARNING";
-    }
-    else if (engine->mode == ENGINE_STATE_SHUTDOWN)
-    {
-        *mode_string = "SHUTDOWN";
-    }
-    else
+    mode_index = (unsigned int)engine->mode;
+    if (mode_index >= (unsigned int)(sizeof(engine_mode_str) / sizeof(engine_mode_str[0])))
     {
         return ENGINE_ERROR;
     }
+
+    *mode_string = engine_mode_str[mode_index];
 
     return ENGINE_OK;
 }

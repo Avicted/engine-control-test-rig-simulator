@@ -9,7 +9,7 @@
 typedef struct
 {
     const char *name;
-    int (*scenario_func)(EngineState *, int, int, int);
+    int (*scenario_func)(EngineState *, int, int, int, void *, unsigned int, unsigned int *);
     int expected_result;
 } TestCase;
 
@@ -25,5 +25,18 @@ int run_named_scenario_with_full_options(const char *name,
                                          int use_color,
                                          int show_control,
                                          int show_state);
+int run_all_tests_with_json(int show_sim, int use_color, int show_control, int show_state, int json_output);
+int run_named_scenario_with_json(const char *name,
+                                 int show_sim,
+                                 int use_color,
+                                 int show_control,
+                                 int show_state,
+                                 int json_output);
+int run_scripted_scenario_with_json(const char *script_path,
+                                    int show_sim,
+                                    int use_color,
+                                    int show_control,
+                                    int show_state,
+                                    int json_output);
 
 #endif
