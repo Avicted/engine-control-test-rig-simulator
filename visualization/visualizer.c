@@ -32,6 +32,106 @@
 #define SHORT_SCENARIO_TICKS_PER_SECOND 2.5f
 #define FONT_PATH "visualization/PxPlus_IBM_EGA_8x14.ttf"
 
+/* ── UI COLOURS ─────────────────────────────────────────────────────────── */
+/* Background layers */
+#define COL_WINDOW_BG ((Color){9, 11, 18, 255})
+#define COL_GRAD_TOP ((Color){11, 14, 22, 255})
+#define COL_GRAD_BOT ((Color){7, 9, 16, 255})
+#define COL_PANEL_BG ((Color){13, 16, 26, 255})
+#define COL_NAV_BG ((Color){10, 12, 20, 255})
+#define COL_TIMELINE_BG ((Color){12, 15, 24, 255})
+#define COL_BAR_BG ((Color){18, 22, 34, 255})
+#define COL_BADGE_BG ((Color){20, 25, 40, 255})
+#define COL_SLIDER_TRACK_BG ((Color){22, 27, 44, 255})
+#define COL_KNOB_SHADOW ((Color){8, 10, 18, 180})
+/* Borders / dividers */
+#define COL_HDR_BORDER ((Color){30, 36, 58, 255})
+#define COL_PANEL_BORDER ((Color){30, 36, 56, 255})
+#define COL_TIMELINE_BORDER ((Color){32, 38, 58, 255})
+#define COL_SECTION_DIV ((Color){24, 29, 48, 255})
+#define COL_TIMELINE_SUBDIV ((Color){26, 31, 50, 255})
+#define COL_FAULT_BAR_BOR ((Color){38, 44, 64, 255})
+#define COL_BAR_BORDER ((Color){40, 46, 66, 255})
+#define COL_SLIDER_TRACK_BOR ((Color){44, 52, 76, 255})
+#define COL_BADGE_BORDER ((Color){44, 54, 84, 255})
+/* Grid */
+#define COL_GRID_LINE ((Color){44, 49, 63, 180})
+#define COL_GRID_BRIGHT ((Color){96, 104, 122, 220})
+#define COL_GRID_VERT ((Color){38, 43, 58, 170})
+/* Text - dark to light */
+#define COL_CAPTION ((Color){68, 82, 118, 255})
+#define COL_TIMELINE_TITLE ((Color){72, 85, 120, 255})
+#define COL_SPEED_RUNNING ((Color){72, 86, 120, 255})
+#define COL_SCEN_COUNTER ((Color){78, 94, 136, 255})
+#define COL_SUBLABEL ((Color){90, 106, 148, 255})
+#define COL_KEY ((Color){90, 170, 255, 255})
+#define COL_KEY_DESC ((Color){110, 124, 155, 255})
+#define COL_METER_LABEL ((Color){120, 134, 165, 255})
+#define COL_TICK_COUNTER ((Color){140, 155, 186, 255})
+#define COL_BADGE_TEXT ((Color){148, 165, 205, 255})
+#define COL_AXIS_LABEL ((Color){160, 168, 184, 255})
+#define COL_FAULT_PCT_TEXT ((Color){170, 182, 212, 255})
+#define COL_KNOB_FILL ((Color){220, 228, 245, 255})
+#define COL_MODE_DEFAULT ((Color){180, 186, 200, 255})
+#define COL_BRAK ((Color){50, 62, 94, 255})
+/* Semantic status */
+#define COL_OK ((Color){40, 167, 69, 255})
+#define COL_WARNING ((Color){255, 193, 7, 255})
+#define COL_SHUTDOWN ((Color){220, 53, 69, 255})
+#define COL_WARNING_FILL ((Color){255, 193, 7, 200})
+#define COL_SHUTDOWN_FILL ((Color){220, 53, 69, 210})
+#define COL_WARNING_DASH ((Color){255, 193, 7, 160})
+#define COL_SHUTDOWN_DASH ((Color){220, 53, 69, 170})
+#define COL_OIL_SHUT_DASH ((Color){220, 53, 69, 120})
+#define COL_WARNING_TINT ((Color){255, 193, 7, 26})
+#define COL_SHUTDOWN_TINT ((Color){220, 53, 69, 34})
+#define COL_SPEED_PAUSED ((Color){255, 193, 7, 220})
+#define COL_END_NOTICE ((Color){255, 220, 100, 255})
+#define COL_PLAYHEAD ((Color){255, 255, 255, 210})
+/* Signal / sensor lines */
+#define COL_RPM ((Color){52, 152, 219, 255})
+#define COL_TEMP ((Color){255, 99, 132, 255})
+#define COL_OIL ((Color){46, 204, 113, 255})
+#define COL_CTRL ((Color){176, 132, 255, 255})
+/* Slider accent */
+#define COL_SLIDER_FILL ((Color){48, 128, 220, 255})
+#define COL_SLIDER_RING ((Color){48, 128, 220, 200})
+
+/* ── FONT SIZES (base, multiply by scale before use) ─────────────────────── */
+#define FS_TINY 11.0f      /* small captions, fault rate labels */
+#define FS_SMALL 12.0f     /* section header, key-hint desc text */
+#define FS_KEY_HINT 13.0f  /* key-hint labels, meter labels */
+#define FS_VALUE 16.0f     /* meter numeric values, log values */
+#define FS_BADGE 15.0f     /* tick counter badge */
+#define FS_MODE 22.0f      /* large engine-mode display */
+#define FS_SCEN_NAME 20.0f /* scenario name in header */
+/* Timeline font sizes are unscaled (drawn in absolute pixel coords) */
+#define FS_TL_TITLE 18.0f
+#define FS_TL_LEGEND 17.0f
+#define FS_TL_AXIS 14.0f
+
+/* ── LAYOUT (unscaled, multiply by scale where needed) ───────────────────── */
+#define LAYOUT_PAD 16.0f
+#define LAYOUT_HDR_H 50.0f
+#define LAYOUT_NAV_H 30.0f
+#define LAYOUT_MAIN_H 252.0f
+#define LAYOUT_STATUS_W 310.0f
+#define LAYOUT_COL_GAP 12.0f
+#define LAYOUT_BAR_H 22.0f
+#define LAYOUT_ROW_STEP 42.0f
+#define LAYOUT_BADGE_H 28.0f
+#define LAYOUT_KNOB_R 9.0f
+#define LAYOUT_KNOB_SHADOW 11.0f
+#define LAYOUT_TRACK_H 6.0f
+#define LAYOUT_DOT_R 5.0f
+#define LAYOUT_LEGEND_DOT_GAP 6.0f
+#define LAYOUT_LEGEND_COL_GAP 18.0f
+#define LAYOUT_SLIDER_INSET 30.0f /* space taken by slider inside timeline area */
+#define LAYOUT_SLIDER_H 24.0f     /* slider control height */
+
+/* Only used for the end-of-scenario replay hint (distinct from other label colours) */
+#define COL_REPLAY_HINT ((Color){160, 174, 210, 255})
+
 typedef enum
 {
     LEVEL_OK = 0,
@@ -674,13 +774,13 @@ static Color level_color(SeverityLevel level)
 {
     if (level == LEVEL_SHUTDOWN)
     {
-        return (Color){220, 53, 69, 255};
+        return COL_SHUTDOWN;
     }
     if (level == LEVEL_WARNING)
     {
-        return (Color){255, 193, 7, 255};
+        return COL_WARNING;
     }
-    return (Color){40, 167, 69, 255};
+    return COL_OK;
 }
 
 static float clamp01(float value)
@@ -751,21 +851,21 @@ static Color mode_color(const char *engine_mode)
 {
     if (engine_mode == NULL)
     {
-        return (Color){180, 186, 200, 255};
+        return COL_MODE_DEFAULT;
     }
     if ((strcmp(engine_mode, "INIT") == 0) || (strcmp(engine_mode, "STARTING") == 0))
     {
-        return (Color){52, 152, 219, 255};
+        return COL_RPM; /* blue: starting state shares the RPM signal colour */
     }
     if (strcmp(engine_mode, "WARNING") == 0)
     {
-        return (Color){255, 193, 7, 255};
+        return COL_WARNING;
     }
     if (strcmp(engine_mode, "SHUTDOWN") == 0)
     {
-        return (Color){220, 53, 69, 255};
+        return COL_SHUTDOWN;
     }
-    return (Color){40, 167, 69, 255};
+    return COL_OK;
 }
 
 static Color lerp_color(Color a, Color b, float t)
@@ -796,9 +896,9 @@ static float draw_key_hint(const Font *font,
                            float y,
                            float font_size)
 {
-    Color key_color = (Color){90, 170, 255, 255};
-    Color brak_color = (Color){50, 62, 94, 255};
-    Color desc_color = (Color){110, 124, 155, 255};
+    Color key_color = COL_KEY;
+    Color brak_color = COL_BRAK;
+    Color desc_color = COL_KEY_DESC;
     float cx = x;
     float w;
 
@@ -832,8 +932,8 @@ static void draw_meter(const Font *font,
     float ratio;
     int fill_width;
     char value_text[64];
-    float lbl_fs = 13.0f * scale;
-    float val_fs = 16.0f * scale;
+    float lbl_fs = FS_KEY_HINT * scale;
+    float val_fs = FS_VALUE * scale;
     Vector2 value_size;
     float value_x;
     float value_y;
@@ -842,27 +942,23 @@ static void draw_meter(const Font *font,
     ratio = clamp01(ratio);
     fill_width = (int)(ratio * bar_area.width);
 
-    draw_text_font(font, label, bar_area.x, bar_area.y - lbl_fs - 3.0f * scale, lbl_fs,
-                   (Color){120, 134, 165, 255});
-    DrawRectangleRec(bar_area, (Color){18, 22, 34, 255});
+    draw_text_font(font, label, bar_area.x, bar_area.y - lbl_fs - 3.0f * scale, lbl_fs, COL_METER_LABEL);
+    DrawRectangleRec(bar_area, COL_BAR_BG);
     if (fill_width > 0)
     {
         DrawRectangle((int)bar_area.x, (int)bar_area.y, fill_width, (int)bar_area.height, level_color(level));
     }
-    DrawRectangleLines((int)bar_area.x, (int)bar_area.y, (int)bar_area.width, (int)bar_area.height,
-                       (Color){40, 46, 66, 255});
+    DrawRectangleLines((int)bar_area.x, (int)bar_area.y, (int)bar_area.width, (int)bar_area.height, COL_BAR_BORDER);
 
     if ((warn_threshold > 0.0f) && (warn_threshold < max_value))
     {
         int warn_x = (int)(bar_area.x + (warn_threshold / max_value) * bar_area.width);
-        DrawLine(warn_x, (int)(bar_area.y + 2), warn_x, (int)(bar_area.y + bar_area.height - 2),
-                 (Color){255, 193, 7, 200});
+        DrawLine(warn_x, (int)(bar_area.y + 2), warn_x, (int)(bar_area.y + bar_area.height - 2), COL_WARNING_FILL);
     }
     if ((shutdown_threshold > 0.0f) && (shutdown_threshold < max_value))
     {
         int shut_x = (int)(bar_area.x + (shutdown_threshold / max_value) * bar_area.width);
-        DrawLine(shut_x, (int)(bar_area.y + 2), shut_x, (int)(bar_area.y + bar_area.height - 2),
-                 (Color){220, 53, 69, 210});
+        DrawLine(shut_x, (int)(bar_area.y + 2), shut_x, (int)(bar_area.y + bar_area.height - 2), COL_SHUTDOWN_FILL);
     }
 
     (void)snprintf(value_text, sizeof(value_text), "%.2f %s", value, unit);
@@ -891,6 +987,50 @@ static void draw_dashed_hline(int x0, int x1, int y, int dash, int gap, Color co
     }
 }
 
+/* Draw a standard info panel: filled background, border, header caption, and a
+   horizontal divider line below the header row.  Returns the Y coordinate of
+   the content area (just below the divider). */
+static float draw_panel_header(const Font *font, Rectangle area, const char *title, float scale)
+{
+    float title_y = area.y + 10.0f * scale;
+    float divider_y = area.y + 31.0f * scale;
+
+    DrawRectangleRec(area, COL_PANEL_BG);
+    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, COL_PANEL_BORDER);
+    draw_text_font(font, title, area.x + 14.0f * scale, title_y, FS_SMALL * scale, COL_CAPTION);
+    DrawLine((int)(area.x + 1), (int)divider_y,
+             (int)(area.x + area.width - 1), (int)divider_y,
+             COL_SECTION_DIV);
+
+    return divider_y;
+}
+
+/* Draw a single fault-rate row: label, filled progress bar, and percentage
+   text.  bar_x/bar_w define the bar rect; label is drawn at label_x on row_y. */
+static void draw_fault_rate_row(const Font *font,
+                                const char *label,
+                                float value_pct,
+                                float label_x,
+                                float bar_x,
+                                float bar_w,
+                                float bar_h,
+                                float row_y,
+                                Color fill_color,
+                                float scale)
+{
+    char pct_text[20];
+    float text_x = bar_x + bar_w + 6.0f * scale;
+
+    draw_text_font(font, label, label_x, row_y, FS_TINY * scale, COL_SUBLABEL);
+
+    DrawRectangle((int)bar_x, (int)row_y, (int)bar_w, (int)bar_h, COL_BAR_BG);
+    DrawRectangle((int)bar_x, (int)row_y, (int)(bar_w * (value_pct / 100.0f)), (int)bar_h, fill_color);
+    DrawRectangleLines((int)bar_x, (int)row_y, (int)bar_w, (int)bar_h, COL_FAULT_BAR_BOR);
+
+    (void)snprintf(pct_text, sizeof(pct_text), "%.1f%%", value_pct);
+    draw_text_font(font, pct_text, text_x, row_y, FS_TINY * scale, COL_FAULT_PCT_TEXT);
+}
+
 static void draw_timeline(const Font *font, const ScenarioData *scenario, float playhead, Rectangle area, float scale)
 {
     int i;
@@ -906,13 +1046,13 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         return;
     }
 
-    DrawRectangleRec(area, (Color){12, 15, 24, 255});
-    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, (Color){32, 38, 58, 255});
+    DrawRectangleRec(area, COL_TIMELINE_BG);
+    DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, COL_TIMELINE_BORDER);
 
-    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 8.0f, 18.0f, (Color){72, 85, 120, 255});
+    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 8.0f, FS_TL_TITLE, COL_TIMELINE_TITLE);
     DrawLine((int)(area.x + 1), (int)(area.y + 32.0f),
              (int)(area.x + area.width - 1), (int)(area.y + 32.0f),
-             (Color){26, 31, 50, 255});
+             COL_TIMELINE_SUBDIV);
 
     {
         unsigned int active_tick = scenario->ticks[(unsigned int)(playhead + 0.5f)].tick;
@@ -921,9 +1061,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         float tl_x;
         (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick,
                        scenario->ticks[scenario->tick_count - 1U].tick);
-        tl_sz = MeasureTextEx(*font, tick_label, 18.0f, 1.0f);
+        tl_sz = MeasureTextEx(*font, tick_label, FS_TL_TITLE, 1.0f);
         tl_x = area.x + area.width * 0.5f - tl_sz.x * 0.5f;
-        draw_text_font(font, tick_label, tl_x, area.y + 8.0f, 18.0f, (Color){140, 155, 186, 255});
+        draw_text_font(font, tick_label, tl_x, area.y + 8.0f, FS_TL_TITLE, COL_TICK_COUNTER);
     }
 
     plot_left = (int)area.x + 52;
@@ -936,13 +1076,13 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
     for (i = 0; i <= 8; ++i)
     {
         int gy = plot_top + (i * plot_h) / 8;
-        Color grid_color = (i == 8) ? (Color){96, 104, 122, 220} : (Color){44, 49, 63, 180};
+        Color grid_color = (i == 8) ? COL_GRID_BRIGHT : COL_GRID_LINE;
         DrawLine(plot_left, gy, plot_right, gy, grid_color);
         if ((i % 2) == 0)
         {
             char y_label[16];
             (void)snprintf(y_label, sizeof(y_label), "%d%%", 100 - ((i * 100) / 8));
-            draw_text_font(font, y_label, area.x + 8.0f, (float)gy - 8.0f, 14.0f, (Color){160, 168, 184, 255});
+            draw_text_font(font, y_label, area.x + 8.0f, (float)gy - 8.0f, FS_TL_AXIS, COL_AXIS_LABEL);
         }
     }
 
@@ -956,9 +1096,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             int gx = plot_left + (int)(t * (float)plot_w);
             unsigned int tick_idx = (unsigned int)(t * (float)(scenario->tick_count - 1U));
             char x_label[16];
-            DrawLine(gx, plot_top, gx, plot_bottom, (Color){38, 43, 58, 170});
+            DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
             (void)snprintf(x_label, sizeof(x_label), "%u", scenario->ticks[tick_idx].tick);
-            draw_text_font(font, x_label, (float)gx - 8.0f, (float)plot_bottom + 8.0f, 14.0f, (Color){160, 168, 184, 255});
+            draw_text_font(font, x_label, (float)gx - 8.0f, (float)plot_bottom + 8.0f, FS_TL_AXIS, COL_AXIS_LABEL);
         }
     }
 
@@ -966,9 +1106,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         int temp_warn_y = plot_bottom - (int)((TEMP_WARNING_THRESHOLD / 120.0f) * (float)plot_h);
         int temp_shutdown_y = plot_bottom - (int)((TEMP_SHUTDOWN_THRESHOLD / 120.0f) * (float)plot_h);
         int oil_shutdown_y = plot_bottom - (int)((OIL_SHUTDOWN_THRESHOLD / 5.0f) * (float)plot_h);
-        draw_dashed_hline(plot_left, plot_right, temp_warn_y, 10, 5, (Color){255, 193, 7, 160});
-        draw_dashed_hline(plot_left, plot_right, temp_shutdown_y, 10, 5, (Color){220, 53, 69, 170});
-        draw_dashed_hline(plot_left, plot_right, oil_shutdown_y, 10, 5, (Color){220, 53, 69, 120});
+        draw_dashed_hline(plot_left, plot_right, temp_warn_y, 10, 5, COL_WARNING_DASH);
+        draw_dashed_hline(plot_left, plot_right, temp_shutdown_y, 10, 5, COL_SHUTDOWN_DASH);
+        draw_dashed_hline(plot_left, plot_right, oil_shutdown_y, 10, 5, COL_OIL_SHUT_DASH);
     }
 
     if (scenario->tick_count > 1U)
@@ -984,11 +1124,11 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
 
             if (level == LEVEL_WARNING)
             {
-                DrawRectangle(sx, plot_top, ex - sx, plot_h, (Color){255, 193, 7, 26});
+                DrawRectangle(sx, plot_top, ex - sx, plot_h, COL_WARNING_TINT);
             }
             else if (level == LEVEL_SHUTDOWN)
             {
-                DrawRectangle(sx, plot_top, ex - sx, plot_h, (Color){220, 53, 69, 34});
+                DrawRectangle(sx, plot_top, ex - sx, plot_h, COL_SHUTDOWN_TINT);
             }
         }
 
@@ -1017,14 +1157,10 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             int yc0 = plot_bottom - (int)(ctrl0 * (float)plot_h);
             int yc1 = plot_bottom - (int)(ctrl1 * (float)plot_h);
 
-            DrawLineEx((Vector2){(float)x0, (float)yr0}, (Vector2){(float)x1, (float)yr1}, 2.0f,
-                       (Color){52, 152, 219, 255});
-            DrawLineEx((Vector2){(float)x0, (float)yt0}, (Vector2){(float)x1, (float)yt1}, 2.0f,
-                       (Color){255, 99, 132, 255});
-            DrawLineEx((Vector2){(float)x0, (float)yo0}, (Vector2){(float)x1, (float)yo1}, 2.0f,
-                       (Color){46, 204, 113, 255});
-            DrawLineEx((Vector2){(float)x0, (float)yc0}, (Vector2){(float)x1, (float)yc1}, 2.0f,
-                       (Color){176, 132, 255, 255});
+            DrawLineEx((Vector2){(float)x0, (float)yr0}, (Vector2){(float)x1, (float)yr1}, 2.0f, COL_RPM);
+            DrawLineEx((Vector2){(float)x0, (float)yt0}, (Vector2){(float)x1, (float)yt1}, 2.0f, COL_TEMP);
+            DrawLineEx((Vector2){(float)x0, (float)yo0}, (Vector2){(float)x1, (float)yo1}, 2.0f, COL_OIL);
+            DrawLineEx((Vector2){(float)x0, (float)yc0}, (Vector2){(float)x1, (float)yc1}, 2.0f, COL_CTRL);
         }
 
         {
@@ -1032,44 +1168,39 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             int marker_x = plot_left + (int)(marker_t * (float)plot_w);
             DrawLineEx((Vector2){(float)marker_x, (float)plot_top},
                        (Vector2){(float)marker_x, (float)plot_bottom},
-                       2.0f, (Color){255, 255, 255, 210});
+                       2.0f, COL_PLAYHEAD);
         }
     }
 
     /* Compact right-to-left legend with colour dots */
     {
         float ley = area.y + 8.0f;
-        float lfs2 = 17.0f;
-        float dot_r = 5.0f;
+        float lfs2 = FS_TL_LEGEND;
+        float dot_r = LAYOUT_DOT_R;
         float lx = area.x + area.width - 12.0f;
         Vector2 lsz;
 
-        lsz = MeasureTextEx(*font, "CTRL", lfs2, 1.0f);
-        lx -= lsz.x;
-        draw_text_font(font, "CTRL", lx, ley, lfs2, (Color){176, 132, 255, 255});
-        lx -= dot_r * 2.0f + 6.0f;
-        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){176, 132, 255, 255});
-        lx -= 18.0f;
-
-        lsz = MeasureTextEx(*font, "OIL", lfs2, 1.0f);
-        lx -= lsz.x;
-        draw_text_font(font, "OIL", lx, ley, lfs2, (Color){46, 204, 113, 255});
-        lx -= dot_r * 2.0f + 6.0f;
-        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){46, 204, 113, 255});
-        lx -= 18.0f;
-
-        lsz = MeasureTextEx(*font, "TEMP", lfs2, 1.0f);
-        lx -= lsz.x;
-        draw_text_font(font, "TEMP", lx, ley, lfs2, (Color){255, 99, 132, 255});
-        lx -= dot_r * 2.0f + 6.0f;
-        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){255, 99, 132, 255});
-        lx -= 18.0f;
-
-        lsz = MeasureTextEx(*font, "RPM", lfs2, 1.0f);
-        lx -= lsz.x;
-        draw_text_font(font, "RPM", lx, ley, lfs2, (Color){52, 152, 219, 255});
-        lx -= dot_r * 2.0f + 6.0f;
-        DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, (Color){52, 152, 219, 255});
+        /* Entries drawn right-to-left: CTRL → OIL → TEMP → RPM */
+        static const struct
+        {
+            const char *name;
+            Color col;
+        } k_legend[] = {
+            {"CTRL", COL_CTRL},
+            {"OIL", COL_OIL},
+            {"TEMP", COL_TEMP},
+            {"RPM", COL_RPM},
+        };
+        int li;
+        for (li = 0; li < 4; ++li)
+        {
+            lsz = MeasureTextEx(*font, k_legend[li].name, lfs2, 1.0f);
+            lx -= lsz.x;
+            draw_text_font(font, k_legend[li].name, lx, ley, lfs2, k_legend[li].col);
+            lx -= dot_r * 2.0f + LAYOUT_LEGEND_DOT_GAP;
+            DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, k_legend[li].col);
+            lx -= LAYOUT_LEGEND_COL_GAP;
+        }
     }
 }
 
@@ -1101,19 +1232,19 @@ static void draw_slider(const Font *font,
         knob_x = (int)(slider.x + (slider.width * knob_t));
 
         /* Background track */
-        DrawRectangle(tx, cy - th / 2, tw, th, (Color){22, 27, 44, 255});
-        DrawRectangleLines(tx, cy - th / 2, tw, th, (Color){44, 52, 76, 255});
+        DrawRectangle(tx, cy - th / 2, tw, th, COL_SLIDER_TRACK_BG);
+        DrawRectangleLines(tx, cy - th / 2, tw, th, COL_SLIDER_TRACK_BOR);
         /* Filled progress */
         if (knob_t > 0.0f)
         {
             int fw = (int)(tw * knob_t);
-            DrawRectangle(tx + rx, cy - th / 2, fw - rx, th, (Color){48, 128, 220, 255});
+            DrawRectangle(tx + rx, cy - th / 2, fw - rx, th, COL_SLIDER_FILL);
         }
 
         /* Knob: shadow ring, white fill, blue accent */
-        DrawCircle(knob_x, cy, 11.0f, (Color){8, 10, 18, 180});
-        DrawCircle(knob_x, cy, 9.0f, (Color){220, 228, 245, 255});
-        DrawCircleLines(knob_x, cy, 11.0f, (Color){48, 128, 220, 200});
+        DrawCircle(knob_x, cy, LAYOUT_KNOB_SHADOW, COL_KNOB_SHADOW);
+        DrawCircle(knob_x, cy, LAYOUT_KNOB_R, COL_KNOB_FILL);
+        DrawCircleLines(knob_x, cy, LAYOUT_KNOB_SHADOW, COL_SLIDER_RING);
     }
 
     (void)restart_feedback_timer;
@@ -1206,13 +1337,13 @@ static void run_visualizer(ScenarioSet *scenario_set)
         int screen_w = GetScreenWidth();
         int screen_h = GetScreenHeight();
         float scale = screen_scale(screen_w, screen_h);
-        float pad = 16.0f * scale;
-        float hdr_h = 50.0f * scale;
-        float nav_h = 30.0f * scale;
+        float pad = LAYOUT_PAD * scale;
+        float hdr_h = LAYOUT_HDR_H * scale;
+        float nav_h = LAYOUT_NAV_H * scale;
         float content_y = hdr_h + nav_h + 8.0f * scale;
-        float main_h = 252.0f * scale;
-        float status_panel_w = 310.0f * scale;
-        float col_gap = 12.0f * scale;
+        float main_h = LAYOUT_MAIN_H * scale;
+        float status_panel_w = LAYOUT_STATUS_W * scale;
+        float col_gap = LAYOUT_COL_GAP * scale;
         float gauges_x = pad;
         float gauges_w = (float)screen_w - (pad * 2.0f) - status_panel_w - col_gap;
         float status_x = gauges_x + gauges_w + col_gap;
@@ -1221,8 +1352,8 @@ static void run_visualizer(ScenarioSet *scenario_set)
         float bar_col_w = gc_w * 0.68f;
         float val_col_w = gc_w - bar_col_w - 10.0f * scale;
         float val_col_x = gc_x + bar_col_w + 10.0f * scale;
-        float bar_h = 22.0f * scale;
-        float row_step = 42.0f * scale;
+        float bar_h = LAYOUT_BAR_H * scale;
+        float row_step = LAYOUT_ROW_STEP * scale;
         float m_row0_y = content_y + 44.0f * scale;
         float m_row1_y = m_row0_y + row_step;
         float m_row2_y = m_row1_y + row_step;
@@ -1238,9 +1369,9 @@ static void run_visualizer(ScenarioSet *scenario_set)
         float timeline_h_val = (float)screen_h - timeline_y - pad;
         Rectangle timeline = {pad, timeline_y, (float)screen_w - 2.0f * pad, timeline_h_val};
         Rectangle slider = {timeline.x + 52.0f,
-                            timeline.y + timeline.height - 30.0f * scale,
+                            timeline.y + timeline.height - LAYOUT_SLIDER_INSET * scale,
                             timeline.width - 76.0f,
-                            24.0f * scale};
+                            LAYOUT_SLIDER_H * scale};
         float warning_pct = 0.0f;
         float shutdown_pct = 0.0f;
 
@@ -1341,12 +1472,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
         animated_mode_color = lerp_color(animated_mode_color, mode_color(tick->engine_mode), GetFrameTime() * 8.0f);
 
         BeginDrawing();
-        ClearBackground((Color){9, 11, 18, 255});
-        DrawRectangleGradientV(0, 0, screen_w, screen_h, (Color){11, 14, 22, 255}, (Color){7, 9, 16, 255});
+        ClearBackground(COL_WINDOW_BG);
+        DrawRectangleGradientV(0, 0, screen_w, screen_h, COL_GRAD_TOP, COL_GRAD_BOT);
 
         /* ── HEADER BAR ────────────────────────────────── */
-        DrawRectangle(0, 0, screen_w, (int)hdr_h, (Color){13, 16, 26, 255});
-        DrawLine(0, (int)hdr_h - 1, screen_w, (int)hdr_h - 1, (Color){30, 36, 58, 255});
+        DrawRectangle(0, 0, screen_w, (int)hdr_h, COL_PANEL_BG);
+        DrawLine(0, (int)hdr_h - 1, screen_w, (int)hdr_h - 1, COL_HDR_BORDER);
         {
             char scen_label[48];
             char tick_str[48];
@@ -1354,39 +1485,35 @@ static void run_visualizer(ScenarioSet *scenario_set)
             float badge_w;
             float badge_x;
             float badge_y;
-            float badge_h = 28.0f * scale;
+            float badge_h = LAYOUT_BADGE_H * scale;
 
             (void)snprintf(scen_label, sizeof(scen_label),
                            "SCENARIO  %u / %u",
                            scenario_set->active_index + 1U, scenario_set->count);
-            draw_text_font(&ui_font, scen_label, pad, 7.0f * scale, 11.0f * scale,
-                           (Color){78, 94, 136, 255});
-            draw_text_font(&ui_font, scenario->scenario, pad, 21.0f * scale, 20.0f * scale,
-                           RAYWHITE);
+            draw_text_font(&ui_font, scen_label, pad, 7.0f * scale, FS_TINY * scale, COL_SCEN_COUNTER);
+            draw_text_font(&ui_font, scenario->scenario, pad, 21.0f * scale, FS_SCEN_NAME * scale, RAYWHITE);
 
             (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
                            tick->tick, scenario->tick_count);
-            tick_sz = MeasureTextEx(ui_font, tick_str, 15.0f * scale, 1.0f);
+            tick_sz = MeasureTextEx(ui_font, tick_str, FS_BADGE * scale, 1.0f);
             badge_w = tick_sz.x + 20.0f * scale;
             badge_x = (float)screen_w - badge_w - pad;
             badge_y = (hdr_h - badge_h) * 0.5f;
-            DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
-                          (Color){20, 25, 40, 255});
-            DrawRectangleLines((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
-                               (Color){44, 54, 84, 255});
+            DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BG);
+            DrawRectangleLines((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BORDER);
             draw_text_font(&ui_font, tick_str,
                            badge_x + 10.0f * scale,
-                           badge_y + (badge_h - 15.0f * scale) * 0.5f,
-                           15.0f * scale, (Color){148, 165, 205, 255});
+                           badge_y + (badge_h - FS_BADGE * scale) * 0.5f,
+                           FS_BADGE * scale, COL_BADGE_TEXT);
         }
 
         /* ── CONTROLS BAR ──────────────────────────────── */
-        DrawRectangle(0, (int)hdr_h, screen_w, (int)nav_h, (Color){10, 12, 20, 255});
-        DrawLine(0, (int)(hdr_h + nav_h), screen_w, (int)(hdr_h + nav_h), (Color){24, 29, 48, 255});
+        DrawRectangle(0, (int)hdr_h, screen_w, (int)nav_h, COL_NAV_BG);
+        DrawLine(0, (int)(hdr_h + nav_h), screen_w, (int)(hdr_h + nav_h), COL_SECTION_DIV);
         {
             float kx = pad;
-            float ky = hdr_h + (nav_h - 13.0f * scale) * 0.5f;
-            float kfs = 13.0f * scale;
+            float ky = hdr_h + (nav_h - FS_KEY_HINT * scale) * 0.5f;
+            float kfs = FS_KEY_HINT * scale;
             float gap2 = 20.0f * scale;
             char speed_str[32];
             Vector2 sp_sz;
@@ -1403,20 +1530,11 @@ static void run_visualizer(ScenarioSet *scenario_set)
             sp_sz = MeasureTextEx(ui_font, speed_str, kfs, 1.0f);
             draw_text_font(&ui_font, speed_str,
                            (float)screen_w - sp_sz.x - pad, ky, kfs,
-                           (paused != 0) ? (Color){255, 193, 7, 220} : (Color){72, 86, 120, 255});
+                           (paused != 0) ? COL_SPEED_PAUSED : COL_SPEED_RUNNING);
         }
 
         /* ── GAUGES PANEL ──────────────────────────────── */
-        DrawRectangleRec(gauges_panel, (Color){13, 16, 26, 255});
-        DrawRectangleLines((int)gauges_panel.x, (int)gauges_panel.y,
-                           (int)gauges_panel.width, (int)gauges_panel.height,
-                           (Color){30, 36, 56, 255});
-        draw_text_font(&ui_font, "SENSOR READINGS",
-                       gauges_panel.x + 14.0f * scale, gauges_panel.y + 10.0f * scale,
-                       12.0f * scale, (Color){68, 82, 118, 255});
-        DrawLine((int)(gauges_panel.x + 1), (int)(gauges_panel.y + 31.0f * scale),
-                 (int)(gauges_panel.x + gauges_panel.width - 1), (int)(gauges_panel.y + 31.0f * scale),
-                 (Color){24, 29, 48, 255});
+        draw_panel_header(&ui_font, gauges_panel, "SENSOR READINGS", scale);
 
         draw_meter(&ui_font, "RPM", tick->rpm, 5000.0f,
                    rpm_bar, rpm_val,
@@ -1431,44 +1549,35 @@ static void run_visualizer(ScenarioSet *scenario_set)
                    oil_to_level(tick->oil),
                    "bar", 0.0f, OIL_SHUTDOWN_THRESHOLD, scale);
         /* ── STATUS PANEL ──────────────────────────────── */
-        DrawRectangleRec(metrics_area, (Color){13, 16, 26, 255});
-        DrawRectangleLines((int)metrics_area.x, (int)metrics_area.y,
-                           (int)metrics_area.width, (int)metrics_area.height,
-                           (Color){30, 36, 56, 255});
-        draw_text_font(&ui_font, "ENGINE STATUS",
-                       metrics_area.x + 14.0f * scale, metrics_area.y + 10.0f * scale,
-                       12.0f * scale, (Color){68, 82, 118, 255});
-        DrawLine((int)(metrics_area.x + 1), (int)(metrics_area.y + 31.0f * scale),
-                 (int)(metrics_area.x + metrics_area.width - 1), (int)(metrics_area.y + 31.0f * scale),
-                 (Color){24, 29, 48, 255});
+        draw_panel_header(&ui_font, metrics_area, "ENGINE STATUS", scale);
 
         /* Mode (left) + Result/Run (right), same horizontal band */
         {
             float lx = metrics_area.x + 14.0f * scale;
             float rx = metrics_area.x + metrics_area.width * 0.54f;
             float cap_y = metrics_area.y + 38.0f * scale;
-            float cap_fs = 11.0f * scale;
-            float val_fs = 13.0f * scale;
-            float mode_fs = 22.0f * scale;
+            float cap_fs = FS_TINY * scale;
+            float val_fs = FS_KEY_HINT * scale;
+            float mode_fs = FS_MODE * scale;
             char run_val[16];
             Color result_c;
 
             result_c = (strcmp(tick->result, "OK") == 0)
-                           ? (Color){46, 204, 113, 255}
+                           ? COL_OIL /* green  */
                        : (strcmp(tick->result, "WARNING") == 0)
-                           ? (Color){255, 193, 7, 255}
-                           : (Color){220, 53, 69, 255};
+                           ? COL_WARNING   /* amber  */
+                           : COL_SHUTDOWN; /* red   */
 
             /* Left: MODE caption + big mode text */
-            draw_text_font(&ui_font, "MODE", lx, cap_y, cap_fs, (Color){68, 82, 118, 255});
+            draw_text_font(&ui_font, "MODE", lx, cap_y, cap_fs, COL_CAPTION);
             draw_text_font(&ui_font, tick->engine_mode, lx, cap_y + cap_fs + 4.0f * scale,
                            mode_fs, animated_mode_color);
 
             /* Right: RESULT caption + value, then RUN caption + value */
-            draw_text_font(&ui_font, "RESULT", rx, cap_y, cap_fs, (Color){68, 82, 118, 255});
+            draw_text_font(&ui_font, "RESULT", rx, cap_y, cap_fs, COL_CAPTION);
             draw_text_font(&ui_font, tick->result, rx, cap_y + cap_fs + 4.0f * scale, val_fs, result_c);
             draw_text_font(&ui_font, "RUN", rx, cap_y + cap_fs + 4.0f * scale + val_fs + 10.0f * scale,
-                           cap_fs, (Color){68, 82, 118, 255});
+                           cap_fs, COL_CAPTION);
             (void)snprintf(run_val, sizeof(run_val), "%d", tick->run);
             draw_text_font(&ui_font, run_val,
                            rx, cap_y + cap_fs * 2.0f + val_fs + 8.0f * scale + 10.0f * scale,
@@ -1479,12 +1588,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
         DrawLine((int)(metrics_area.x + 14.0f * scale), (int)(metrics_area.y + 110.0f * scale),
                  (int)(metrics_area.x + metrics_area.width - 14.0f * scale),
                  (int)(metrics_area.y + 110.0f * scale),
-                 (Color){24, 29, 48, 255});
+                 COL_SECTION_DIV);
 
         /* Session fault rate */
         draw_text_font(&ui_font, "SESSION FAULT RATE",
                        metrics_area.x + 14.0f * scale, metrics_area.y + 118.0f * scale,
-                       11.0f * scale, (Color){68, 82, 118, 255});
+                       FS_TINY * scale, COL_CAPTION);
         {
             float bx2 = metrics_area.x + 14.0f * scale;
             float bw2 = metrics_area.width - 28.0f * scale;
@@ -1492,37 +1601,15 @@ static void run_visualizer(ScenarioSet *scenario_set)
             float lbl_w2 = 68.0f * scale;
             float tr_x = bx2 + lbl_w2;
             float tr_w = bw2 - lbl_w2 - 52.0f * scale;
-            char warn_txt[20];
-            char shut_txt[20];
 
-            (void)snprintf(warn_txt, sizeof(warn_txt), "%.1f%%", warning_pct);
-            (void)snprintf(shut_txt, sizeof(shut_txt), "%.1f%%", shutdown_pct);
-
-            draw_text_font(&ui_font, "WARNING", bx2, metrics_area.y + 134.0f * scale,
-                           11.0f * scale, (Color){90, 106, 148, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
-                          (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
-                          (int)(tr_w * (warning_pct / 100.0f)), (int)bh2,
-                          (Color){255, 193, 7, 200});
-            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
-                               (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
-            draw_text_font(&ui_font, warn_txt, tr_x + tr_w + 6.0f * scale,
-                           metrics_area.y + 134.0f * scale, 11.0f * scale,
-                           (Color){170, 182, 212, 255});
-
-            draw_text_font(&ui_font, "SHUTDOWN", bx2, metrics_area.y + 148.0f * scale,
-                           11.0f * scale, (Color){90, 106, 148, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
-                          (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
-                          (int)(tr_w * (shutdown_pct / 100.0f)), (int)bh2,
-                          (Color){220, 53, 69, 210});
-            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
-                               (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
-            draw_text_font(&ui_font, shut_txt, tr_x + tr_w + 6.0f * scale,
-                           metrics_area.y + 148.0f * scale, 11.0f * scale,
-                           (Color){170, 182, 212, 255});
+            draw_fault_rate_row(&ui_font, "WARNING", warning_pct,
+                                bx2, tr_x, tr_w, bh2,
+                                metrics_area.y + 134.0f * scale,
+                                COL_WARNING_FILL, scale);
+            draw_fault_rate_row(&ui_font, "SHUTDOWN", shutdown_pct,
+                                bx2, tr_x, tr_w, bh2,
+                                metrics_area.y + 148.0f * scale,
+                                COL_SHUTDOWN_FILL, scale);
         }
 
         /* End of scenario notice */
@@ -1531,13 +1618,13 @@ static void run_visualizer(ScenarioSet *scenario_set)
             DrawLine((int)(metrics_area.x + 14.0f * scale), (int)(metrics_area.y + 172.0f * scale),
                      (int)(metrics_area.x + metrics_area.width - 14.0f * scale),
                      (int)(metrics_area.y + 172.0f * scale),
-                     (Color){24, 29, 48, 255});
+                     COL_SECTION_DIV);
             draw_text_font(&ui_font, "End of scenario",
                            metrics_area.x + 14.0f * scale, metrics_area.y + 180.0f * scale,
-                           12.0f * scale, (Color){255, 220, 100, 255});
+                           FS_SMALL * scale, COL_END_NOTICE);
             draw_text_font(&ui_font, "Press  R  to replay",
                            metrics_area.x + 14.0f * scale, metrics_area.y + 194.0f * scale,
-                           12.0f * scale, (Color){160, 174, 210, 255});
+                           FS_SMALL * scale, COL_REPLAY_HINT);
         }
 
         /* ── TIMELINE + SLIDER ─────────────────────────── */
