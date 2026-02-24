@@ -796,7 +796,7 @@ static float draw_key_hint(const Font *font,
                            float y,
                            float font_size)
 {
-    Color key_color  = (Color){90, 170, 255, 255};
+    Color key_color = (Color){90, 170, 255, 255};
     Color brak_color = (Color){50, 62, 94, 255};
     Color desc_color = (Color){110, 124, 155, 255};
     float cx = x;
@@ -832,8 +832,8 @@ static void draw_meter(const Font *font,
     float ratio;
     int fill_width;
     char value_text[64];
-    float lbl_fs   = 13.0f * scale;
-    float val_fs   = 16.0f * scale;
+    float lbl_fs = 13.0f * scale;
+    float val_fs = 16.0f * scale;
     Vector2 value_size;
     float value_x;
     float value_y;
@@ -911,9 +911,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         draw_text_font(font, tick_label, tl_x, area.y + 10.0f, 14.0f, (Color){140, 155, 186, 255});
     }
 
-    plot_left  = (int)area.x + 52;
+    plot_left = (int)area.x + 52;
     plot_right = (int)(area.x + area.width) - 24;
-    plot_top   = (int)area.y + 48;
+    plot_top = (int)area.y + 48;
     plot_bottom = (int)(area.y + area.height) - 50;
     plot_w = plot_right - plot_left;
     plot_h = plot_bottom - plot_top;
@@ -1023,7 +1023,7 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
 
     /* Compact right-to-left legend with colour dots */
     {
-        float ley  = area.y + 10.0f;
+        float ley = area.y + 10.0f;
         float lfs2 = 13.0f;
         float dot_r = 4.0f;
         float lx = area.x + area.width - 12.0f;
@@ -1077,11 +1077,11 @@ static void draw_slider(const Font *font,
 
     /* Track + knob */
     {
-        int cy  = (int)(slider.y + slider.height * 0.5f);
-        int th  = 6;
-        int tx  = (int)slider.x;
-        int tw  = (int)slider.width;
-        int rx  = 3;
+        int cy = (int)(slider.y + slider.height * 0.5f);
+        int th = 6;
+        int tx = (int)slider.x;
+        int tw = (int)slider.width;
+        int rx = 3;
 
         knob_t = (scenario->tick_count > 1U) ? clamp01(playhead / (float)(scenario->tick_count - 1U)) : 0.0f;
         knob_x = (int)(slider.x + (slider.width * knob_t));
@@ -1189,46 +1189,46 @@ static void run_visualizer(ScenarioSet *scenario_set)
         const TickData *tick;
         int screen_w = GetScreenWidth();
         int screen_h = GetScreenHeight();
-        float scale          = screen_scale(screen_w, screen_h);
-        float pad            = 16.0f * scale;
-        float hdr_h          = 50.0f * scale;
-        float nav_h          = 30.0f * scale;
-        float content_y      = hdr_h + nav_h + 8.0f * scale;
-        float main_h         = 252.0f * scale;
+        float scale = screen_scale(screen_w, screen_h);
+        float pad = 16.0f * scale;
+        float hdr_h = 50.0f * scale;
+        float nav_h = 30.0f * scale;
+        float content_y = hdr_h + nav_h + 8.0f * scale;
+        float main_h = 252.0f * scale;
         float status_panel_w = 310.0f * scale;
-        float col_gap        = 12.0f * scale;
-        float gauges_x       = pad;
-        float gauges_w       = (float)screen_w - (pad * 2.0f) - status_panel_w - col_gap;
-        float status_x       = gauges_x + gauges_w + col_gap;
-        float gc_x           = gauges_x + 14.0f * scale;
-        float gc_w           = gauges_w  - 28.0f * scale;
-        float bar_col_w      = gc_w * 0.68f;
-        float val_col_w      = gc_w - bar_col_w - 10.0f * scale;
-        float val_col_x      = gc_x + bar_col_w + 10.0f * scale;
-        float bar_h          = 22.0f * scale;
-        float row_step       = 42.0f * scale;
-        float m_row0_y       = content_y + 44.0f * scale;
-        float m_row1_y       = m_row0_y + row_step;
-        float m_row2_y       = m_row1_y + row_step;
-        float m_row3_y       = m_row2_y + row_step;
+        float col_gap = 12.0f * scale;
+        float gauges_x = pad;
+        float gauges_w = (float)screen_w - (pad * 2.0f) - status_panel_w - col_gap;
+        float status_x = gauges_x + gauges_w + col_gap;
+        float gc_x = gauges_x + 14.0f * scale;
+        float gc_w = gauges_w - 28.0f * scale;
+        float bar_col_w = gc_w * 0.68f;
+        float val_col_w = gc_w - bar_col_w - 10.0f * scale;
+        float val_col_x = gc_x + bar_col_w + 10.0f * scale;
+        float bar_h = 22.0f * scale;
+        float row_step = 42.0f * scale;
+        float m_row0_y = content_y + 44.0f * scale;
+        float m_row1_y = m_row0_y + row_step;
+        float m_row2_y = m_row1_y + row_step;
+        float m_row3_y = m_row2_y + row_step;
         Rectangle gauges_panel = {gauges_x, content_y, gauges_w, main_h};
         Rectangle metrics_area = {status_x, content_y, status_panel_w, main_h};
-        Rectangle rpm_bar  = {gc_x, m_row0_y, bar_col_w, bar_h};
-        Rectangle rpm_val  = {val_col_x, m_row0_y, val_col_w, bar_h};
+        Rectangle rpm_bar = {gc_x, m_row0_y, bar_col_w, bar_h};
+        Rectangle rpm_val = {val_col_x, m_row0_y, val_col_w, bar_h};
         Rectangle temp_bar = {gc_x, m_row1_y, bar_col_w, bar_h};
         Rectangle temp_val = {val_col_x, m_row1_y, val_col_w, bar_h};
-        Rectangle oil_bar  = {gc_x, m_row2_y, bar_col_w, bar_h};
-        Rectangle oil_val  = {val_col_x, m_row2_y, val_col_w, bar_h};
+        Rectangle oil_bar = {gc_x, m_row2_y, bar_col_w, bar_h};
+        Rectangle oil_val = {val_col_x, m_row2_y, val_col_w, bar_h};
         Rectangle ctrl_bar = {gc_x, m_row3_y, bar_col_w, bar_h};
         Rectangle ctrl_val = {val_col_x, m_row3_y, val_col_w, bar_h};
-        float timeline_y   = content_y + main_h + 10.0f * scale;
+        float timeline_y = content_y + main_h + 10.0f * scale;
         float timeline_h_val = (float)screen_h - timeline_y - pad;
         Rectangle timeline = {pad, timeline_y, (float)screen_w - 2.0f * pad, timeline_h_val};
-        Rectangle slider   = {timeline.x + 54.0f * scale,
-                              timeline.y + timeline.height - 30.0f * scale,
-                              timeline.width - 80.0f * scale,
-                              24.0f * scale};
-        float warning_pct  = 0.0f;
+        Rectangle slider = {timeline.x + 54.0f * scale,
+                            timeline.y + timeline.height - 30.0f * scale,
+                            timeline.width - 80.0f * scale,
+                            24.0f * scale};
+        float warning_pct = 0.0f;
         float shutdown_pct = 0.0f;
 
         compute_cumulative_metrics(scenario, &warning_pct, &shutdown_pct);
@@ -1353,10 +1353,10 @@ static void run_visualizer(ScenarioSet *scenario_set)
 
             (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
                            tick->tick, scenario->tick_count);
-            tick_sz   = MeasureTextEx(ui_font, tick_str, 15.0f * scale, 1.0f);
-            badge_w   = tick_sz.x + 20.0f * scale;
-            badge_x   = (float)screen_w - badge_w - pad;
-            badge_y   = (hdr_h - badge_h) * 0.5f;
+            tick_sz = MeasureTextEx(ui_font, tick_str, 15.0f * scale, 1.0f);
+            badge_w = tick_sz.x + 20.0f * scale;
+            badge_x = (float)screen_w - badge_w - pad;
+            badge_y = (hdr_h - badge_h) * 0.5f;
             DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
                           (Color){20, 25, 40, 255});
             DrawRectangleLines((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h,
@@ -1371,18 +1371,18 @@ static void run_visualizer(ScenarioSet *scenario_set)
         DrawRectangle(0, (int)hdr_h, screen_w, (int)nav_h, (Color){10, 12, 20, 255});
         DrawLine(0, (int)(hdr_h + nav_h), screen_w, (int)(hdr_h + nav_h), (Color){24, 29, 48, 255});
         {
-            float kx   = pad;
-            float ky   = hdr_h + (nav_h - 13.0f * scale) * 0.5f;
-            float kfs  = 13.0f * scale;
+            float kx = pad;
+            float ky = hdr_h + (nav_h - 13.0f * scale) * 0.5f;
+            float kfs = 13.0f * scale;
             float gap2 = 20.0f * scale;
-            char  speed_str[32];
+            char speed_str[32];
             Vector2 sp_sz;
 
-            kx += draw_key_hint(&ui_font, "SPC",   "Pause",   kx, ky, kfs) + gap2;
-            kx += draw_key_hint(&ui_font, "R",     "Restart", kx, ky, kfs) + gap2;
-            kx += draw_key_hint(&ui_font, "UP DN", "Speed",   kx, ky, kfs) + gap2;
-            kx += draw_key_hint(&ui_font, "LT RT", "Step",    kx, ky, kfs) + gap2;
-            kx += draw_key_hint(&ui_font, "TAB",   "Switch",  kx, ky, kfs);
+            kx += draw_key_hint(&ui_font, "SPC", "Pause", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "R", "Restart", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "UP DN", "Speed", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "LT RT", "Step", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "TAB", "Switch", kx, ky, kfs);
             (void)kx;
 
             (void)snprintf(speed_str, sizeof(speed_str), "%.0f tk/s%s",
@@ -1436,20 +1436,20 @@ static void run_visualizer(ScenarioSet *scenario_set)
 
         /* Mode (left) + Result/Run (right), same horizontal band */
         {
-            float lx    = metrics_area.x + 14.0f * scale;
-            float rx    = metrics_area.x + metrics_area.width * 0.54f;
+            float lx = metrics_area.x + 14.0f * scale;
+            float rx = metrics_area.x + metrics_area.width * 0.54f;
             float cap_y = metrics_area.y + 38.0f * scale;
             float cap_fs = 11.0f * scale;
             float val_fs = 13.0f * scale;
             float mode_fs = 22.0f * scale;
-            char  run_val[16];
+            char run_val[16];
             Color result_c;
 
             result_c = (strcmp(tick->result, "OK") == 0)
                            ? (Color){46, 204, 113, 255}
-                           : (strcmp(tick->result, "WARNING") == 0)
-                                 ? (Color){255, 193, 7, 255}
-                                 : (Color){220, 53, 69, 255};
+                       : (strcmp(tick->result, "WARNING") == 0)
+                           ? (Color){255, 193, 7, 255}
+                           : (Color){220, 53, 69, 255};
 
             /* Left: MODE caption + big mode text */
             draw_text_font(&ui_font, "MODE", lx, cap_y, cap_fs, (Color){68, 82, 118, 255});
@@ -1478,14 +1478,14 @@ static void run_visualizer(ScenarioSet *scenario_set)
                        metrics_area.x + 14.0f * scale, metrics_area.y + 118.0f * scale,
                        11.0f * scale, (Color){68, 82, 118, 255});
         {
-            float bx2     = metrics_area.x + 14.0f * scale;
-            float bw2     = metrics_area.width - 28.0f * scale;
-            float bh2     = 9.0f * scale;
-            float lbl_w2  = 68.0f * scale;
-            float tr_x    = bx2 + lbl_w2;
-            float tr_w    = bw2 - lbl_w2 - 52.0f * scale;
-            char  warn_txt[20];
-            char  shut_txt[20];
+            float bx2 = metrics_area.x + 14.0f * scale;
+            float bw2 = metrics_area.width - 28.0f * scale;
+            float bh2 = 9.0f * scale;
+            float lbl_w2 = 68.0f * scale;
+            float tr_x = bx2 + lbl_w2;
+            float tr_w = bw2 - lbl_w2 - 52.0f * scale;
+            char warn_txt[20];
+            char shut_txt[20];
 
             (void)snprintf(warn_txt, sizeof(warn_txt), "%.1f%%", warning_pct);
             (void)snprintf(shut_txt, sizeof(shut_txt), "%.1f%%", shutdown_pct);
