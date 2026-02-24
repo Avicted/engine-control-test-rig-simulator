@@ -44,12 +44,12 @@ static const char *level_to_display(const char *level, int use_color)
     return level;
 }
 
-int log_event(const char *level, const char *message)
+StatusCode log_event(const char *level, const char *message)
 {
     return log_event_with_options(level, message, 0);
 }
 
-int log_event_with_options(const char *level, const char *message, int use_color)
+StatusCode log_event_with_options(const char *level, const char *message, int use_color)
 {
     char buffer[LOG_BUFFER_SIZE];
     char level_buffer[LEVEL_BUFFER_SIZE];
@@ -60,27 +60,27 @@ int log_event_with_options(const char *level, const char *message, int use_color
 
     if ((level == (const char *)0) || (message == (const char *)0))
     {
-        return -1;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     level_written = snprintf(level_buffer, sizeof(level_buffer), "%s", level);
     if ((level_written < 0) || (level_written >= (int)sizeof(level_buffer)))
     {
-        return -1;
+        return STATUS_BUFFER_OVERFLOW;
     }
 
     display_level = level_to_display(level_buffer, use_color);
     written = snprintf(buffer, sizeof(buffer), "[%s] %s\n", display_level, message);
     if ((written < 0) || (written >= (int)sizeof(buffer)))
     {
-        return -1;
+        return STATUS_BUFFER_OVERFLOW;
     }
 
     print_result = fputs(buffer, stdout);
     if (print_result < 0)
     {
-        return -1;
+        return STATUS_IO_ERROR;
     }
 
-    return 0;
+    return STATUS_OK;
 }

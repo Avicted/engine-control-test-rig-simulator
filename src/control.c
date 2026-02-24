@@ -20,18 +20,18 @@ static void update_fault_counter(int fault_active, unsigned int *counter)
     }
 }
 
-static int transition_engine_mode_by_result(EngineState *engine, int evaluation_result)
+static StatusCode transition_engine_mode_by_result(EngineState *engine, int evaluation_result)
 {
     if (engine == (EngineState *)0)
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     if ((engine->mode == ENGINE_STATE_INIT) && (engine->is_running != 0))
     {
-        if (engine_transition_mode(engine, ENGINE_STATE_STARTING) != ENGINE_OK)
+        if (engine_transition_mode(engine, ENGINE_STATE_STARTING) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            return STATUS_INTERNAL_ERROR;
         }
     }
 
@@ -39,9 +39,9 @@ static int transition_engine_mode_by_result(EngineState *engine, int evaluation_
     {
         if ((evaluation_result == ENGINE_WARNING) || (evaluation_result == ENGINE_SHUTDOWN))
         {
-            if (engine_transition_mode(engine, ENGINE_STATE_WARNING) != ENGINE_OK)
+            if (engine_transition_mode(engine, ENGINE_STATE_WARNING) != STATUS_OK)
             {
-                return ENGINE_ERROR;
+                return STATUS_INTERNAL_ERROR;
             }
         }
     }
@@ -49,14 +49,14 @@ static int transition_engine_mode_by_result(EngineState *engine, int evaluation_
     {
         if (evaluation_result == ENGINE_SHUTDOWN)
         {
-            if (engine_transition_mode(engine, ENGINE_STATE_SHUTDOWN) != ENGINE_OK)
+            if (engine_transition_mode(engine, ENGINE_STATE_SHUTDOWN) != STATUS_OK)
             {
-                return ENGINE_ERROR;
+                return STATUS_INTERNAL_ERROR;
             }
         }
     }
 
-    return ENGINE_OK;
+    return STATUS_OK;
 }
 
 static int mode_to_result_code(const EngineState *engine)
@@ -91,15 +91,15 @@ static float clamp_output(float value)
     return value;
 }
 
-int evaluate_engine(EngineState *engine)
+StatusCode evaluate_engine(EngineState *engine, int *evaluation_result)
 {
     int shutdown_fault;
     int warning_fault;
-    int evaluation_result;
+    int eval_result_code;
 
-    if (engine == (EngineState *)0)
+    if ((engine == (EngineState *)0) || (evaluation_result == (int *)0))
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     update_fault_counter((engine->temperature > MAX_TEMP) ? 1 : 0,
@@ -128,32 +128,33 @@ int evaluate_engine(EngineState *engine)
 
     if (shutdown_fault != 0)
     {
-        evaluation_result = ENGINE_SHUTDOWN;
+        eval_result_code = ENGINE_SHUTDOWN;
     }
     else if (warning_fault != 0)
     {
-        evaluation_result = ENGINE_WARNING;
+        eval_result_code = ENGINE_WARNING;
     }
     else
     {
-        evaluation_result = ENGINE_OK;
+        eval_result_code = ENGINE_OK;
     }
 
-    if (transition_engine_mode_by_result(engine, evaluation_result) != ENGINE_OK)
+    if (transition_engine_mode_by_result(engine, eval_result_code) != STATUS_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_INTERNAL_ERROR;
     }
 
-    return mode_to_result_code(engine);
+    *evaluation_result = mode_to_result_code(engine);
+    return STATUS_OK;
 }
 
-int compute_control_output(const EngineState *engine, float *control_output)
+StatusCode compute_control_output(const EngineState *engine, float *control_output)
 {
     float output;
 
     if ((engine == (const EngineState *)0) || (control_output == (float *)0))
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     output = 20.0f;
@@ -162,5 +163,5 @@ int compute_control_output(const EngineState *engine, float *control_output)
     output -= (3.0f - engine->oil_pressure) * 10.0f;
 
     *control_output = clamp_output(output);
-    return ENGINE_OK;
+    return STATUS_OK;
 }

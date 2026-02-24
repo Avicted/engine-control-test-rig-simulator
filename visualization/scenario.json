@@ -2,6 +2,7 @@
   "scenarios": [
     {
       "scenario": "normal_operation",
+      "requirement_id": "REQ-ENG-003",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2200.00, "temp": 76.00, "oil": 3.20, "run": 1, "result": "OK", "control": 31.25, "engine_mode": "STARTING"},
@@ -15,6 +16,7 @@
     },
     {
       "scenario": "overheat_lt_persistence",
+      "requirement_id": "REQ-ENG-001",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2400.00, "temp": 96.00, "oil": 3.10, "run": 1, "result": "OK", "control": 27.25, "engine_mode": "STARTING"},
@@ -28,6 +30,7 @@
     },
     {
       "scenario": "overheat_ge_persistence",
+      "requirement_id": "REQ-ENG-001",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2500.00, "temp": 96.00, "oil": 3.00, "run": 1, "result": "OK", "control": 27.25, "engine_mode": "STARTING"},
@@ -41,6 +44,7 @@
     },
     {
       "scenario": "oil_low_ge_persistence",
+      "requirement_id": "REQ-ENG-002",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2600.00, "temp": 82.00, "oil": 2.40, "run": 1, "result": "OK", "control": 25.75, "engine_mode": "STARTING"},
@@ -54,6 +58,7 @@
     },
     {
       "scenario": "combined_warning_persistence",
+      "requirement_id": "REQ-ENG-003",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 3600.00, "temp": 86.00, "oil": 3.00, "run": 1, "result": "OK", "control": 40.75, "engine_mode": "STARTING"},
@@ -66,6 +71,7 @@
     },
     {
       "scenario": "cold_start",
+      "requirement_id": "REQ-ENG-003",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 800.00, "temp": 44.00, "oil": 3.80, "run": 1, "result": "OK", "control": 31.25, "engine_mode": "STARTING"},
@@ -100,6 +106,7 @@
     },
     {
       "scenario": "high_load",
+      "requirement_id": "REQ-ENG-003",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2000.00, "temp": 70.00, "oil": 3.20, "run": 1, "result": "OK", "control": 30.75, "engine_mode": "STARTING"},
@@ -127,6 +134,7 @@
     },
     {
       "scenario": "oil_drain",
+      "requirement_id": "REQ-ENG-002",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2500.00, "temp": 74.00, "oil": 3.50, "run": 1, "result": "OK", "control": 37.75, "engine_mode": "STARTING"},
@@ -152,6 +160,7 @@
     },
     {
       "scenario": "thermal_runaway",
+      "requirement_id": "REQ-ENG-001",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2200.00, "temp": 68.00, "oil": 3.30, "run": 1, "result": "OK", "control": 34.25, "engine_mode": "STARTING"},
@@ -176,6 +185,7 @@
     },
     {
       "scenario": "intermittent_oil",
+      "requirement_id": "REQ-ENG-002",
       "ticks": [
         {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
         {"tick": 1, "rpm": 2000.00, "temp": 70.00, "oil": 3.40, "run": 1, "result": "OK", "control": 32.75, "engine_mode": "STARTING"},

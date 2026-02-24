@@ -1,365 +1,323 @@
-# Engine Control Test Rig Simulator
+# Engine Control Validation & HIL Test Rig Simulator
 
 A deterministic C11 engine-control validation simulator designed with
 safety-critical principles and CI-driven hardware-in-the-loop (HIL)
 workflows in mind.
 
 This project models a simplified engine state, injects deterministic
-fault conditions, and validates control-system safety responses under
-reproducible scenarios. It is structured to resemble an industrial test
-rig component used in automated validation environments.
+fault conditions, validates control-system safety responses, and
+supports decoupled visualization via a read-only Raylib dashboard.
 
+------------------------------------------------------------------------
 
-## Project Intent
+## Architectural Overview
 
-This simulator is designed to demonstrate:
+                 +---------------------------+
+                 |   testrig (CLI core)      |
+                 |---------------------------|
+                 | Deterministic simulation  |
+                 | Safety validation logic   |
+                 | JSON output               |
+                 +-------------+-------------+
+                               |
+                               | JSON (read-only)
+                               v
+                 +---------------------------+
+                 |   visualizer (Raylib)     |
+                 |---------------------------|
+                 | Read-only JSON playback   |
+                 | Animated dashboard        |
+                 +---------------------------+
 
--   Deterministic control-system validation
--   Reproducible fault injection
--   Safety-oriented C implementation discipline
--   CI-compatible automated testing
--   Hardware-in-the-loop style scenario modeling
--   Static-analysis-friendly code structure
+Strict separation ensures simulation determinism is never affected by
+visualization logic.
 
-The architecture mirrors how engine control functionality can be
-validated in lab environments before deployment to production systems.
+Current core data path:
 
+           +------------------+
+           |  Scenario Input  |
+           +------------------+
+                  |
+                  v
+              +---------+
+              |   HAL   |
+              +---------+
+              | Sensors |
+              | Actuators
+                  |
+                  v
+              +---------+
+              | Engine  |
+              +---------+
+                  |
+                  v
+              +---------+
+              | Control |
+              +---------+
+                  |
+                  v
+              +---------+
+              |  HAL    |
+              +---------+
 
+Visualizer remains read-only and separate from simulation logic.
 
-## Safety-Oriented Design
+------------------------------------------------------------------------
 
-The implementation follows safety-driven C practices inspired by
-aerospace and embedded system standards.
+## Determinism Guarantee
 
-Key characteristics:
+For identical input scenario files:
 
--   Deterministic execution (no randomness, no time dependency)
+-   Sensor values are processed sequentially
+-   State transitions are deterministic
+-   JSON output is reproducible
+-   No system time, randomness, threads, or external IO influence
+    results
+
+This enables reproducible CI regression validation and controlled
+HIL-style replay.
+
+------------------------------------------------------------------------
+
+## Safety-Oriented Design Principles
+
 -   No dynamic memory allocation
--   No recursion and no `goto`
--   Fixed-size test registry (`MAX_TESTS=6`)
+-   No recursion or `goto`
 -   Bounded loops only
--   Explicit pointer validation and status-code returns
+-   Fixed-size buffers and registries
+-   Explicit pointer validation
+-   Status-code-based error handling
 -   Strict compiler diagnostics (`-Werror`)
--   Structured and bounded logging (`snprintf` with checks)
--   No global mutable state
--   CI-safe output mode (color optional, disabled by default)
+-   No hidden global mutable state
+-   CI-safe output mode (color disabled by default)
 
-The goal is predictable, analyzable behavior suitable for automated
-validation pipelines.
+Design prioritizes analyzability and predictability over minimal code
+size.
 
-
+------------------------------------------------------------------------
 
 ## System Model
 
-The simulator models:
+### Inputs
 
--   Engine RPM
--   Engine temperature
--   Oil pressure
--   Engine running state
--   Engine mode state machine (`INIT`, `STARTING`, `RUNNING`, `WARNING`, `SHUTDOWN`)
+-   RPM
+-   Temperature
+-   Oil Pressure
+-   Engine Running State
 
-Control outputs:
+### Engine Modes
 
--   `ENGINE_OK`
--   `ENGINE_WARNING`
--   `ENGINE_SHUTDOWN`
--   `ENGINE_ERROR`
+-   INIT
+-   STARTING
+-   RUNNING
+-   WARNING
+-   SHUTDOWN
 
-Safety thresholds:
+### Control Results
 
--   Temperature limit enforcement with temporal persistence (`TEMP_PERSISTENCE_TICKS`)
--   Oil pressure minimum enforcement with temporal persistence (`OIL_PRESSURE_PERSISTENCE_TICKS`)
--   Combined RPM + temperature warning behavior with persistence (`RPM_TEMP_WARNING_PERSISTENCE_TICKS`)
+-   ENGINE_OK
+-   ENGINE_WARNING
+-   ENGINE_SHUTDOWN
+-   ENGINE_ERROR
 
-This structure mirrors how control logic in real engine control systems
-must respond deterministically to sensor inputs and fault conditions.
+### Temporal Fault Validation
 
+-   Temperature persistence threshold
+-   Oil pressure persistence threshold
+-   Combined RPM + temperature warning persistence
 
+Fault escalation requires deterministic multi-tick persistence,
+mirroring industrial safety logic.
 
-## Architecture
+------------------------------------------------------------------------
 
--   `engine.*`\
-    Deterministic engine state model and update behavior.
+## Scripted Scenario Support
 
--   `sensors.*`\
-    Repeatable fault injection scenarios:
+Deterministic scenarios can be defined without modifying source code:
 
-    -   Normal ramp-up
-    -   Overheat condition
-    -   Oil pressure failure
-    -   Threshold edge cases
+TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1 TICK 2 RPM 2600 TEMP 80 OIL 3.1
+RUN 1 TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1 TICK 4 RPM 3200 TEMP 84.5
+OIL 2.9 RUN 1
 
--   `control.*`\
-    Explicit safety-rule evaluation with bounded branching and no
-    implicit fallthrough.
+Run:
 
--   `test_runner.*`\
-    Fixed-size automated validation harness suitable for CI integration.
-
--   `logger.*`\
-    Structured, bounded logging with buffer protection.
-
--   `main.c`\
-    Strict CLI parsing and argument validation.
-
-Each module is isolated and free of hidden global state, enabling clear
-reasoning and static analysis.
-
-
-
-## Build
-
-Compile in safety mode:
-
-``` bash
-make
-```
-
-Compiler flags:
-
-    -std=c11
-    -Wall -Wextra -Werror -pedantic
-    -O2
-    -fstack-protector-strong
-    -D_FORTIFY_SOURCE=2
-
-Clean:
-
-``` bash
-make clean
-```
-
-
-
-## Run
-
-Run automated validation suite:
-
-``` bash
-./build/testrig --run-all
-```
-
-Optional debugging flags:
-
--   `--show-sim` → print deterministic engine-state snapshots
--   `--show-control` → print computed control outputs
--   `--show-state` → print engine mode and fault counters per tick
--   `--color` → interactive terminal readability (disabled by default
-    for CI)
--   `--json` → emit machine-readable deterministic JSON output
-
-Run individual scenario:
-
-``` bash
-./build/testrig --scenario overheat
-```
-
-Run scripted scenario input file:
-
-``` bash
-./build/testrig --script scenario.txt
-```
-
-Convenience Make targets:
-
-``` bash
-make run-script SCRIPT=scenarios/normal_operation.txt
-make run-script-json SCRIPT=scenarios/normal_operation.txt
-make run-scenarios
-```
-
-Script format (one deterministic tick per line):
-
-```text
-TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1
-TICK 2 RPM 2600 TEMP 80 OIL 3.1 RUN 1
-TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1
-TICK 4 RPM 3200 TEMP 84.5 OIL 2.9 RUN 1
-```
-
-Machine-readable output mode:
-
-``` bash
-./build/testrig --run-all --json
 ./build/testrig --script scenario.txt --json
-```
 
-The JSON output includes per-tick sensor input, control output,
-evaluation result, and engine mode, plus scenario-level expected/actual
-and pass/fail fields.
+Supports CI-driven regression and HIL-style replay workflows.
 
+------------------------------------------------------------------------
 
+## JSON Machine Output
 
-## Raylib Visualization (Decoupled)
+Per-scenario JSON includes:
 
-The simulator remains deterministic and CLI/JSON-only.
-Visualization is a separate read-only program in `visualizer.c`.
+-   Tick-level sensor inputs
+-   Control output
+-   Engine mode
+-   Requirement traceability ID (`requirement_id`)
+-   Evaluation result
+-   Scenario expected vs actual outcome
+-   Pass/fail status
 
-### Generate JSON Input
+Designed for CI gating and automated validation parsing.
 
-Create deterministic JSON output from the simulator:
+------------------------------------------------------------------------
 
-``` bash
-./build/testrig --scenario overheat --json > scenario.json
-```
+## Raylib Visualization (Read-Only)
 
-The visualizer reads the first scenario object in the JSON payload
-(`"scenarios"[0]`) and animates tick data sequentially.
+![Raylib Visualizer Screenshot](visualization/visualizer_example.png)
 
-### Build Visualizer
+The visualization program:
 
-![Visualizer screenshot](visualization/visualizer_example.png)
+-   Reads JSON only
+-   Does not call simulator internals
+-   Cannot modify simulation state
+-   Provides animated dashboard playback
 
-Install Raylib first (distribution package name usually `raylib`), then
-build:
+Features:
 
-``` bash
-clang -std=c11 -Wall -Wextra -Werror -pedantic -O2 -o visualizer visualizer.c -lraylib -lm -lpthread -ldl
-```
+-   Pixel monospaced font
+-   Responsive layout
+-   Threshold overlays
+-   Timeline graphs
+-   Scrubbable tick slider
+-   Multi-scenario switching
+-   Cumulative warning/shutdown statistics
 
-Or use Makefile target:
+Raylib chosen for:
 
-``` bash
-make visualizer
-```
+-   Lightweight C API
+-   Cross-platform support
+-   Minimal dependencies
+-   Suitable for lab dashboard tooling
 
-### Run Visualizer
-
-``` bash
-./visualizer scenario.json
-./visualizer scenario_a.json scenario_b.json
-```
-
-Or via Makefile target:
-
-``` bash
-make run-visualizer JSON=scenario.json
-```
-
-Controls:
-
--   `SPACE` pause/resume
--   `R` replay from first tick
--   `UP`/`DOWN` change playback speed (ticks/sec)
--   `LEFT`/`RIGHT` jump one tick (scrub step)
--   Mouse drag on slider to scrub timeline
--   `TAB` switch loaded scenarios without restarting
-
-Visualizer UI upgrades:
-
--   Uses pixel font from `visualization/PxPlus_IBM_EGA_8x14.ttf`
--   Resizable window with responsive panel/layout scaling
--   Threshold indicators in bars and timeline overlays
--   Timeline grid, axis labels, fault-period highlighting, and control-output line
--   Cumulative warning/shutdown percentage panel per scenario
-
-### Displayed Metrics
-
--   Tick-by-tick animated bars for RPM, temperature, and oil pressure
--   Large engine mode indicator (`RUNNING`, `WARNING`, `SHUTDOWN`, etc.)
--   Per-tick status (`result`) and control output
--   Simple timeline plot for RPM / TEMP / OIL over all ticks
-
-Color mapping:
-
--   `OK` → green
--   `WARNING` → yellow
--   `SHUTDOWN` → red
-
-### Example Terminal Capture
-
-``` text
-$ ./build/testrig --scenario overheat --json > scenario.json
-$ clang -std=c11 -Wall -Wextra -Werror -pedantic -O2 -o visualizer visualizer.c -lraylib -lm -lpthread -ldl
-$ ./visualizer scenario.json
-```
-
-This keeps simulation logic and visualization fully decoupled: the
-visualizer never writes simulator state or calls simulator internals.
-
-
-
-## Example Output
-
-Automated validation:
-
-    [INFO] Running automated validation tests
-    TEST | normal_operation
-    EVAL | expected=OK        actual=OK        => PASS
-    TEST | overheat_lt_persistence
-    EVAL | expected=OK        actual=OK        => PASS
-    TEST | overheat_ge_persistence
-    EVAL | expected=SHUTDOWN  actual=SHUTDOWN  => PASS
-    TEST | oil_low_ge_persistence
-    EVAL | expected=SHUTDOWN  actual=SHUTDOWN  => PASS
-    TEST | combined_warning_persistence
-    EVAL | expected=WARNING   actual=WARNING   => PASS
-    Summary: 5/5 tests passed
-    [INFO] All tests passed
-
-Single scenario:
-
-    [ERROR] Scenario evaluated: SHUTDOWN
-    Scenario 'overheat' result: SHUTDOWN
-
-
+------------------------------------------------------------------------
 
 ## CI Integration Model
 
-The simulator is designed to behave like a lab validation component
-integrated into a Continuous Integration pipeline.
+Exit codes:
 
--   Exit code `0` → all validation tests pass
--   Exit code `1` → any validation test fails
+-   0 → all tests pass
+-   1 → any test fails
 
-CI example:
+Example:
 
-``` bash
-make
-./build/testrig --run-all
-```
+make ./build/testrig --run-all
 
-This mirrors how automated test rigs can gate changes to control
-software before integration into physical hardware environments.
+Intended to behave like a validation component gating control-system
+changes before hardware deployment.
 
+------------------------------------------------------------------------
 
+## Hardware Abstraction Layer
 
-## Hardware-in-the-Loop (HIL) Rationale
+HAL interfaces are defined in `src/hal.h` and implemented in `src/hal.c`.
 
-In real HIL systems:
+-   `hal_init()` / `hal_shutdown()` manage HAL lifecycle
+-   `hal_read_sensors()` is the sensor ingress boundary
+-   `hal_write_actuators()` is the control egress boundary
 
--   A controller is validated against deterministic plant simulations
--   Fault conditions are injected in a controlled and repeatable manner
--   Safety logic must respond predictably
--   Results must be machine-readable and CI-compatible
+The current HAL implementation is deterministic pass-through with strict
+pointer validation and explicit `StatusCode` returns.
 
-This simulator mirrors that workflow by:
+------------------------------------------------------------------------
 
--   Driving deterministic state transitions
--   Injecting reproducible fault conditions
--   Enforcing safety shutdown logic
--   Producing bounded structured output
--   Supporting automated regression testing
+## Requirement Traceability
 
+Requirement IDs are defined in `src/requirements.h` and attached to test
+registry entries.
 
+Console output includes requirement linkage per test, for example:
+
+`REQ-ENG-002 | oil_low_ge_persistence | expected=SHUTDOWN | actual=SHUTDOWN | PASS`
+
+JSON output includes:
+
+`"requirement_id": "REQ-ENG-002"`
+
+------------------------------------------------------------------------
+
+## Error Handling Model
+
+`src/status.h` defines the unified status model:
+
+-   `STATUS_OK`
+-   `STATUS_INVALID_ARGUMENT`
+-   `STATUS_PARSE_ERROR`
+-   `STATUS_IO_ERROR`
+-   `STATUS_BUFFER_OVERFLOW`
+-   `STATUS_INTERNAL_ERROR`
+
+Script parsing and logger/HAL paths use explicit status returns with no
+silent fallthrough.
+
+Strict mode is available via `--strict`.
+
+------------------------------------------------------------------------
+
+## Static Analysis Compatibility
+
+Make targets:
+
+-   `make analyze-cppcheck`
+-   `make analyze-clang-tidy`
+-   `make debug` (AddressSanitizer + UndefinedBehaviorSanitizer)
+
+------------------------------------------------------------------------
+
+## Failure Modes
+
+Common hard-fail conditions:
+
+-   Invalid CLI arguments
+-   Malformed script lines
+-   Non-increasing script tick sequence
+-   File open/close errors
+-   Output buffer overflow checks in formatted writes
+
+These failures return non-zero exit status for CI safety.
+
+------------------------------------------------------------------------
+
+## Design Tradeoffs
+
+This simulator intentionally:
+
+-   Avoids dynamic allocation for analyzability
+-   Uses explicit branching for clarity
+-   Separates presentation from validation logic
+-   Favors deterministic reproducibility over compact code
+
+The goal is robustness and reasoning transparency.
+
+------------------------------------------------------------------------
 
 ## Industrial Relevance
 
-This project demonstrates:
+Demonstrates:
 
 -   Control-logic validation mindset
 -   Fault injection discipline
 -   Deterministic simulation design
--   CI-driven automated validation
--   Defensive C programming in safety-oriented contexts
--   Clean modular lab-style architecture
+-   CI-driven validation workflows
+-   Defensive C programming
+-   Modular lab-style architecture
+-   Decoupled presentation layer
 
-It is intentionally structured to resemble a minimal validation
-component that could exist inside an engine automation laboratory
-pipeline.
+Structured to resemble a minimal automation laboratory validation
+component.
 
+------------------------------------------------------------------------
 
+## Future Extensions
+
+-   Configurable thresholds via JSON
+-   Fault-type classification reporting
+-   CSV export for lab analysis
+-   Replay checksum verification
+-   Module-level unit testing integration
+
+------------------------------------------------------------------------
 
 ## License
 

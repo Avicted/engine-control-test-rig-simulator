@@ -1,6 +1,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "status.h"
+
 #define ENGINE_OK 0
 #define ENGINE_WARNING 1
 #define ENGINE_SHUTDOWN 2
@@ -33,11 +35,11 @@ typedef struct
     unsigned int fault_counters[ENGINE_FAULT_COUNTER_COUNT];
 } EngineState;
 
-int engine_init(EngineState *engine);
-int engine_reset(EngineState *engine);
-int engine_start(EngineState *engine);
-int engine_update(EngineState *engine);
-int engine_transition_mode(EngineState *engine, EngineStateMode target_mode);
-int engine_get_mode_string(const EngineState *engine, const char **mode_string);
+StatusCode engine_init(EngineState *engine);
+StatusCode engine_reset(EngineState *engine);
+StatusCode engine_start(EngineState *engine);
+StatusCode engine_update(EngineState *engine);
+StatusCode engine_transition_mode(EngineState *engine, EngineStateMode target_mode);
+StatusCode engine_get_mode_string(const EngineState *engine, const char **mode_string);
 
 #endif
