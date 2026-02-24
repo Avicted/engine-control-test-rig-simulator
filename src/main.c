@@ -43,7 +43,7 @@ static int print_usage(const char *program_name)
 
     written = snprintf(usage_line,
                        sizeof(usage_line),
-                       "  %s --run-all [--show-sim] [--show-control] [--color]\n",
+                       "  %s --run-all [--show-sim] [--show-control] [--show-state] [--color]\n",
                        program_name);
     if ((written < 0) || (written >= (int)sizeof(usage_line)))
     {
@@ -56,7 +56,7 @@ static int print_usage(const char *program_name)
 
     written = snprintf(usage_line,
                        sizeof(usage_line),
-                       "  %s --scenario <normal|overheat|pressure_failure> [--show-sim] [--show-control] [--color]\n",
+                       "  %s --scenario <normal|overheat|pressure_failure> [--show-sim] [--show-control] [--show-state] [--color]\n",
                        program_name);
     if ((written < 0) || (written >= (int)sizeof(usage_line)))
     {
@@ -71,13 +71,14 @@ static int parse_optional_flags(int argc,
                                 int start_index,
                                 int *show_sim,
                                 int *use_color,
-                                int *show_control)
+                                int *show_control,
+                                int *show_state)
 {
     int index;
     size_t arg_len;
 
     if ((argv == (char **)0) || (show_sim == (int *)0) || (use_color == (int *)0) ||
-        (show_control == (int *)0))
+        (show_control == (int *)0) || (show_state == (int *)0))
     {
         return ENGINE_ERROR;
     }
@@ -90,6 +91,7 @@ static int parse_optional_flags(int argc,
     *show_sim = 0;
     *use_color = 0;
     *show_control = 0;
+    *show_state = 0;
 
     for (index = start_index; (index < argc) && (index < MAX_CLI_ARGS); ++index)
     {
@@ -128,6 +130,14 @@ static int parse_optional_flags(int argc,
             }
             *use_color = 1;
         }
+        else if (strncmp(argv[index], "--show-state", MAX_CLI_ARG_LEN) == 0)
+        {
+            if (*show_state != 0)
+            {
+                return ENGINE_ERROR;
+            }
+            *show_state = 1;
+        }
         else
         {
             return ENGINE_ERROR;
@@ -143,6 +153,7 @@ int main(int argc, char **argv)
     int show_sim;
     int use_color;
     int show_control;
+    int show_state;
 
     if ((argv == (char **)0) || (argc < 1))
     {
@@ -161,12 +172,13 @@ int main(int argc, char **argv)
         if ((arg_len > 0U) && (arg_len < MAX_CLI_ARG_LEN) &&
             (strncmp(argv[1], "--run-all", MAX_CLI_ARG_LEN) == 0))
         {
-            if (parse_optional_flags(argc, argv, 2, &show_sim, &use_color, &show_control) != ENGINE_OK)
+            if (parse_optional_flags(argc, argv, 2, &show_sim, &use_color, &show_control, &show_state) !=
+                ENGINE_OK)
             {
                 (void)print_usage(argv[0]);
                 return 1;
             }
-            return run_all_tests_with_full_options(show_sim, use_color, show_control);
+            return run_all_tests_with_full_options(show_sim, use_color, show_control, show_state);
         }
     }
 
@@ -178,13 +190,15 @@ int main(int argc, char **argv)
         {
             int scenario_result;
 
-            if (parse_optional_flags(argc, argv, 3, &show_sim, &use_color, &show_control) != ENGINE_OK)
+            if (parse_optional_flags(argc, argv, 3, &show_sim, &use_color, &show_control, &show_state) !=
+                ENGINE_OK)
             {
                 (void)print_usage(argv[0]);
                 return 1;
             }
 
-            scenario_result = run_named_scenario_with_full_options(argv[2], show_sim, use_color, show_control);
+            scenario_result =
+                run_named_scenario_with_full_options(argv[2], show_sim, use_color, show_control, show_state);
             if (scenario_result == ENGINE_ERROR)
             {
                 (void)print_usage(argv[0]);
