@@ -1,6 +1,6 @@
 #include "control.h"
 
-static void update_fault_counter(int fault_active, uint32_t *counter)
+static void update_fault_counter(int32_t fault_active, uint32_t *counter)
 {
     if (counter == (uint32_t *)0)
     {

@@ -14,6 +14,10 @@ SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/sensors.c \
        $(SRC_DIR)/control.c \
 	$(SRC_DIR)/script_parser.c \
+	$(SRC_DIR)/scenario_profiles.c \
+	$(SRC_DIR)/scenario_report.c \
+	$(SRC_DIR)/scenario_catalog.c \
+	$(SRC_DIR)/output.c \
        $(SRC_DIR)/test_runner.c \
 	$(SRC_DIR)/logger.c \
 	$(SRC_DIR)/hal.c
