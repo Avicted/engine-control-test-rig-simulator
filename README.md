@@ -1,5 +1,9 @@
 # Engine Control Validation & HIL Test Rig Simulator
 
+> [!WARNING] 
+> Work in progress. Intent is for educational purposes only. Not intended for real-world control applications.
+
+
 A deterministic C11 engine-control validation simulator designed with
 safety-critical principles and CI-driven hardware-in-the-loop (HIL)
 workflows in mind.
