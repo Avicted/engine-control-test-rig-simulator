@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/engine-control-test-rig/scenario-result.schema.json",
+  "title": "Engine Control Scenario Report",
+  "type": "object",
+  "required": ["schema_version", "software_version", "scenarios", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "software_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "scenario",
+          "requirement_id",
+          "ticks",
+          "expected",
+          "actual",
+          "pass"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "scenario": { "type": "string", "minLength": 1 },
+          "requirement_id": { "type": "string", "minLength": 1 },
+          "ticks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["tick", "rpm", "temp", "oil", "run", "result", "control", "engine_mode"],
+              "additionalProperties": false,
+              "properties": {
+                "tick": { "type": "integer", "minimum": 0 },
+                "rpm": { "type": "number", "minimum": 0, "maximum": 10000 },
+                "temp": { "type": "number", "minimum": -50, "maximum": 200 },
+                "oil": { "type": "number", "minimum": 0, "maximum": 10 },
+                "run": { "type": "integer", "enum": [0, 1] },
+                "result": { "type": "string", "enum": ["OK", "WARNING", "SHUTDOWN", "ERROR"] },
+                "control": { "type": "number", "minimum": 0, "maximum": 100 },
+                "engine_mode": {
+                  "type": "string",
+                  "enum": ["INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN", "UNKNOWN"]
+                }
+              }
+            }
+          },
+          "expected": { "type": "string", "enum": ["OK", "WARNING", "SHUTDOWN", "ERROR"] },
+          "actual": { "type": "string", "enum": ["OK", "WARNING", "SHUTDOWN", "ERROR"] },
+          "pass": { "type": "boolean" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["passed", "total"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

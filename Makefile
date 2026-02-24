@@ -3,13 +3,17 @@ CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -fstack-protector-strong -
 BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
+UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
 VISUALIZER_SRC = visualization/visualizer.c
+UNIT_TEST_SRC = tests/unit/test_engine_control.c
+UNIT_TEST_DEPS = $(SRC_DIR)/engine.c $(SRC_DIR)/control.c $(SRC_DIR)/hal.c
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 SRC_DIR = src
 SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/engine.c \
        $(SRC_DIR)/sensors.c \
        $(SRC_DIR)/control.c \
+	$(SRC_DIR)/script_parser.c \
        $(SRC_DIR)/test_runner.c \
 	$(SRC_DIR)/logger.c \
 	$(SRC_DIR)/hal.c
@@ -27,11 +31,16 @@ $(TARGET): $(BUILD_DIR) $(SRCS)
 $(VISUALIZER_TARGET): $(BUILD_DIR) $(VISUALIZER_SRC)
 	$(CC) $(CFLAGS) -o $(VISUALIZER_TARGET) $(VISUALIZER_SRC) $(RAYLIB_LIBS)
 
+$(UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRC) $(UNIT_TEST_DEPS)
+	$(CC) $(CFLAGS) -I$(SRC_DIR) -o $(UNIT_TEST_TARGET) $(UNIT_TEST_SRC) $(UNIT_TEST_DEPS)
+
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean:
 	rm -f $(TARGET)
+	rm -f $(UNIT_TEST_TARGET)
+	rm -f $(VISUALIZER_TARGET)
 
 run-script: $(TARGET)
 	@if [ -z "$(SCRIPT)" ]; then \
@@ -80,4 +89,19 @@ analyze-cppcheck:
 analyze-clang-tidy:
 	clang-tidy src/*.c -checks='-*,clang-analyzer-*,-clang-analyzer-security.*,-clang-analyzer-alpha.*' -warnings-as-errors='*' -- -std=c11
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy
+test-unit: $(UNIT_TEST_TARGET)
+	$(UNIT_TEST_TARGET)
+
+validate-json-contract: $(TARGET)
+	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	$(TARGET) --run-all --json > "$$tmp_json"; \
+	grep -q '"schema_version": "1.0"' "$$tmp_json"; \
+	grep -q '"software_version":' "$$tmp_json"; \
+	grep -q '"requirement_id":' "$$tmp_json"; \
+	grep -q '"ticks":' "$$tmp_json"; \
+	grep -q '"summary": {"passed":' "$$tmp_json"
+
+ci-check: all debug analyze-cppcheck analyze-clang-tidy test-unit validate-json-contract
+	$(TARGET) --run-all --json > /dev/null
+
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy test-unit validate-json-contract ci-check

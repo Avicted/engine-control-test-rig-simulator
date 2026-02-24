@@ -44,15 +44,15 @@ StatusCode engine_transition_mode(EngineState *engine, EngineStateMode target_mo
 
 StatusCode engine_get_mode_string(const EngineState *engine, const char **mode_string)
 {
-    unsigned int mode_index;
+    uint32_t mode_index;
 
     if ((engine == (const EngineState *)0) || (mode_string == (const char **)0))
     {
         return STATUS_INVALID_ARGUMENT;
     }
 
-    mode_index = (unsigned int)engine->mode;
-    if (mode_index >= (unsigned int)(sizeof(engine_mode_str) / sizeof(engine_mode_str[0])))
+    mode_index = (uint32_t)engine->mode;
+    if (mode_index >= (uint32_t)(sizeof(engine_mode_str) / sizeof(engine_mode_str[0])))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -64,7 +64,7 @@ StatusCode engine_get_mode_string(const EngineState *engine, const char **mode_s
 
 StatusCode engine_init(EngineState *engine)
 {
-    int index;
+    int32_t index;
 
     if (engine == (EngineState *)0)
     {
@@ -92,7 +92,7 @@ StatusCode engine_reset(EngineState *engine)
 
 StatusCode engine_start(EngineState *engine)
 {
-    int transition_status;
+    StatusCode transition_status;
 
     if (engine == (EngineState *)0)
     {
@@ -123,7 +123,7 @@ StatusCode engine_update(EngineState *engine)
 
     if (engine->mode == ENGINE_STATE_STARTING)
     {
-        int transition_status;
+        StatusCode transition_status;
 
         transition_status = engine_transition_mode(engine, ENGINE_STATE_RUNNING);
         if (transition_status != STATUS_OK)

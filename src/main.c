@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "engine.h"
@@ -83,18 +84,18 @@ static int print_usage(const char *program_name)
 static StatusCode parse_optional_flags(int argc,
                                        char **argv,
                                        int start_index,
-                                       int *show_sim,
-                                       int *use_color,
-                                       int *show_control,
-                                       int *show_state,
-                                       int *json_output,
-                                       int *strict_mode)
+                                       int32_t *show_sim,
+                                       int32_t *use_color,
+                                       int32_t *show_control,
+                                       int32_t *show_state,
+                                       int32_t *json_output,
+                                       int32_t *strict_mode)
 {
     int index;
 
-    if ((argv == (char **)0) || (show_sim == (int *)0) || (use_color == (int *)0) ||
-        (show_control == (int *)0) || (show_state == (int *)0) || (json_output == (int *)0) ||
-        (strict_mode == (int *)0))
+    if ((argv == (char **)0) || (show_sim == (int32_t *)0) || (use_color == (int32_t *)0) ||
+        (show_control == (int32_t *)0) || (show_state == (int32_t *)0) || (json_output == (int32_t *)0) ||
+        (strict_mode == (int32_t *)0))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -185,12 +186,12 @@ static StatusCode parse_optional_flags(int argc,
 
 int main(int argc, char **argv)
 {
-    int show_sim;
-    int use_color;
-    int show_control;
-    int show_state;
-    int json_output;
-    int strict_mode;
+    int32_t show_sim;
+    int32_t use_color;
+    int32_t show_control;
+    int32_t show_state;
+    int32_t json_output;
+    int32_t strict_mode;
 
     if ((argv == (char **)0) || (argc < 1))
     {
