@@ -1,0 +1,14 @@
+#ifndef STATUS_H
+#define STATUS_H
+
+typedef enum
+{
+    STATUS_OK = 0,
+    STATUS_INVALID_ARGUMENT,
+    STATUS_PARSE_ERROR,
+    STATUS_IO_ERROR,
+    STATUS_BUFFER_OVERFLOW,
+    STATUS_INTERNAL_ERROR
+} StatusCode;
+
+#endif

@@ -11,7 +11,7 @@
 #define OIL_PRESSURE_PERSISTENCE_TICKS 3U
 #define RPM_TEMP_WARNING_PERSISTENCE_TICKS 2U
 
-int evaluate_engine(EngineState *engine);
-int compute_control_output(const EngineState *engine, float *control_output);
+StatusCode evaluate_engine(EngineState *engine, int *evaluation_result);
+StatusCode compute_control_output(const EngineState *engine, float *control_output);
 
 #endif

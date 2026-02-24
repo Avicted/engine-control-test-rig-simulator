@@ -4,7 +4,9 @@
 
 #include "control.h"
 #include "engine.h"
+#include "hal.h"
 #include "logger.h"
+#include "requirements.h"
 #include "test_runner.h"
 
 #define TEST_LINE_BUFFER_SIZE 256
@@ -152,6 +154,7 @@ static int print_tick_details(unsigned int tick,
                               int show_state)
 {
     char line[TEST_LINE_BUFFER_SIZE];
+    HAL_ControlFrame control_frame;
     int written;
 
     if (engine == (const EngineState *)0)
@@ -198,17 +201,14 @@ static int print_tick_details(unsigned int tick,
         float control_output = 0.0f;
 
         control_status = compute_control_output(engine, &control_output);
-        if (control_status != ENGINE_OK)
+        if (control_status != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
 
-        written = snprintf(line, sizeof(line), "CTRL | output=%6.2f%%\n", control_output);
-        if ((written < 0) || (written >= (int)sizeof(line)))
-        {
-            return ENGINE_ERROR;
-        }
-        if (print_line(line) != ENGINE_OK)
+        control_frame.control_output = control_output;
+        control_frame.emit_control_line = 1;
+        if (hal_write_actuators(&control_frame) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -218,7 +218,7 @@ static int print_tick_details(unsigned int tick,
     {
         const char *mode_string;
 
-        if (engine_get_mode_string(engine, &mode_string) != ENGINE_OK)
+        if (engine_get_mode_string(engine, &mode_string) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -257,8 +257,9 @@ static int execute_profile(EngineState *engine,
                            unsigned int tick_report_capacity,
                            unsigned int *tick_report_count)
 {
+    HAL_SensorFrame sensor_frame;
     unsigned int tick_index;
-    int status;
+    StatusCode status;
     int result = ENGINE_OK;
 
     if ((engine == (EngineState *)0) || (rpm_values == (const float *)0) ||
@@ -296,7 +297,7 @@ static int execute_profile(EngineState *engine,
     }
 
     status = engine_start(engine);
-    if (status != ENGINE_OK)
+    if (status != STATUS_OK)
     {
         return ENGINE_ERROR;
     }
@@ -319,13 +320,22 @@ static int execute_profile(EngineState *engine,
             return ENGINE_ERROR;
         }
 
-        engine->is_running = run_flag;
-        engine->rpm = rpm_values[tick_index];
-        engine->temperature = temp_values[tick_index];
-        engine->oil_pressure = oil_values[tick_index];
+        sensor_frame.is_running = run_flag;
+        sensor_frame.rpm = rpm_values[tick_index];
+        sensor_frame.temperature = temp_values[tick_index];
+        sensor_frame.oil_pressure = oil_values[tick_index];
 
-        result = evaluate_engine(engine);
-        if (result == ENGINE_ERROR)
+        if (hal_read_sensors(&sensor_frame) != STATUS_OK)
+        {
+            return ENGINE_ERROR;
+        }
+
+        engine->is_running = sensor_frame.is_running;
+        engine->rpm = sensor_frame.rpm;
+        engine->temperature = sensor_frame.temperature;
+        engine->oil_pressure = sensor_frame.oil_pressure;
+
+        if (evaluate_engine(engine, &result) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -335,7 +345,7 @@ static int execute_profile(EngineState *engine,
             float control_output = 0.0f;
             unsigned int report_index = tick_index + 1U; /* +1: index 0 is the pre-start INIT tick */
 
-            if (compute_control_output(engine, &control_output) != ENGINE_OK)
+            if (compute_control_output(engine, &control_output) != STATUS_OK)
             {
                 return ENGINE_ERROR;
             }
@@ -363,7 +373,7 @@ static int execute_profile(EngineState *engine,
         }
 
         status = engine_update(engine);
-        if (status != ENGINE_OK)
+        if (status != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -707,12 +717,13 @@ static int scenario_intermittent_oil_then_combined_fault(EngineState *engine,
                            tick_report_count);
 }
 
-static int print_json_scenario_object(const char *scenario_name,
-                                      const TickReport *tick_reports,
-                                      unsigned int tick_count,
-                                      int expected_result,
-                                      int actual_result,
-                                      int has_expected)
+static StatusCode print_json_scenario_object(const char *scenario_name,
+                                             const char *requirement_id,
+                                             const TickReport *tick_reports,
+                                             unsigned int tick_count,
+                                             int expected_result,
+                                             int actual_result,
+                                             int has_expected)
 {
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
@@ -720,9 +731,10 @@ static int print_json_scenario_object(const char *scenario_name,
     int expected_value;
     int is_pass;
 
-    if ((scenario_name == (const char *)0) || (tick_reports == (const TickReport *)0))
+    if ((scenario_name == (const char *)0) || (requirement_id == (const char *)0) ||
+        (tick_reports == (const TickReport *)0))
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     expected_value = has_expected != 0 ? expected_result : actual_result;
@@ -730,22 +742,32 @@ static int print_json_scenario_object(const char *scenario_name,
 
     if (print_line("    {\n") != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     written = snprintf(line, sizeof(line), "      \"scenario\": \"%s\",\n", scenario_name);
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        return STATUS_BUFFER_OVERFLOW;
     }
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
+    }
+
+    written = snprintf(line, sizeof(line), "      \"requirement_id\": \"%s\",\n", requirement_id);
+    if ((written < 0) || (written >= (int)sizeof(line)))
+    {
+        return STATUS_BUFFER_OVERFLOW;
+    }
+    if (print_line(line) != ENGINE_OK)
+    {
+        return STATUS_IO_ERROR;
     }
 
     if (print_line("      \"ticks\": [\n") != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     for (index = 0U; index < tick_count; ++index)
@@ -765,50 +787,50 @@ static int print_json_scenario_object(const char *scenario_name,
                            (index + 1U < tick_count) ? "," : "");
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
-            return ENGINE_ERROR;
+            return STATUS_BUFFER_OVERFLOW;
         }
         if (print_line(line) != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            return STATUS_IO_ERROR;
         }
     }
 
     if (print_line("      ],\n") != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     written = snprintf(line, sizeof(line), "      \"expected\": \"%s\",\n", result_to_string(expected_value));
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        return STATUS_BUFFER_OVERFLOW;
     }
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     written = snprintf(line, sizeof(line), "      \"actual\": \"%s\",\n", result_to_string(actual_result));
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        return STATUS_BUFFER_OVERFLOW;
     }
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     written = snprintf(line, sizeof(line), "      \"pass\": %s\n", (is_pass != 0) ? "true" : "false");
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        return STATUS_BUFFER_OVERFLOW;
     }
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
-    return print_line("    }");
+    return (print_line("    }") == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }
 
 static int run_test_case(const TestCase *test_case,
@@ -821,23 +843,22 @@ static int run_test_case(const TestCase *test_case,
 {
     EngineState engine;
     int actual_result;
-    int status;
-    char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    StatusCode status;
     TickReport tick_reports[MAX_PROFILE_TICKS];
     unsigned int tick_report_count = 0U;
     int local_show_sim;
     int local_show_control;
     int local_show_state;
 
-    if ((test_case == (const TestCase *)0) || (test_case->name == (const char *)0) ||
+    if ((test_case == (const TestCase *)0) || (test_case->test_name == (const char *)0) ||
+        (test_case->requirement_id == (const char *)0) ||
         (test_case->scenario_func == (int (*)(EngineState *, int, int, int, void *, unsigned int, unsigned int *))0))
     {
         return 0;
     }
 
     status = engine_reset(&engine);
-    if (status != ENGINE_OK)
+    if (status != STATUS_OK)
     {
         return 0;
     }
@@ -845,16 +866,6 @@ static int run_test_case(const TestCase *test_case,
     if (json_output == 0)
     {
         if (print_test_separator() != ENGINE_OK)
-        {
-            return 0;
-        }
-
-        written = snprintf(line, sizeof(line), "TEST | %s\n", test_case->name);
-        if ((written < 0) || (written >= (int)sizeof(line)))
-        {
-            return 0;
-        }
-        if (print_line(line) != ENGINE_OK)
         {
             return 0;
         }
@@ -886,24 +897,28 @@ static int run_test_case(const TestCase *test_case,
             }
         }
 
-        if (print_json_scenario_object(test_case->name,
+        if (print_json_scenario_object(test_case->test_name,
+                                       test_case->requirement_id,
                                        tick_reports,
                                        tick_report_count,
                                        test_case->expected_result,
                                        actual_result,
-                                       1) != ENGINE_OK)
+                                       1) != STATUS_OK)
         {
             return 0;
         }
     }
     else
     {
+        char line[TEST_LINE_BUFFER_SIZE];
+        int written;
+
         written = snprintf(line,
                            sizeof(line),
-                           "EVAL | expected=%-*s  actual=%-*s  => %s\n",
-                           RESULT_COLUMN_WIDTH,
+                           "%s | %s | expected=%s | actual=%s | %s\n",
+                           test_case->requirement_id,
+                           test_case->test_name,
                            result_to_display_string(test_case->expected_result, use_color),
-                           RESULT_COLUMN_WIDTH,
                            result_to_display_string(actual_result, use_color),
                            pass_fail_display(actual_result == test_case->expected_result, use_color));
         if ((written < 0) || (written >= (int)sizeof(line)))
@@ -937,12 +952,22 @@ static int valid_scenario_name(const char *name)
     return 1;
 }
 
-static int parse_script_line(const char *line,
-                             unsigned int *tick,
-                             float *rpm,
-                             float *temp,
-                             float *oil,
-                             int *run)
+static int validate_hal_negative_cases(void)
+{
+    if (hal_read_sensors((HAL_SensorFrame *)0) != STATUS_INVALID_ARGUMENT)
+    {
+        return ENGINE_ERROR;
+    }
+
+    return ENGINE_OK;
+}
+
+static StatusCode parse_script_line(const char *line,
+                                    unsigned int *tick,
+                                    float *rpm,
+                                    float *temp,
+                                    float *oil,
+                                    int *run)
 {
     char key_tick[8];
     char key_rpm[8];
@@ -961,7 +986,7 @@ static int parse_script_line(const char *line,
     if ((line == (const char *)0) || (tick == (unsigned int *)0) || (rpm == (float *)0) || (temp == (float *)0) ||
         (oil == (float *)0) || (run == (int *)0))
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     parsed = sscanf(line,
@@ -980,13 +1005,13 @@ static int parse_script_line(const char *line,
 
     if (parsed != 10)
     {
-        return ENGINE_ERROR;
+        return STATUS_PARSE_ERROR;
     }
 
     if ((strcmp(key_tick, "TICK") != 0) || (strcmp(key_rpm, "RPM") != 0) || (strcmp(key_temp, "TEMP") != 0) ||
         (strcmp(key_oil, "OIL") != 0) || (strcmp(key_run, "RUN") != 0))
     {
-        return ENGINE_ERROR;
+        return STATUS_PARSE_ERROR;
     }
 
     remaining = line + consumed;
@@ -994,7 +1019,7 @@ static int parse_script_line(const char *line,
     {
         if (!isspace((unsigned char)*remaining))
         {
-            return ENGINE_ERROR;
+            return STATUS_PARSE_ERROR;
         }
         ++remaining;
     }
@@ -1003,7 +1028,7 @@ static int parse_script_line(const char *line,
         (temp_value < SCRIPT_MIN_TEMP) || (temp_value > SCRIPT_MAX_TEMP) || (oil_value < SCRIPT_MIN_OIL) ||
         (oil_value > SCRIPT_MAX_OIL) || ((run_value != 0) && (run_value != 1)))
     {
-        return ENGINE_ERROR;
+        return STATUS_PARSE_ERROR;
     }
 
     *tick = tick_value;
@@ -1012,22 +1037,23 @@ static int parse_script_line(const char *line,
     *oil = oil_value;
     *run = run_value;
 
-    return ENGINE_OK;
+    return STATUS_OK;
 }
 
 static int line_is_whitespace_only(const char *line)
 {
-    const char *cursor;
+    const unsigned char *cursor;
 
     if (line == (const char *)0)
     {
         return 1;
     }
 
-    cursor = line;
+    cursor = (const unsigned char *)line;
     while (*cursor != '\0')
     {
-        if (!isspace((unsigned char)*cursor))
+        if ((*cursor != ' ') && (*cursor != '\t') && (*cursor != '\n') && (*cursor != '\r') &&
+            (*cursor != '\v') && (*cursor != '\f'))
         {
             return 0;
         }
@@ -1037,15 +1063,36 @@ static int line_is_whitespace_only(const char *line)
     return 1;
 }
 
-static int parse_script_file(const char *script_path,
-                             unsigned int *tick_values,
-                             float *rpm_values,
-                             float *temp_values,
-                             float *oil_values,
-                             int *run_values,
-                             unsigned int *tick_count,
-                             char *error_message,
-                             unsigned int error_message_size)
+static int line_is_comment(const char *line)
+{
+    const unsigned char *cursor;
+
+    if (line == (const char *)0)
+    {
+        return 0;
+    }
+
+    cursor = (const unsigned char *)line;
+    while ((*cursor == ' ') || (*cursor == '\t') || (*cursor == '\r') || (*cursor == '\n') ||
+           (*cursor == '\v') || (*cursor == '\f'))
+    {
+        ++cursor;
+    }
+
+    return (*cursor == '#') ? 1 : 0;
+}
+
+static StatusCode parse_script_file(const char *script_path,
+                                    unsigned int *tick_values,
+                                    float *rpm_values,
+                                    float *temp_values,
+                                    float *oil_values,
+                                    int *run_values,
+                                    unsigned int *tick_count,
+                                    char *error_message,
+                                    unsigned int error_message_size,
+                                    int strict_mode,
+                                    unsigned int *parse_warning_count)
 {
     FILE *script_file;
     char line_buffer[SCRIPT_LINE_BUFFER_SIZE];
@@ -1054,19 +1101,21 @@ static int parse_script_file(const char *script_path,
 
     if ((script_path == (const char *)0) || (tick_values == (unsigned int *)0) || (rpm_values == (float *)0) ||
         (temp_values == (float *)0) || (oil_values == (float *)0) || (run_values == (int *)0) ||
-        (tick_count == (unsigned int *)0) || (error_message == (char *)0) || (error_message_size == 0U))
+        (tick_count == (unsigned int *)0) || (error_message == (char *)0) || (error_message_size == 0U) ||
+        (parse_warning_count == (unsigned int *)0))
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     *tick_count = 0U;
+    *parse_warning_count = 0U;
     error_message[0] = '\0';
 
     script_file = fopen(script_path, "r");
     if (script_file == (FILE *)0)
     {
         (void)snprintf(error_message, error_message_size, "Unable to open script file: %s", script_path);
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     while (fgets(line_buffer, sizeof(line_buffer), script_file) != (char *)0)
@@ -1089,11 +1138,27 @@ static int parse_script_file(const char *script_path,
                            line_number,
                            (unsigned int)(SCRIPT_LINE_BUFFER_SIZE - 2U));
             (void)fclose(script_file);
-            return ENGINE_ERROR;
+            return STATUS_PARSE_ERROR;
         }
 
         if (line_is_whitespace_only(line_buffer) != 0)
         {
+            continue;
+        }
+
+        if (line_is_comment(line_buffer) != 0)
+        {
+            if (strict_mode != 0)
+            {
+                (void)snprintf(error_message,
+                               error_message_size,
+                               "Strict mode parse warning at line %u: comments are not allowed",
+                               line_number);
+                (void)fclose(script_file);
+                return STATUS_PARSE_ERROR;
+            }
+
+            *parse_warning_count += 1U;
             continue;
         }
 
@@ -1104,7 +1169,7 @@ static int parse_script_file(const char *script_path,
                            "Script tick count exceeds limit (%u)",
                            (unsigned int)MAX_SCRIPT_TICKS);
             (void)fclose(script_file);
-            return ENGINE_ERROR;
+            return STATUS_PARSE_ERROR;
         }
 
         if (parse_script_line(line_buffer,
@@ -1112,14 +1177,14 @@ static int parse_script_file(const char *script_path,
                               &rpm_values[parsed_ticks],
                               &temp_values[parsed_ticks],
                               &oil_values[parsed_ticks],
-                              &run_values[parsed_ticks]) != ENGINE_OK)
+                              &run_values[parsed_ticks]) != STATUS_OK)
         {
             (void)snprintf(error_message,
                            error_message_size,
                            "Malformed script line %u: expected 'TICK <n> RPM <v> TEMP <v> OIL <v> RUN <0|1>'",
                            line_number);
             (void)fclose(script_file);
-            return ENGINE_ERROR;
+            return STATUS_PARSE_ERROR;
         }
 
         if ((parsed_ticks > 0U) && (tick_values[parsed_ticks] <= tick_values[parsed_ticks - 1U]))
@@ -1130,7 +1195,7 @@ static int parse_script_file(const char *script_path,
                            line_number,
                            tick_values[parsed_ticks]);
             (void)fclose(script_file);
-            return ENGINE_ERROR;
+            return STATUS_PARSE_ERROR;
         }
 
         parsed_ticks += 1U;
@@ -1139,50 +1204,63 @@ static int parse_script_file(const char *script_path,
     if (fclose(script_file) != 0)
     {
         (void)snprintf(error_message, error_message_size, "Failed to close script file: %s", script_path);
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
     if (parsed_ticks == 0U)
     {
         (void)snprintf(error_message, error_message_size, "Script file contains no tick data: %s", script_path);
-        return ENGINE_ERROR;
+        return STATUS_PARSE_ERROR;
     }
 
     *tick_count = parsed_ticks;
-    return ENGINE_OK;
+    return STATUS_OK;
 }
 
-int run_all_tests_with_json(int show_sim, int use_color, int show_control, int show_state, int json_output)
+StatusCode run_all_tests_with_json(int show_sim, int use_color, int show_control, int show_state, int json_output)
 {
     const TestCase tests[MAX_TESTS] = {
-        {"normal_operation", scenario_normal_operation, ENGINE_OK},
-        {"overheat_lt_persistence", scenario_overheat_short_duration, ENGINE_OK},
-        {"overheat_ge_persistence", scenario_overheat_persistent, ENGINE_SHUTDOWN},
-        {"oil_low_ge_persistence", scenario_oil_pressure_persistent, ENGINE_SHUTDOWN},
-        {"combined_warning_persistence", scenario_combined_warning_persistent, ENGINE_WARNING},
-        {"cold_start", scenario_cold_start_warmup_and_ramp, ENGINE_OK},
-        {"high_load", scenario_high_load_warning_then_recovery, ENGINE_WARNING},
-        {"oil_drain", scenario_oil_pressure_gradual_drain, ENGINE_SHUTDOWN},
-        {"thermal_runaway", scenario_thermal_runaway_with_load_surge, ENGINE_SHUTDOWN},
-        {"intermittent_oil", scenario_intermittent_oil_then_combined_fault, ENGINE_WARNING}};
+        {"normal_operation", REQ_ENG_003, scenario_normal_operation, ENGINE_OK},
+        {"overheat_lt_persistence", REQ_ENG_001, scenario_overheat_short_duration, ENGINE_OK},
+        {"overheat_ge_persistence", REQ_ENG_001, scenario_overheat_persistent, ENGINE_SHUTDOWN},
+        {"oil_low_ge_persistence", REQ_ENG_002, scenario_oil_pressure_persistent, ENGINE_SHUTDOWN},
+        {"combined_warning_persistence", REQ_ENG_003, scenario_combined_warning_persistent, ENGINE_WARNING},
+        {"cold_start", REQ_ENG_003, scenario_cold_start_warmup_and_ramp, ENGINE_OK},
+        {"high_load", REQ_ENG_003, scenario_high_load_warning_then_recovery, ENGINE_WARNING},
+        {"oil_drain", REQ_ENG_002, scenario_oil_pressure_gradual_drain, ENGINE_SHUTDOWN},
+        {"thermal_runaway", REQ_ENG_001, scenario_thermal_runaway_with_load_surge, ENGINE_SHUTDOWN},
+        {"intermittent_oil", REQ_ENG_002, scenario_intermittent_oil_then_combined_fault, ENGINE_WARNING}};
     int passed = 0;
     const int total = MAX_TESTS;
     int index;
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
 
+    if (hal_init() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    if (validate_hal_negative_cases() != ENGINE_OK)
+    {
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
+    }
+
     if (json_output == 0)
     {
-        if (log_event_with_options("INFO", "Running automated validation tests", use_color) != 0)
+        if (log_event_with_options("INFO", "Running automated validation tests", use_color) != STATUS_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
     else
     {
         if (print_line("{\n  \"scenarios\": [\n") != ENGINE_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
 
@@ -1201,7 +1279,8 @@ int run_all_tests_with_json(int show_sim, int use_color, int show_control, int s
     {
         if (print_line("\n  ],\n") != ENGINE_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
         written = snprintf(line,
@@ -1211,79 +1290,95 @@ int run_all_tests_with_json(int show_sim, int use_color, int show_control, int s
                            total);
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         if (print_line(line) != ENGINE_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
     else
     {
         if (print_test_separator() != ENGINE_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
         written = snprintf(line, sizeof(line), "Summary: %d/%d tests passed\n", passed, total);
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         if (print_line(line) != ENGINE_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
         if (passed == total)
         {
-            if (log_event_with_options("INFO", "All tests passed", use_color) != 0)
+            if (log_event_with_options("INFO", "All tests passed", use_color) != STATUS_OK)
             {
-                return 1;
+                (void)hal_shutdown();
+                return STATUS_INTERNAL_ERROR;
             }
-            return 0;
+            if (hal_shutdown() != STATUS_OK)
+            {
+                return STATUS_INTERNAL_ERROR;
+            }
+            return STATUS_OK;
         }
 
-        if (log_event_with_options("ERROR", "One or more tests failed", use_color) != 0)
+        if (log_event_with_options("ERROR", "One or more tests failed", use_color) != STATUS_OK)
         {
-            return 1;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
 
-    return (passed == total) ? 0 : 1;
+    if (hal_shutdown() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    return (passed == total) ? STATUS_OK : STATUS_INTERNAL_ERROR;
 }
 
-int run_all_tests_with_full_options(int show_sim, int use_color, int show_control, int show_state)
+StatusCode run_all_tests_with_full_options(int show_sim, int use_color, int show_control, int show_state)
 {
     return run_all_tests_with_json(show_sim, use_color, show_control, show_state, 0);
 }
 
-int run_all_tests(void)
+StatusCode run_all_tests(void)
 {
     return run_all_tests_with_full_options(0, 0, 0, 0);
 }
 
-int run_all_tests_with_output(int show_sim)
+StatusCode run_all_tests_with_output(int show_sim)
 {
     return run_all_tests_with_full_options(show_sim, 0, 0, 0);
 }
 
-int run_all_tests_with_options(int show_sim, int use_color)
+StatusCode run_all_tests_with_options(int show_sim, int use_color)
 {
     return run_all_tests_with_full_options(show_sim, use_color, 0, 0);
 }
 
-int run_named_scenario_with_json(const char *name,
-                                 int show_sim,
-                                 int use_color,
-                                 int show_control,
-                                 int show_state,
-                                 int json_output)
+StatusCode run_named_scenario_with_json(const char *name,
+                                        int show_sim,
+                                        int use_color,
+                                        int show_control,
+                                        int show_state,
+                                        int json_output)
 {
     EngineState engine;
     int result;
-    int status;
-    int log_status;
+    StatusCode status;
+    StatusCode log_status;
     int expected_result;
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
@@ -1293,18 +1388,24 @@ int run_named_scenario_with_json(const char *name,
     int local_show_control;
     int local_show_state;
 
+    if (hal_init() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
     if (valid_scenario_name(name) == 0)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INVALID_ARGUMENT;
     }
 
     status = engine_reset(&engine);
-    if (status != ENGINE_OK)
+    if (status != STATUS_OK)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
-    expected_result = ENGINE_OK;
     local_show_sim = (json_output != 0) ? 0 : show_sim;
     local_show_control = (json_output != 0) ? 0 : show_control;
     local_show_state = (json_output != 0) ? 0 : show_state;
@@ -1399,27 +1500,32 @@ int run_named_scenario_with_json(const char *name,
     }
     else
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INVALID_ARGUMENT;
     }
 
     if (result == ENGINE_ERROR)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
     if (json_output != 0)
     {
         if (print_line("{\n  \"scenarios\": [\n") != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
-        if (print_json_scenario_object(name, tick_reports, tick_report_count, expected_result, result, 1) != ENGINE_OK)
+        if (print_json_scenario_object(name, REQ_ENG_003, tick_reports, tick_report_count, expected_result, result, 1) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         if (print_line("\n  ],\n") != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         written = snprintf(line,
                            sizeof(line),
@@ -1427,13 +1533,19 @@ int run_named_scenario_with_json(const char *name,
                            (result == expected_result) ? 1 : 0);
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         if (print_line(line) != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
-        return result;
+        if (hal_shutdown() != STATUS_OK)
+        {
+            return STATUS_INTERNAL_ERROR;
+        }
+        return STATUS_OK;
     }
 
     if (result == ENGINE_OK)
@@ -1448,9 +1560,10 @@ int run_named_scenario_with_json(const char *name,
     {
         log_status = log_event_with_options("ERROR", "Scenario evaluated: SHUTDOWN", use_color);
     }
-    if (log_status != 0)
+    if (log_status != STATUS_OK)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
     written = snprintf(line,
@@ -1460,46 +1573,54 @@ int run_named_scenario_with_json(const char *name,
                        result_to_display_string(result, use_color));
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
-    return result;
+    if (hal_shutdown() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    return STATUS_OK;
 }
 
-int run_named_scenario_with_full_options(const char *name,
-                                         int show_sim,
-                                         int use_color,
-                                         int show_control,
-                                         int show_state)
+StatusCode run_named_scenario_with_full_options(const char *name,
+                                                int show_sim,
+                                                int use_color,
+                                                int show_control,
+                                                int show_state)
 {
     return run_named_scenario_with_json(name, show_sim, use_color, show_control, show_state, 0);
 }
 
-int run_named_scenario(const char *name)
+StatusCode run_named_scenario(const char *name)
 {
     return run_named_scenario_with_full_options(name, 0, 0, 0, 0);
 }
 
-int run_named_scenario_with_output(const char *name, int show_sim)
+StatusCode run_named_scenario_with_output(const char *name, int show_sim)
 {
     return run_named_scenario_with_full_options(name, show_sim, 0, 0, 0);
 }
 
-int run_named_scenario_with_options(const char *name, int show_sim, int use_color)
+StatusCode run_named_scenario_with_options(const char *name, int show_sim, int use_color)
 {
     return run_named_scenario_with_full_options(name, show_sim, use_color, 0, 0);
 }
 
-int run_scripted_scenario_with_json(const char *script_path,
-                                    int show_sim,
-                                    int use_color,
-                                    int show_control,
-                                    int show_state,
-                                    int json_output)
+StatusCode run_scripted_scenario_with_json(const char *script_path,
+                                           int show_sim,
+                                           int use_color,
+                                           int show_control,
+                                           int show_state,
+                                           int json_output,
+                                           int strict_mode)
 {
     EngineState engine;
     unsigned int tick_values[MAX_SCRIPT_TICKS];
@@ -1508,13 +1629,19 @@ int run_scripted_scenario_with_json(const char *script_path,
     float oil_values[MAX_SCRIPT_TICKS];
     int run_values[MAX_SCRIPT_TICKS];
     unsigned int tick_count = 0U;
+    unsigned int parse_warning_count = 0U;
     TickReport tick_reports[MAX_SCRIPT_TICKS + 1U];
     unsigned int tick_report_count = 0U;
-    int status;
+    StatusCode status;
     int result;
     char error_message[TEST_LINE_BUFFER_SIZE];
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
+
+    if (hal_init() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
 
     if (parse_script_file(script_path,
                           tick_values,
@@ -1524,19 +1651,38 @@ int run_scripted_scenario_with_json(const char *script_path,
                           run_values,
                           &tick_count,
                           error_message,
-                          (unsigned int)sizeof(error_message)) != ENGINE_OK)
+                          (unsigned int)sizeof(error_message),
+                          strict_mode,
+                          &parse_warning_count) != STATUS_OK)
     {
         if (json_output == 0)
         {
             (void)log_event_with_options("ERROR", error_message, use_color);
         }
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_PARSE_ERROR;
     }
 
     status = engine_reset(&engine);
-    if (status != ENGINE_OK)
+    if (status != STATUS_OK)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    if ((strict_mode != 0) && (parse_warning_count > 0U))
+    {
+        (void)hal_shutdown();
+        return STATUS_PARSE_ERROR;
+    }
+
+    if ((strict_mode == 0) && (parse_warning_count > 0U) && (json_output == 0))
+    {
+        if (log_event_with_options("WARN", "Script parse warnings detected and tolerated (non-strict mode)", use_color) != STATUS_OK)
+        {
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
+        }
     }
 
     result = execute_profile(&engine,
@@ -1554,57 +1700,70 @@ int run_scripted_scenario_with_json(const char *script_path,
                              &tick_report_count);
     if (result == ENGINE_ERROR)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
     if (json_output != 0)
     {
         if (print_line("{\n  \"scenarios\": [\n") != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
-        if (print_json_scenario_object("scripted_scenario", tick_reports, tick_report_count, result, result, 1) != ENGINE_OK)
+        if (print_json_scenario_object("scripted_scenario", REQ_ENG_003, tick_reports, tick_report_count, result, result, 1) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
         if (print_line("\n  ],\n") != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
 
         written = snprintf(line, sizeof(line), "  \"summary\": {\"passed\": 1, \"total\": 1}\n}\n");
         if ((written < 0) || (written >= (int)sizeof(line)))
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
         if (print_line(line) != ENGINE_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
-        return result;
+        if (hal_shutdown() != STATUS_OK)
+        {
+            return STATUS_INTERNAL_ERROR;
+        }
+        return STATUS_OK;
     }
 
     if (result == ENGINE_OK)
     {
-        if (log_event_with_options("INFO", "Scripted scenario evaluated: OK", use_color) != 0)
+        if (log_event_with_options("INFO", "Scripted scenario evaluated: OK", use_color) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
     else if (result == ENGINE_WARNING)
     {
-        if (log_event_with_options("WARN", "Scripted scenario evaluated: WARNING", use_color) != 0)
+        if (log_event_with_options("WARN", "Scripted scenario evaluated: WARNING", use_color) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
     else
     {
-        if (log_event_with_options("ERROR", "Scripted scenario evaluated: SHUTDOWN", use_color) != 0)
+        if (log_event_with_options("ERROR", "Scripted scenario evaluated: SHUTDOWN", use_color) != STATUS_OK)
         {
-            return ENGINE_ERROR;
+            (void)hal_shutdown();
+            return STATUS_INTERNAL_ERROR;
         }
     }
 
@@ -1615,13 +1774,20 @@ int run_scripted_scenario_with_json(const char *script_path,
                        result_to_display_string(result, use_color));
     if ((written < 0) || (written >= (int)sizeof(line)))
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
     if (print_line(line) != ENGINE_OK)
     {
-        return ENGINE_ERROR;
+        (void)hal_shutdown();
+        return STATUS_INTERNAL_ERROR;
     }
 
-    return result;
+    if (hal_shutdown() != STATUS_OK)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    return STATUS_OK;
 }

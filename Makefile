@@ -11,9 +11,15 @@ SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/sensors.c \
        $(SRC_DIR)/control.c \
        $(SRC_DIR)/test_runner.c \
-       $(SRC_DIR)/logger.c
+	$(SRC_DIR)/logger.c \
+	$(SRC_DIR)/hal.c
+
+DEBUG_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
 
 all: $(TARGET)
+
+debug: $(BUILD_DIR) $(SRCS)
+	$(CC) $(DEBUG_CFLAGS) -o $(TARGET) $(SRCS)
 
 $(TARGET): $(BUILD_DIR) $(SRCS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
@@ -62,4 +68,16 @@ run-visualizer: $(VISUALIZER_TARGET)
 	fi
 	$(VISUALIZER_TARGET) "$(JSON)"
 
-.PHONY: all clean run-script run-script-json run-scenarios visualizer run-visualizer
+analyze-cppcheck:
+	cppcheck --enable=all --std=c11 --error-exitcode=1 \
+		--suppress=missingIncludeSystem \
+		--suppress=normalCheckLevelMaxBranches \
+		--suppress=checkersReport \
+		--suppress=unusedFunction \
+		--suppress=staticFunction \
+		src/
+
+analyze-clang-tidy:
+	clang-tidy src/*.c -checks='-*,clang-analyzer-*,-clang-analyzer-security.*,-clang-analyzer-alpha.*' -warnings-as-errors='*' -- -std=c11
+
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy
