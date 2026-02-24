@@ -3,7 +3,7 @@
 
 #include "engine.h"
 
-#define MAX_TESTS 5
+#define MAX_TESTS 10
 #define MAX_SCENARIO_NAME_LEN 32
 
 typedef struct

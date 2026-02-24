@@ -191,6 +191,95 @@ and pass/fail fields.
 
 
 
+## Raylib Visualization (Decoupled)
+
+The simulator remains deterministic and CLI/JSON-only.
+Visualization is a separate read-only program in `visualizer.c`.
+
+### Generate JSON Input
+
+Create deterministic JSON output from the simulator:
+
+``` bash
+./build/testrig --scenario overheat --json > scenario.json
+```
+
+The visualizer reads the first scenario object in the JSON payload
+(`"scenarios"[0]`) and animates tick data sequentially.
+
+### Build Visualizer
+
+![Visualizer screenshot](visualization/visualizer_example.png)
+
+Install Raylib first (distribution package name usually `raylib`), then
+build:
+
+``` bash
+clang -std=c11 -Wall -Wextra -Werror -pedantic -O2 -o visualizer visualizer.c -lraylib -lm -lpthread -ldl
+```
+
+Or use Makefile target:
+
+``` bash
+make visualizer
+```
+
+### Run Visualizer
+
+``` bash
+./visualizer scenario.json
+./visualizer scenario_a.json scenario_b.json
+```
+
+Or via Makefile target:
+
+``` bash
+make run-visualizer JSON=scenario.json
+```
+
+Controls:
+
+-   `SPACE` pause/resume
+-   `R` replay from first tick
+-   `UP`/`DOWN` change playback speed (ticks/sec)
+-   `LEFT`/`RIGHT` jump one tick (scrub step)
+-   Mouse drag on slider to scrub timeline
+-   `TAB` switch loaded scenarios without restarting
+
+Visualizer UI upgrades:
+
+-   Uses pixel font from `visualization/PxPlus_IBM_EGA_8x14.ttf`
+-   Resizable window with responsive panel/layout scaling
+-   Threshold indicators in bars and timeline overlays
+-   Timeline grid, axis labels, fault-period highlighting, and control-output line
+-   Cumulative warning/shutdown percentage panel per scenario
+
+### Displayed Metrics
+
+-   Tick-by-tick animated bars for RPM, temperature, and oil pressure
+-   Large engine mode indicator (`RUNNING`, `WARNING`, `SHUTDOWN`, etc.)
+-   Per-tick status (`result`) and control output
+-   Simple timeline plot for RPM / TEMP / OIL over all ticks
+
+Color mapping:
+
+-   `OK` → green
+-   `WARNING` → yellow
+-   `SHUTDOWN` → red
+
+### Example Terminal Capture
+
+``` text
+$ ./build/testrig --scenario overheat --json > scenario.json
+$ clang -std=c11 -Wall -Wextra -Werror -pedantic -O2 -o visualizer visualizer.c -lraylib -lm -lpthread -ldl
+$ ./visualizer scenario.json
+```
+
+This keeps simulation logic and visualization fully decoupled: the
+visualizer never writes simulator state or calls simulator internals.
+
+
+
 ## Example Output
 
 Automated validation:

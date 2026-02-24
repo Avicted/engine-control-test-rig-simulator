@@ -28,7 +28,7 @@ static int safe_print(const char *line)
 
 static int print_usage(const char *program_name)
 {
-    char usage_line[160];
+    char usage_line[256];
     int written;
 
     if (program_name == (const char *)0)
@@ -56,7 +56,7 @@ static int print_usage(const char *program_name)
 
     written = snprintf(usage_line,
                        sizeof(usage_line),
-                       "  %s --scenario <normal|overheat|pressure_failure> [--show-sim] [--show-control] [--show-state] [--color] [--json]\n",
+                       "  %s --scenario <normal|overheat|pressure_failure|cold_start|high_load|oil_drain|thermal_runaway|intermittent_oil> [--show-sim] [--show-control] [--show-state] [--color] [--json]\n",
                        program_name);
     if ((written < 0) || (written >= (int)sizeof(usage_line)))
     {

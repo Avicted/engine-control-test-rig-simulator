@@ -35,14 +35,6 @@ static int transition_engine_mode_by_result(EngineState *engine, int evaluation_
         }
     }
 
-    if (engine->mode == ENGINE_STATE_STARTING)
-    {
-        if (engine_transition_mode(engine, ENGINE_STATE_RUNNING) != ENGINE_OK)
-        {
-            return ENGINE_ERROR;
-        }
-    }
-
     if (engine->mode == ENGINE_STATE_RUNNING)
     {
         if ((evaluation_result == ENGINE_WARNING) || (evaluation_result == ENGINE_SHUTDOWN))

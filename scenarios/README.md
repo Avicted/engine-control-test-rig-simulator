@@ -14,6 +14,19 @@ Included scripts:
 - `overheat_persistent_shutdown.txt` -> expected final result: `SHUTDOWN`
 - `oil_low_persistent_shutdown.txt` -> expected final result: `SHUTDOWN`
 
+Longer scripts (25 ticks or fewer):
+
+- `cold_start_warmup_and_ramp.txt` -> expected final result: `OK`
+  - Cold start from 800 RPM, gradual warm-up through the full operating range, cruise at 3400 RPM, then a symmetric ramp-down. All sensor values remain safely within thresholds throughout.
+- `high_load_warning_then_recovery.txt` -> expected final result: `WARNING`
+  - Ramp to high load where RPM ≥ 3500 and TEMP ≥ 85 holds for two consecutive ticks, triggering the combined-fault WARNING. The engine then decelerates back to safe values, but the state machine keeps the engine in WARNING.
+- `oil_pressure_gradual_drain.txt` -> expected final result: `SHUTDOWN`
+  - All values are healthy while oil pressure drains slowly from 3.5 bar toward critical. Once oil pressure crosses below 2.5 bar for three consecutive ticks the evaluation triggers SHUTDOWN, and the fourth fault tick completes the state transition.
+- `thermal_runaway_with_load_surge.txt` -> expected final result: `SHUTDOWN`
+  - Engine sustains a heavy load at 3400 RPM while temperature climbs steadily from 68 °C past the critical threshold of 95 °C. Three consecutive over-temperature ticks trigger the SHUTDOWN evaluation, and the fourth tick completes the state transition.
+- `intermittent_oil_then_combined_fault.txt` -> expected final result: `WARNING`
+  - Oil pressure briefly dips below 2.5 bar for two ticks (counter reaches 2) then recovers, resetting the counter before shutdown can occur. A subsequent load surge pushes RPM ≥ 3500 and TEMP ≥ 85 for two consecutive ticks, triggering a combined-fault WARNING that the engine does not recover from.
+
 Format per line:
 
 ```text
