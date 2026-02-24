@@ -876,7 +876,22 @@ static void draw_meter(const Font *font,
     draw_text_font(font, value_text, value_x, value_y, val_fs, RAYWHITE);
 }
 
-static void draw_timeline(const Font *font, const ScenarioData *scenario, float playhead, Rectangle area)
+static void draw_dashed_hline(int x0, int x1, int y, int dash, int gap, Color color)
+{
+    int x = x0;
+    while (x < x1)
+    {
+        int end = x + dash;
+        if (end > x1)
+        {
+            end = x1;
+        }
+        DrawLine(x, y, end, y, color);
+        x = end + gap;
+    }
+}
+
+static void draw_timeline(const Font *font, const ScenarioData *scenario, float playhead, Rectangle area, float scale)
 {
     int i;
     int plot_left;
@@ -894,7 +909,7 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
     DrawRectangleRec(area, (Color){12, 15, 24, 255});
     DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, (Color){32, 38, 58, 255});
 
-    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 10.0f, 13.0f, (Color){72, 85, 120, 255});
+    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 8.0f, 18.0f, (Color){72, 85, 120, 255});
     DrawLine((int)(area.x + 1), (int)(area.y + 32.0f),
              (int)(area.x + area.width - 1), (int)(area.y + 32.0f),
              (Color){26, 31, 50, 255});
@@ -906,15 +921,15 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         float tl_x;
         (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick,
                        scenario->ticks[scenario->tick_count - 1U].tick);
-        tl_sz = MeasureTextEx(*font, tick_label, 14.0f, 1.0f);
+        tl_sz = MeasureTextEx(*font, tick_label, 18.0f, 1.0f);
         tl_x = area.x + area.width * 0.5f - tl_sz.x * 0.5f;
-        draw_text_font(font, tick_label, tl_x, area.y + 10.0f, 14.0f, (Color){140, 155, 186, 255});
+        draw_text_font(font, tick_label, tl_x, area.y + 8.0f, 18.0f, (Color){140, 155, 186, 255});
     }
 
     plot_left = (int)area.x + 52;
     plot_right = (int)(area.x + area.width) - 24;
     plot_top = (int)area.y + 48;
-    plot_bottom = (int)(area.y + area.height) - 50;
+    plot_bottom = (int)(area.y + area.height - 30.0f * scale - 30.0f);
     plot_w = plot_right - plot_left;
     plot_h = plot_bottom - plot_top;
 
@@ -951,9 +966,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         int temp_warn_y = plot_bottom - (int)((TEMP_WARNING_THRESHOLD / 120.0f) * (float)plot_h);
         int temp_shutdown_y = plot_bottom - (int)((TEMP_SHUTDOWN_THRESHOLD / 120.0f) * (float)plot_h);
         int oil_shutdown_y = plot_bottom - (int)((OIL_SHUTDOWN_THRESHOLD / 5.0f) * (float)plot_h);
-        DrawLine(plot_left, temp_warn_y, plot_right, temp_warn_y, (Color){255, 193, 7, 120});
-        DrawLine(plot_left, temp_shutdown_y, plot_right, temp_shutdown_y, (Color){220, 53, 69, 130});
-        DrawLine(plot_left, oil_shutdown_y, plot_right, oil_shutdown_y, (Color){220, 53, 69, 90});
+        draw_dashed_hline(plot_left, plot_right, temp_warn_y, 10, 5, (Color){255, 193, 7, 160});
+        draw_dashed_hline(plot_left, plot_right, temp_shutdown_y, 10, 5, (Color){220, 53, 69, 170});
+        draw_dashed_hline(plot_left, plot_right, oil_shutdown_y, 10, 5, (Color){220, 53, 69, 120});
     }
 
     if (scenario->tick_count > 1U)
@@ -1023,9 +1038,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
 
     /* Compact right-to-left legend with colour dots */
     {
-        float ley = area.y + 10.0f;
-        float lfs2 = 13.0f;
-        float dot_r = 4.0f;
+        float ley = area.y + 8.0f;
+        float lfs2 = 17.0f;
+        float dot_r = 5.0f;
         float lx = area.x + area.width - 12.0f;
         Vector2 lsz;
 
@@ -1065,7 +1080,6 @@ static void draw_slider(const Font *font,
                         float restart_feedback_timer)
 {
     float knob_t;
-    float pulse;
     int knob_x;
 
     if ((scenario == NULL) || (scenario->tick_count == 0U))
@@ -1102,26 +1116,28 @@ static void draw_slider(const Font *font,
         DrawCircleLines(knob_x, cy, 11.0f, (Color){48, 128, 220, 200});
     }
 
-    pulse = clamp01(restart_feedback_timer / 0.6f);
-    if (pulse > 0.0f)
-    {
-        Color flash = (Color){80, 180, 255, (unsigned char)(50 + (int)(120.0f * pulse))};
-        DrawRectangle((int)slider.x, (int)slider.y, (int)slider.width, (int)slider.height, flash);
-    }
+    (void)restart_feedback_timer;
 }
 
-static void compute_cumulative_metrics(const ScenarioData *scenario, float *warning_pct, float *shutdown_pct)
+static void compute_cumulative_metrics(const ScenarioData *scenario, float playhead, float *warning_pct, float *shutdown_pct)
 {
     unsigned int i;
     unsigned int warn_count = 0U;
     unsigned int shut_count = 0U;
+    unsigned int active_count;
 
     if ((scenario == NULL) || (warning_pct == NULL) || (shutdown_pct == NULL) || (scenario->tick_count == 0U))
     {
         return;
     }
 
-    for (i = 0U; i < scenario->tick_count; ++i)
+    active_count = (unsigned int)(playhead + 0.5f) + 1U;
+    if (active_count > scenario->tick_count)
+    {
+        active_count = scenario->tick_count;
+    }
+
+    for (i = 0U; i < active_count; ++i)
     {
         SeverityLevel level = mode_to_level(scenario->ticks[i].engine_mode, scenario->ticks[i].result);
         if (level == LEVEL_WARNING)
@@ -1134,8 +1150,8 @@ static void compute_cumulative_metrics(const ScenarioData *scenario, float *warn
         }
     }
 
-    *warning_pct = (100.0f * (float)warn_count) / (float)scenario->tick_count;
-    *shutdown_pct = (100.0f * (float)shut_count) / (float)scenario->tick_count;
+    *warning_pct = (100.0f * (float)warn_count) / (float)active_count;
+    *shutdown_pct = (100.0f * (float)shut_count) / (float)active_count;
 }
 
 static float screen_scale(int width, int height)
@@ -1210,7 +1226,6 @@ static void run_visualizer(ScenarioSet *scenario_set)
         float m_row0_y = content_y + 44.0f * scale;
         float m_row1_y = m_row0_y + row_step;
         float m_row2_y = m_row1_y + row_step;
-        float m_row3_y = m_row2_y + row_step;
         Rectangle gauges_panel = {gauges_x, content_y, gauges_w, main_h};
         Rectangle metrics_area = {status_x, content_y, status_panel_w, main_h};
         Rectangle rpm_bar = {gc_x, m_row0_y, bar_col_w, bar_h};
@@ -1219,19 +1234,17 @@ static void run_visualizer(ScenarioSet *scenario_set)
         Rectangle temp_val = {val_col_x, m_row1_y, val_col_w, bar_h};
         Rectangle oil_bar = {gc_x, m_row2_y, bar_col_w, bar_h};
         Rectangle oil_val = {val_col_x, m_row2_y, val_col_w, bar_h};
-        Rectangle ctrl_bar = {gc_x, m_row3_y, bar_col_w, bar_h};
-        Rectangle ctrl_val = {val_col_x, m_row3_y, val_col_w, bar_h};
         float timeline_y = content_y + main_h + 10.0f * scale;
         float timeline_h_val = (float)screen_h - timeline_y - pad;
         Rectangle timeline = {pad, timeline_y, (float)screen_w - 2.0f * pad, timeline_h_val};
-        Rectangle slider = {timeline.x + 54.0f * scale,
+        Rectangle slider = {timeline.x + 52.0f,
                             timeline.y + timeline.height - 30.0f * scale,
-                            timeline.width - 80.0f * scale,
+                            timeline.width - 76.0f,
                             24.0f * scale};
         float warning_pct = 0.0f;
         float shutdown_pct = 0.0f;
 
-        compute_cumulative_metrics(scenario, &warning_pct, &shutdown_pct);
+        compute_cumulative_metrics(scenario, playhead, &warning_pct, &shutdown_pct);
 
         if (IsKeyPressed(KEY_SPACE))
         {
@@ -1417,11 +1430,6 @@ static void run_visualizer(ScenarioSet *scenario_set)
                    oil_bar, oil_val,
                    oil_to_level(tick->oil),
                    "bar", 0.0f, OIL_SHUTDOWN_THRESHOLD, scale);
-        draw_meter(&ui_font, "Control Output", tick->control, 100.0f,
-                   ctrl_bar, ctrl_val,
-                   LEVEL_OK,
-                   "%", 0.0f, 0.0f, scale);
-
         /* ── STATUS PANEL ──────────────────────────────── */
         DrawRectangleRec(metrics_area, (Color){13, 16, 26, 255});
         DrawRectangleLines((int)metrics_area.x, (int)metrics_area.y,
@@ -1463,7 +1471,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
                            cap_fs, (Color){68, 82, 118, 255});
             (void)snprintf(run_val, sizeof(run_val), "%d", tick->run);
             draw_text_font(&ui_font, run_val,
-                           rx, cap_y + cap_fs * 2.0f + val_fs + 14.0f * scale + 10.0f * scale,
+                           rx, cap_y + cap_fs * 2.0f + val_fs + 8.0f * scale + 10.0f * scale,
                            val_fs, RAYWHITE);
         }
 
@@ -1490,30 +1498,30 @@ static void run_visualizer(ScenarioSet *scenario_set)
             (void)snprintf(warn_txt, sizeof(warn_txt), "%.1f%%", warning_pct);
             (void)snprintf(shut_txt, sizeof(shut_txt), "%.1f%%", shutdown_pct);
 
-            draw_text_font(&ui_font, "WARNING", bx2, metrics_area.y + 130.0f * scale,
+            draw_text_font(&ui_font, "WARNING", bx2, metrics_area.y + 134.0f * scale,
                            11.0f * scale, (Color){90, 106, 148, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
                           (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
                           (int)(tr_w * (warning_pct / 100.0f)), (int)bh2,
                           (Color){255, 193, 7, 200});
-            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 130.0f * scale),
+            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 134.0f * scale),
                                (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
             draw_text_font(&ui_font, warn_txt, tr_x + tr_w + 6.0f * scale,
-                           metrics_area.y + 130.0f * scale, 11.0f * scale,
+                           metrics_area.y + 134.0f * scale, 11.0f * scale,
                            (Color){170, 182, 212, 255});
 
-            draw_text_font(&ui_font, "SHUTDOWN", bx2, metrics_area.y + 151.0f * scale,
+            draw_text_font(&ui_font, "SHUTDOWN", bx2, metrics_area.y + 148.0f * scale,
                            11.0f * scale, (Color){90, 106, 148, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
                           (int)tr_w, (int)bh2, (Color){18, 22, 34, 255});
-            DrawRectangle((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+            DrawRectangle((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
                           (int)(tr_w * (shutdown_pct / 100.0f)), (int)bh2,
                           (Color){220, 53, 69, 210});
-            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 151.0f * scale),
+            DrawRectangleLines((int)tr_x, (int)(metrics_area.y + 148.0f * scale),
                                (int)tr_w, (int)bh2, (Color){38, 44, 64, 255});
             draw_text_font(&ui_font, shut_txt, tr_x + tr_w + 6.0f * scale,
-                           metrics_area.y + 151.0f * scale, 11.0f * scale,
+                           metrics_area.y + 148.0f * scale, 11.0f * scale,
                            (Color){170, 182, 212, 255});
         }
 
@@ -1533,7 +1541,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
         }
 
         /* ── TIMELINE + SLIDER ─────────────────────────── */
-        draw_timeline(&ui_font, scenario, playhead, timeline);
+        draw_timeline(&ui_font, scenario, playhead, timeline, scale);
         draw_slider(&ui_font, slider, scenario, playhead, restart_feedback_timer);
 
         EndDrawing();
