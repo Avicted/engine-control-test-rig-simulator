@@ -1,7 +1,7 @@
 # Engine Control Validation & HIL Test Rig Simulator
 
 > [!WARNING] 
-> Work in progress. Intent is for educational purposes only. Not intended for real-world control applications.
+> Work in progress. Intended for educational purposes only. Not intended for real-world control applications.
 
 
 A deterministic C11 engine-control validation simulator designed with
@@ -12,7 +12,7 @@ This project models a simplified engine state, injects deterministic
 fault conditions, validates control-system safety responses, and
 supports decoupled visualization via a read-only Raylib dashboard.
 
-------------------------------------------------------------------------
+
 
 ## Architectural Overview
 
@@ -43,11 +43,12 @@ Current core data path:
            +------------------+
                   |
                   v
-              +---------+
-              |   HAL   |
-              +---------+
-              | Sensors |
-              | Actuators
+              +-----------+
+              |   HAL     |
+              +-----------+
+              | Sensors   |
+              | Actuators |
+              +-----------+
                   |
                   v
               +---------+
@@ -66,7 +67,8 @@ Current core data path:
 
 Visualizer remains read-only and separate from simulation logic.
 
-------------------------------------------------------------------------
+
+
 
 ## Determinism Guarantee
 
@@ -75,13 +77,14 @@ For identical input scenario files:
 -   Sensor values are processed sequentially
 -   State transitions are deterministic
 -   JSON output is reproducible
--   No system time, randomness, threads, or external IO influence
+-   No system time, randomness, threads, or external I/O influence
     results
 
 This enables reproducible CI regression validation and controlled
 HIL-style replay.
 
-------------------------------------------------------------------------
+
+
 
 ## Safety-Oriented Design Principles
 
@@ -98,7 +101,8 @@ HIL-style replay.
 Design prioritizes analyzability and predictability over minimal code
 size.
 
-------------------------------------------------------------------------
+
+
 
 ## System Model
 
@@ -133,28 +137,36 @@ size.
 Fault escalation requires deterministic multi-tick persistence,
 mirroring industrial safety logic.
 
-------------------------------------------------------------------------
+
+
 
 ## Scripted Scenario Support
 
 Deterministic scenarios can be defined without modifying source code:
 
-TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1 TICK 2 RPM 2600 TEMP 80 OIL 3.1
-RUN 1 TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1 TICK 4 RPM 3200 TEMP 84.5
-OIL 2.9 RUN 1
+```text
+TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1 
+TICK 2 RPM 2600 TEMP 80 OIL 3.1 RUN 1 
+TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1 
+TICK 4 RPM 3200 TEMP 84.5 OIL 2.9 RUN 1
+```
 
 Run:
 
+```bash
 ./build/testrig --script scenario.txt --json
+```
 
 Supports CI-driven regression and HIL-style replay workflows.
 
-------------------------------------------------------------------------
+
+
 
 ## JSON Machine Output
 
 Per-scenario JSON includes:
 
+-   Top-level contract metadata (`schema_version`, `software_version`)
 -   Tick-level sensor inputs
 -   Control output
 -   Engine mode
@@ -165,7 +177,11 @@ Per-scenario JSON includes:
 
 Designed for CI gating and automated validation parsing.
 
-------------------------------------------------------------------------
+Formal schema is provided at
+`visualization/schema/scenario-result.schema.json`.
+
+
+
 
 ## Raylib Visualization (Read-Only)
 
@@ -195,7 +211,8 @@ Raylib chosen for:
 -   Minimal dependencies
 -   Suitable for lab dashboard tooling
 
-------------------------------------------------------------------------
+
+
 
 ## CI Integration Model
 
@@ -206,12 +223,15 @@ Exit codes:
 
 Example:
 
-make ./build/testrig --run-all
+```bash
+./build/testrig --run-all
+```
 
 Intended to behave like a validation component gating control-system
 changes before hardware deployment.
 
-------------------------------------------------------------------------
+
+
 
 ## Hardware Abstraction Layer
 
@@ -219,12 +239,15 @@ HAL interfaces are defined in `src/hal.h` and implemented in `src/hal.c`.
 
 -   `hal_init()` / `hal_shutdown()` manage HAL lifecycle
 -   `hal_read_sensors()` is the sensor ingress boundary
+-   `hal_apply_sensors()` is the validated sensor-to-engine state boundary
+-   `hal_receive_bus()` / `hal_transmit_bus()` define deterministic bus interfaces
 -   `hal_write_actuators()` is the control egress boundary
 
 The current HAL implementation is deterministic pass-through with strict
 pointer validation and explicit `StatusCode` returns.
 
-------------------------------------------------------------------------
+
+
 
 ## Requirement Traceability
 
@@ -239,7 +262,11 @@ JSON output includes:
 
 `"requirement_id": "REQ-ENG-002"`
 
-------------------------------------------------------------------------
+Formal requirement mapping matrix is maintained in
+`docs/requirements_traceability_matrix.md`.
+
+
+
 
 ## Error Handling Model
 
@@ -255,9 +282,13 @@ JSON output includes:
 Script parsing and logger/HAL paths use explicit status returns with no
 silent fallthrough.
 
+Script ingestion is isolated in `src/script_parser.c` / `src/script_parser.h`,
+keeping file/text parsing outside the simulation execution loop.
+
 Strict mode is available via `--strict`.
 
-------------------------------------------------------------------------
+
+
 
 ## Static Analysis Compatibility
 
@@ -266,8 +297,12 @@ Make targets:
 -   `make analyze-cppcheck`
 -   `make analyze-clang-tidy`
 -   `make debug` (AddressSanitizer + UndefinedBehaviorSanitizer)
+-   `make test-unit`
+-   `make validate-json-contract`
+-   `make ci-check`
 
-------------------------------------------------------------------------
+
+
 
 ## Failure Modes
 
@@ -281,7 +316,8 @@ Common hard-fail conditions:
 
 These failures return non-zero exit status for CI safety.
 
-------------------------------------------------------------------------
+
+
 
 ## Design Tradeoffs
 
@@ -294,7 +330,8 @@ This simulator intentionally:
 
 The goal is robustness and reasoning transparency.
 
-------------------------------------------------------------------------
+
+
 
 ## Industrial Relevance
 
@@ -311,7 +348,8 @@ Demonstrates:
 Structured to resemble a minimal automation laboratory validation
 component.
 
-------------------------------------------------------------------------
+
+
 
 ## Future Extensions
 
@@ -321,7 +359,8 @@ component.
 -   Replay checksum verification
 -   Module-level unit testing integration
 
-------------------------------------------------------------------------
+
+
 
 ## License
 

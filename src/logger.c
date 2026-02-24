@@ -21,7 +21,7 @@ static int safe_level_equal(const char *lhs, const char *rhs)
     return (strcmp(lhs, rhs) == 0) ? 1 : 0;
 }
 
-static const char *level_to_display(const char *level, int use_color)
+static const char *level_to_display(const char *level, int32_t use_color)
 {
     if (use_color == 0)
     {
@@ -49,7 +49,7 @@ StatusCode log_event(const char *level, const char *message)
     return log_event_with_options(level, message, 0);
 }
 
-StatusCode log_event_with_options(const char *level, const char *message, int use_color)
+StatusCode log_event_with_options(const char *level, const char *message, int32_t use_color)
 {
     char buffer[LOG_BUFFER_SIZE];
     char level_buffer[LEVEL_BUFFER_SIZE];

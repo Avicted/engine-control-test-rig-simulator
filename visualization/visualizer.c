@@ -1,4 +1,6 @@
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +16,8 @@
 #define MAX_SCENARIO_NAME 64U
 #define MAX_MODE_NAME 16U
 #define MAX_SCENARIOS 32U
+
+#define EXPECTED_SCHEMA_VERSION "1.0"
 
 #define MAX_RPM 10000.0f
 #define MIN_TEMP -50.0f
@@ -256,6 +260,8 @@ static int parse_uint_value(const char *object_start, const char *key, unsigned 
 {
     const char *key_pos;
     const char *value_start;
+    char *endptr;
+    unsigned long parsed;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -274,13 +280,35 @@ static int parse_uint_value(const char *object_start, const char *key, unsigned 
         return 0;
     }
 
-    return (sscanf(value_start, "%u", out) == 1) ? 1 : 0;
+    if ((*value_start == '-') || (*value_start == '+'))
+    {
+        return 0;
+    }
+
+    errno = 0;
+    parsed = strtoul(value_start, &endptr, 10);
+    if ((errno != 0) || (endptr == value_start) || ((parsed == ULONG_MAX) && (errno != 0)) ||
+        (parsed > UINT_MAX))
+    {
+        return 0;
+    }
+
+    endptr = (char *)skip_ws(endptr);
+    if ((*endptr != ',') && (*endptr != '}') && (*endptr != ']') && (*endptr != '\0'))
+    {
+        return 0;
+    }
+
+    *out = (unsigned int)parsed;
+    return 1;
 }
 
 static int parse_int_value(const char *object_start, const char *key, int *out)
 {
     const char *key_pos;
     const char *value_start;
+    char *endptr;
+    long parsed;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -299,13 +327,29 @@ static int parse_int_value(const char *object_start, const char *key, int *out)
         return 0;
     }
 
-    return (sscanf(value_start, "%d", out) == 1) ? 1 : 0;
+    errno = 0;
+    parsed = strtol(value_start, &endptr, 10);
+    if ((errno != 0) || (endptr == value_start) || (parsed < INT_MIN) || (parsed > INT_MAX))
+    {
+        return 0;
+    }
+
+    endptr = (char *)skip_ws(endptr);
+    if ((*endptr != ',') && (*endptr != '}') && (*endptr != ']') && (*endptr != '\0'))
+    {
+        return 0;
+    }
+
+    *out = (int)parsed;
+    return 1;
 }
 
 static int parse_float_value(const char *object_start, const char *key, float *out)
 {
     const char *key_pos;
     const char *value_start;
+    char *endptr;
+    float parsed;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -324,7 +368,21 @@ static int parse_float_value(const char *object_start, const char *key, float *o
         return 0;
     }
 
-    return (sscanf(value_start, "%f", out) == 1) ? 1 : 0;
+    errno = 0;
+    parsed = strtof(value_start, &endptr);
+    if ((errno != 0) || (endptr == value_start) || !isfinite(parsed))
+    {
+        return 0;
+    }
+
+    endptr = (char *)skip_ws(endptr);
+    if ((*endptr != ',') && (*endptr != '}') && (*endptr != ']') && (*endptr != '\0'))
+    {
+        return 0;
+    }
+
+    *out = parsed;
+    return 1;
 }
 
 static const char *find_matching_brace(const char *start)
@@ -537,6 +595,8 @@ static int parse_scenarios_json(const char *json_text,
                                 unsigned int max_scenarios,
                                 unsigned int *parsed_count)
 {
+    char schema_version[16];
+    char software_version[32];
     const char *scenarios_key;
     const char *array_start;
     const char *cursor;
@@ -544,6 +604,26 @@ static int parse_scenarios_json(const char *json_text,
     unsigned int scenario_count;
 
     if ((json_text == NULL) || (scenarios == NULL) || (parsed_count == NULL) || (max_scenarios == 0U))
+    {
+        return 0;
+    }
+
+    if (parse_quoted_value(json_text, "\"schema_version\"", schema_version, sizeof(schema_version)) == 0)
+    {
+        return 0;
+    }
+
+    if (strcmp(schema_version, EXPECTED_SCHEMA_VERSION) != 0)
+    {
+        return 0;
+    }
+
+    if (parse_quoted_value(json_text, "\"software_version\"", software_version, sizeof(software_version)) == 0)
+    {
+        return 0;
+    }
+
+    if (software_version[0] == '\0')
     {
         return 0;
     }
@@ -603,6 +683,11 @@ static int parse_scenarios_json(const char *json_text,
             return 0;
         }
 
+        if (find_key(scenario_object_start, "\"requirement_id\"") == NULL)
+        {
+            return 0;
+        }
+
         ticks_key = strstr(scenario_object_start, "\"ticks\"");
         if ((ticks_key == NULL) || (ticks_key > scenario_object_end))
         {
@@ -647,6 +732,13 @@ static int parse_scenarios_json(const char *json_text,
 
             if (parse_tick_object(obj_start,
                                   &scenarios[scenario_count].ticks[scenarios[scenario_count].tick_count]) == 0)
+            {
+                return 0;
+            }
+
+            if ((scenarios[scenario_count].tick_count > 0U) &&
+                (scenarios[scenario_count].ticks[scenarios[scenario_count].tick_count].tick <=
+                 scenarios[scenario_count].ticks[scenarios[scenario_count].tick_count - 1U].tick))
             {
                 return 0;
             }

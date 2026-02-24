@@ -1,8 +1,8 @@
 #include "control.h"
 
-static void update_fault_counter(int fault_active, unsigned int *counter)
+static void update_fault_counter(int fault_active, uint32_t *counter)
 {
-    if (counter == (unsigned int *)0)
+    if (counter == (uint32_t *)0)
     {
         return;
     }
@@ -20,7 +20,7 @@ static void update_fault_counter(int fault_active, unsigned int *counter)
     }
 }
 
-static StatusCode transition_engine_mode_by_result(EngineState *engine, int evaluation_result)
+static StatusCode transition_engine_mode_by_result(EngineState *engine, int32_t evaluation_result)
 {
     if (engine == (EngineState *)0)
     {
@@ -59,7 +59,7 @@ static StatusCode transition_engine_mode_by_result(EngineState *engine, int eval
     return STATUS_OK;
 }
 
-static int mode_to_result_code(const EngineState *engine)
+static int32_t mode_to_result_code(const EngineState *engine)
 {
     if (engine == (const EngineState *)0)
     {
@@ -91,13 +91,13 @@ static float clamp_output(float value)
     return value;
 }
 
-StatusCode evaluate_engine(EngineState *engine, int *evaluation_result)
+StatusCode evaluate_engine(EngineState *engine, int32_t *evaluation_result)
 {
-    int shutdown_fault;
-    int warning_fault;
-    int eval_result_code;
+    int32_t shutdown_fault;
+    int32_t warning_fault;
+    int32_t eval_result_code;
 
-    if ((engine == (EngineState *)0) || (evaluation_result == (int *)0))
+    if ((engine == (EngineState *)0) || (evaluation_result == (int32_t *)0))
     {
         return STATUS_INVALID_ARGUMENT;
     }

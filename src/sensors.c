@@ -1,6 +1,6 @@
 #include "sensors.h"
 
-int scenario_normal_ramp_up(EngineState *engine)
+int32_t scenario_normal_ramp_up(EngineState *engine)
 {
     if (engine == (EngineState *)0)
     {
@@ -31,7 +31,7 @@ int scenario_normal_ramp_up(EngineState *engine)
     return ENGINE_OK;
 }
 
-int scenario_overheat(EngineState *engine)
+int32_t scenario_overheat(EngineState *engine)
 {
     if (engine == (EngineState *)0)
     {
@@ -45,7 +45,7 @@ int scenario_overheat(EngineState *engine)
     return ENGINE_OK;
 }
 
-int scenario_oil_pressure_failure(EngineState *engine)
+int32_t scenario_oil_pressure_failure(EngineState *engine)
 {
     if (engine == (EngineState *)0)
     {
