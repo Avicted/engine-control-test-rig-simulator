@@ -3,7 +3,7 @@
 
 #include "engine.h"
 
-#define MAX_TESTS 3
+#define MAX_TESTS 6
 #define MAX_SCENARIO_NAME_LEN 32
 
 typedef struct
@@ -15,5 +15,9 @@ typedef struct
 
 int run_all_tests(void);
 int run_named_scenario(const char *name);
+int run_all_tests_with_output(int show_sim);
+int run_named_scenario_with_output(const char *name, int show_sim);
+int run_all_tests_with_options(int show_sim, int use_color);
+int run_named_scenario_with_options(const char *name, int show_sim, int use_color);
 
 #endif

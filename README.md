@@ -23,7 +23,7 @@ Safety-focused characteristics:
 - `src/control.c`, `src/control.h`  
   Deterministic safety threshold evaluation (`ENGINE_OK`, `ENGINE_WARNING`, `ENGINE_SHUTDOWN`, `ENGINE_ERROR`).
 - `src/test_runner.c`, `src/test_runner.h`  
-  Fixed-size automated validation framework (`MAX_TESTS=3`) with deterministic PASS/FAIL reporting.
+  Fixed-size automated validation framework (`MAX_TESTS=6`) with deterministic PASS/FAIL reporting.
 - `src/logger.c`, `src/logger.h`  
   Bounded logging implementation using `snprintf` with return-value checks.
 - `src/main.c`  
@@ -53,6 +53,9 @@ Run full automated validation suite:
 
 ```bash
 ./testrig --run-all
+./testrig --run-all --show-sim
+./testrig --run-all --color
+./testrig --run-all --show-sim --color
 ```
 
 Run a single scenario:
@@ -61,6 +64,9 @@ Run a single scenario:
 ./testrig --scenario overheat
 ./testrig --scenario normal
 ./testrig --scenario pressure_failure
+./testrig --scenario normal --show-sim
+./testrig --scenario overheat --color
+./testrig --scenario normal --show-sim --color
 ```
 
 ## Example Output
@@ -72,9 +78,20 @@ Run a single scenario:
 PASS: normal_operation (expected=OK, actual=OK)
 PASS: overheat_test (expected=SHUTDOWN, actual=SHUTDOWN)
 PASS: pressure_failure (expected=SHUTDOWN, actual=SHUTDOWN)
-Summary: 3/3 tests passed
+PASS: warning_high_rpm_temp (expected=WARNING, actual=WARNING)
+PASS: temp_threshold_ok (expected=OK, actual=OK)
+PASS: oil_threshold_ok (expected=OK, actual=OK)
+Summary: 6/6 tests passed
 [INFO] All tests passed
 ```
+
+`--show-sim` prints deterministic engine-state snapshots used in evaluation:
+
+```text
+SIM: normal_operation rpm=120.00 temp=25.70 oil=3.60 running=1
+```
+
+`--color` optionally colorizes PASS/FAIL, result statuses, and `[INFO]/[WARN]/[ERROR]` log levels for readability in interactive terminals. It is disabled by default for CI-safe plain output.
 
 Single scenario (`--scenario overheat`):
 
@@ -113,3 +130,7 @@ In a real HIL setup, a controller is validated against reproducible plant/sensor
 - Injecting repeatable fault scenarios
 - Enforcing safety shutdown logic
 - Producing bounded, structured validation output
+
+
+## License
+MIT License. See [LICENSE](LICENSE) for details.
