@@ -889,6 +889,79 @@ static void draw_text_font(const Font *font, const char *text, float x, float y,
     DrawTextEx(*font, text, (Vector2){x, y}, size, 1.0f, color);
 }
 
+static void draw_quit_modal(const Font *font, int selection, int screen_w, int screen_h, float scale)
+{
+    float box_w = 420.0f * scale;
+    float box_h = 152.0f * scale;
+    float box_x = ((float)screen_w - box_w) * 0.5f;
+    float box_y = ((float)screen_h - box_h) * 0.5f;
+    float btn_w = 80.0f * scale;
+    float btn_h = 28.0f * scale;
+    float btn_y = box_y + 66.0f * scale;
+    float yes_x = box_x + box_w * 0.5f - btn_w - 10.0f * scale;
+    float no_x = box_x + box_w * 0.5f + 10.0f * scale;
+    float title_fs = FS_MODE * scale;
+    float opt_fs = FS_VALUE * scale;
+    float hint_fs = FS_TINY * scale;
+    const char *title = "QUIT?";
+    const char *hint = "[LT RT]  Select   [ENTER]  Confirm   [ESC]  Cancel";
+    Vector2 sz;
+    Color yes_bg, yes_bor, yes_txt;
+    Color no_bg, no_bor, no_txt;
+
+    /* full-screen dim overlay */
+    DrawRectangle(0, 0, screen_w, screen_h, (Color){0, 0, 0, 160});
+
+    /* panel shadow */
+    DrawRectangle((int)(box_x + 4.0f), (int)(box_y + 4.0f), (int)box_w, (int)box_h, (Color){0, 0, 0, 110});
+    /* panel body */
+    DrawRectangle((int)box_x, (int)box_y, (int)box_w, (int)box_h, COL_PANEL_BG);
+    DrawRectangleLines((int)box_x, (int)box_y, (int)box_w, (int)box_h, COL_PANEL_BORDER);
+
+    /* title */
+    sz = MeasureTextEx(*font, title, title_fs, 1.0f);
+    draw_text_font(font, title,
+                   box_x + (box_w - sz.x) * 0.5f,
+                   box_y + 14.0f * scale,
+                   title_fs, RAYWHITE);
+
+    /* divider */
+    DrawLine((int)(box_x + 16.0f * scale), (int)(box_y + 54.0f * scale),
+             (int)(box_x + box_w - 16.0f * scale), (int)(box_y + 54.0f * scale),
+             COL_SECTION_DIV);
+
+    /* YES button */
+    yes_bg = COL_BADGE_BG;
+    yes_bor = (selection == 1) ? RAYWHITE : COL_BADGE_BORDER;
+    yes_txt = RAYWHITE;
+    DrawRectangle((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bg);
+    DrawRectangleLines((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bor);
+    sz = MeasureTextEx(*font, "YES", opt_fs, 1.0f);
+    draw_text_font(font, "YES",
+                   yes_x + (btn_w - sz.x) * 0.5f,
+                   btn_y + (btn_h - sz.y) * 0.5f,
+                   opt_fs, yes_txt);
+
+    /* NO button */
+    no_bg = COL_BADGE_BG;
+    no_bor = (selection == 0) ? RAYWHITE : COL_BADGE_BORDER;
+    no_txt = RAYWHITE;
+    DrawRectangle((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bg);
+    DrawRectangleLines((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bor);
+    sz = MeasureTextEx(*font, "NO", opt_fs, 1.0f);
+    draw_text_font(font, "NO",
+                   no_x + (btn_w - sz.x) * 0.5f,
+                   btn_y + (btn_h - sz.y) * 0.5f,
+                   opt_fs, no_txt);
+
+    /* navigation hint */
+    sz = MeasureTextEx(*font, hint, hint_fs, 1.0f);
+    draw_text_font(font, hint,
+                   box_x + (box_w - sz.x) * 0.5f,
+                   box_y + box_h - 20.0f * scale,
+                   hint_fs, COL_SUBLABEL);
+}
+
 static float draw_key_hint(const Font *font,
                            const char *key,
                            const char *desc,
@@ -1299,6 +1372,9 @@ static void run_visualizer(ScenarioSet *scenario_set)
     float restart_feedback_timer = 0.0f;
     int paused = 0;
     int dragging_slider = 0;
+    int quit_modal_open = 0;
+    int quit_modal_selection = 0; /* 0 = No (default), 1 = Yes */
+    int should_quit = 0;
     Color animated_mode_color;
     Font ui_font;
     int custom_font_loaded = 0;
@@ -1315,6 +1391,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Engine Control Scenario Visualizer");
     SetTargetFPS(60);
+    SetExitKey(KEY_NULL);
 
     ui_font = LoadFontEx(FONT_PATH, 28, NULL, 0);
     if ((ui_font.texture.id > 0U) && (ui_font.glyphCount > 0))
@@ -1329,7 +1406,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
 
     animated_mode_color = mode_color(scenario_set->scenarios[scenario_set->active_index].ticks[0U].engine_mode);
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && (should_quit == 0))
     {
         ScenarioData *scenario = &scenario_set->scenarios[scenario_set->active_index];
         TickData interpolated_tick;
@@ -1377,59 +1454,112 @@ static void run_visualizer(ScenarioSet *scenario_set)
 
         compute_cumulative_metrics(scenario, playhead, &warning_pct, &shutdown_pct);
 
-        if (IsKeyPressed(KEY_SPACE))
+        if (IsKeyPressed(KEY_F11))
         {
-            paused = (paused == 0) ? 1 : 0;
-        }
-        if (IsKeyPressed(KEY_R))
-        {
-            playhead = 0.0f;
-            paused = 0;
-            restart_feedback_timer = 0.6f;
-        }
-        if (IsKeyPressed(KEY_RIGHT))
-        {
-            playhead += 1.0f;
-            if (playhead > (float)(scenario->tick_count - 1U))
+            if (!IsWindowFullscreen())
             {
-                playhead = (float)(scenario->tick_count - 1U);
+                int monitor = GetCurrentMonitor();
+                SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+                ToggleFullscreen();
             }
-            paused = 1;
+            else
+            {
+                ToggleFullscreen();
+                SetWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+            }
         }
-        if (IsKeyPressed(KEY_LEFT))
+        if (IsKeyPressed(KEY_ESCAPE))
         {
-            playhead -= 1.0f;
-            if (playhead < 0.0f)
+            if (quit_modal_open != 0)
+            {
+                quit_modal_open = 0;
+                quit_modal_selection = 0;
+            }
+            else
+            {
+                quit_modal_open = 1;
+                quit_modal_selection = 0;
+            }
+        }
+        if (quit_modal_open != 0)
+        {
+            if (IsKeyPressed(KEY_LEFT))
+            {
+                quit_modal_selection = 1; /* move to YES */
+            }
+            if (IsKeyPressed(KEY_RIGHT))
+            {
+                quit_modal_selection = 0; /* move to NO */
+            }
+            if (IsKeyPressed(KEY_ENTER))
+            {
+                if (quit_modal_selection == 1)
+                {
+                    should_quit = 1;
+                }
+                else
+                {
+                    quit_modal_open = 0;
+                    quit_modal_selection = 0;
+                }
+            }
+        }
+        else
+        {
+            if (IsKeyPressed(KEY_SPACE))
+            {
+                paused = (paused == 0) ? 1 : 0;
+            }
+            if (IsKeyPressed(KEY_R))
             {
                 playhead = 0.0f;
+                paused = 0;
+                restart_feedback_timer = 0.6f;
             }
-            paused = 1;
-        }
-        if (IsKeyPressed(KEY_UP))
-        {
-            ticks_per_second += 1.0f;
-            if (ticks_per_second > 20.0f)
+            if (IsKeyPressed(KEY_RIGHT))
             {
-                ticks_per_second = 20.0f;
+                playhead += 1.0f;
+                if (playhead > (float)(scenario->tick_count - 1U))
+                {
+                    playhead = (float)(scenario->tick_count - 1U);
+                }
+                paused = 1;
             }
-        }
-        if (IsKeyPressed(KEY_DOWN))
-        {
-            ticks_per_second -= 1.0f;
-            if (ticks_per_second < 1.0f)
+            if (IsKeyPressed(KEY_LEFT))
             {
-                ticks_per_second = 1.0f;
+                playhead -= 1.0f;
+                if (playhead < 0.0f)
+                {
+                    playhead = 0.0f;
+                }
+                paused = 1;
             }
-        }
-        if (IsKeyPressed(KEY_TAB) && (scenario_set->count > 1U))
-        {
-            scenario_set->active_index = (scenario_set->active_index + 1U) % scenario_set->count;
-            scenario = &scenario_set->scenarios[scenario_set->active_index];
-            playhead = 0.0f;
-            paused = 0;
-            restart_feedback_timer = 0.6f;
-            ticks_per_second = (scenario->tick_count <= 8U) ? SHORT_SCENARIO_TICKS_PER_SECOND : DEFAULT_TICKS_PER_SECOND;
-            animated_mode_color = mode_color(scenario->ticks[0U].engine_mode);
+            if (IsKeyPressed(KEY_UP))
+            {
+                ticks_per_second += 1.0f;
+                if (ticks_per_second > 20.0f)
+                {
+                    ticks_per_second = 20.0f;
+                }
+            }
+            if (IsKeyPressed(KEY_DOWN))
+            {
+                ticks_per_second -= 1.0f;
+                if (ticks_per_second < 1.0f)
+                {
+                    ticks_per_second = 1.0f;
+                }
+            }
+            if (IsKeyPressed(KEY_TAB) && (scenario_set->count > 1U))
+            {
+                scenario_set->active_index = (scenario_set->active_index + 1U) % scenario_set->count;
+                scenario = &scenario_set->scenarios[scenario_set->active_index];
+                playhead = 0.0f;
+                paused = 0;
+                restart_feedback_timer = 0.6f;
+                ticks_per_second = (scenario->tick_count <= 8U) ? SHORT_SCENARIO_TICKS_PER_SECOND : DEFAULT_TICKS_PER_SECOND;
+                animated_mode_color = mode_color(scenario->ticks[0U].engine_mode);
+            }
         }
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), slider))
@@ -1522,7 +1652,9 @@ static void run_visualizer(ScenarioSet *scenario_set)
             kx += draw_key_hint(&ui_font, "R", "Restart", kx, ky, kfs) + gap2;
             kx += draw_key_hint(&ui_font, "UP DN", "Speed", kx, ky, kfs) + gap2;
             kx += draw_key_hint(&ui_font, "LT RT", "Step", kx, ky, kfs) + gap2;
-            kx += draw_key_hint(&ui_font, "TAB", "Switch", kx, ky, kfs);
+            kx += draw_key_hint(&ui_font, "TAB", "Switch", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "F11", "Fullscreen", kx, ky, kfs) + gap2;
+            kx += draw_key_hint(&ui_font, "ESC", "Quit", kx, ky, kfs);
             (void)kx;
 
             (void)snprintf(speed_str, sizeof(speed_str), "%.0f tk/s%s",
@@ -1630,6 +1762,11 @@ static void run_visualizer(ScenarioSet *scenario_set)
         /* ── TIMELINE + SLIDER ─────────────────────────── */
         draw_timeline(&ui_font, scenario, playhead, timeline, scale);
         draw_slider(&ui_font, slider, scenario, playhead, restart_feedback_timer);
+
+        if (quit_modal_open != 0)
+        {
+            draw_quit_modal(&ui_font, quit_modal_selection, screen_w, screen_h, scale);
+        }
 
         EndDrawing();
     }
