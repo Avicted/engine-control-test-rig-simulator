@@ -39,6 +39,8 @@ typedef struct
     uint32_t combined_warning_persistence_ticks;
 } ControlCalibration;
 
+_Static_assert(sizeof(ControlCalibration) == 28U, "ControlCalibration ABI contract changed");
+
 /**
  * @brief Evaluate engine state against calibrated fault thresholds.
  *

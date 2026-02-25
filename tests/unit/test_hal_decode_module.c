@@ -541,6 +541,217 @@ static int32_t test_vote_clears_after_use(void)
     return 1;
 }
 
+/* ------------------------------------------------------------------
+ * Frame ID Registry tests (Section 1.1)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_frame_id_known_valid(void)
+{
+    ASSERT_EQ(1, hal_frame_id_is_known(HAL_SENSOR_FRAME_ID));
+    ASSERT_EQ(1, hal_frame_id_is_known(HAL_SENSOR_ERROR_FRAME_ID));
+    ASSERT_EQ(1, hal_frame_id_is_known(HAL_SENSOR_TEMP_B_FRAME_ID));
+    return 1;
+}
+
+static int32_t test_frame_id_unknown_rejected(void)
+{
+    ASSERT_EQ(0, hal_frame_id_is_known(0x101U));
+    ASSERT_EQ(0, hal_frame_id_is_known(0x000U));
+    ASSERT_EQ(0, hal_frame_id_is_known(0xFFFFU));
+    return 1;
+}
+
+/* ------------------------------------------------------------------
+ * DLC-per-ID enforcement tests (Section 1.2)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_expected_dlc_sensor(void)
+{
+    uint8_t dlc = 0U;
+    ASSERT_STATUS(STATUS_OK, hal_expected_dlc_for_id(HAL_SENSOR_FRAME_ID, &dlc));
+    ASSERT_EQ(8U, dlc);
+    return 1;
+}
+
+static int32_t test_expected_dlc_error_frame(void)
+{
+    uint8_t dlc = 0U;
+    ASSERT_STATUS(STATUS_OK, hal_expected_dlc_for_id(HAL_SENSOR_ERROR_FRAME_ID, &dlc));
+    ASSERT_EQ(1U, dlc);
+    return 1;
+}
+
+static int32_t test_expected_dlc_temp_b(void)
+{
+    uint8_t dlc = 0U;
+    ASSERT_STATUS(STATUS_OK, hal_expected_dlc_for_id(HAL_SENSOR_TEMP_B_FRAME_ID, &dlc));
+    ASSERT_EQ(2U, dlc);
+    return 1;
+}
+
+static int32_t test_expected_dlc_unknown_id(void)
+{
+    uint8_t dlc = 0U;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_expected_dlc_for_id(0x999U, &dlc));
+    return 1;
+}
+
+static int32_t test_expected_dlc_null_output(void)
+{
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_expected_dlc_for_id(HAL_SENSOR_FRAME_ID, (uint8_t *)0));
+    return 1;
+}
+
+static int32_t test_dlc_mismatch_rejected_on_ingest(void)
+{
+    HAL_SensorFrame source;
+    HAL_Frame frame;
+
+    source.rpm = 2000.0f;
+    source.temperature = 70.0f;
+    source.oil_pressure = 3.0f;
+    source.is_running = 1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_OK, hal_encode_sensor_frame(&source, &frame));
+    /* Corrupt the DLC to a wrong value for this ID */
+    frame.dlc = 4U;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_ingest_sensor_frame(&frame, 1U));
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+/* ------------------------------------------------------------------
+ * Frame Aging tests (Section 1.3)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_frame_age_fresh_after_receipt(void)
+{
+    int32_t stale = -1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_OK, hal_frame_age_record(HAL_SENSOR_FRAME_ID, 5U));
+    ASSERT_STATUS(STATUS_OK, hal_frame_is_stale(HAL_SENSOR_FRAME_ID, 5U, &stale));
+    ASSERT_EQ(0, stale);
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+static int32_t test_frame_age_stale_at_exact_threshold(void)
+{
+    int32_t stale = -1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_OK, hal_frame_age_record(HAL_SENSOR_FRAME_ID, 1U));
+
+    /* At threshold boundary: age == threshold → NOT stale (uses >) */
+    ASSERT_STATUS(STATUS_OK, hal_frame_is_stale(HAL_SENSOR_FRAME_ID,
+                                                1U + HAL_FRAME_STALE_THRESHOLD_TICKS, &stale));
+    ASSERT_EQ(0, stale);
+
+    /* One tick past threshold → stale */
+    ASSERT_STATUS(STATUS_OK, hal_frame_is_stale(HAL_SENSOR_FRAME_ID,
+                                                1U + HAL_FRAME_STALE_THRESHOLD_TICKS + 1U, &stale));
+    ASSERT_EQ(1, stale);
+
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+static int32_t test_frame_age_never_received_not_stale(void)
+{
+    int32_t stale = -1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    /* Never recorded — should report not stale */
+    ASSERT_STATUS(STATUS_OK, hal_frame_is_stale(HAL_SENSOR_FRAME_ID, 999U, &stale));
+    ASSERT_EQ(0, stale);
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+static int32_t test_frame_age_unknown_id_rejected(void)
+{
+    int32_t stale = -1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_frame_age_record(0x999U, 1U));
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_frame_is_stale(0x999U, 1U, &stale));
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+static int32_t test_frame_age_null_output(void)
+{
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, hal_frame_is_stale(HAL_SENSOR_FRAME_ID, 1U, (int32_t *)0));
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+/* ------------------------------------------------------------------
+ * Sensor queue overflow test (Section 1.4)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_sensor_rx_queue_overflow(void)
+{
+    HAL_SensorFrame source;
+    HAL_Frame frame;
+    uint32_t idx;
+    ErrorInfo error;
+
+    source.rpm = 2000.0f;
+    source.temperature = 70.0f;
+    source.oil_pressure = 3.0f;
+    source.is_running = 1;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    ASSERT_STATUS(STATUS_OK, hal_encode_sensor_frame(&source, &frame));
+
+    for (idx = 0U; idx < HAL_MAX_RX_FRAMES; ++idx)
+    {
+        ASSERT_STATUS(STATUS_OK, hal_ingest_sensor_frame(&frame, idx + 1U));
+    }
+    /* Next ingest must overflow */
+    ASSERT_STATUS(STATUS_BUFFER_OVERFLOW,
+                  hal_ingest_sensor_frame(&frame, HAL_MAX_RX_FRAMES + 1U));
+
+    /* Verify structured error was recorded */
+    ASSERT_STATUS(STATUS_OK, hal_get_last_error(&error));
+    ASSERT_EQ(STATUS_BUFFER_OVERFLOW, error.code);
+
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
+/* ------------------------------------------------------------------
+ * TX queue overflow test (Section 1.4)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_hal_transmit_bus_overflow(void)
+{
+    HAL_Frame frame;
+    uint32_t idx;
+    ErrorInfo error;
+
+    ASSERT_STATUS(STATUS_OK, hal_init());
+    (void)memset(&frame, 0, sizeof(frame));
+    frame.id = 0x300U;
+    frame.dlc = 8U;
+
+    for (idx = 0U; idx < HAL_MAX_TX_FRAMES; ++idx)
+    {
+        ASSERT_STATUS(STATUS_OK, hal_transmit_bus(&frame));
+    }
+    ASSERT_STATUS(STATUS_BUFFER_OVERFLOW, hal_transmit_bus(&frame));
+
+    ASSERT_STATUS(STATUS_OK, hal_get_last_error(&error));
+    ASSERT_EQ(STATUS_BUFFER_OVERFLOW, error.code);
+
+    ASSERT_STATUS(STATUS_OK, hal_shutdown());
+    return 1;
+}
+
 int32_t register_hal_decode_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
@@ -591,7 +802,26 @@ int32_t register_hal_decode_tests(const UnitTestCase **tests_out, uint32_t *coun
         {"hal_vote_dual_agree", test_vote_dual_agree},
         {"hal_vote_dual_disagree", test_vote_dual_disagree},
         {"hal_vote_null_out", test_vote_null_output},
-        {"hal_vote_clears", test_vote_clears_after_use}};
+        {"hal_vote_clears", test_vote_clears_after_use},
+        /* Frame ID registry tests (Section 1.1) */
+        {"hal_fid_known_valid", test_frame_id_known_valid},
+        {"hal_fid_unknown_reject", test_frame_id_unknown_rejected},
+        /* DLC per-ID enforcement tests (Section 1.2) */
+        {"hal_dlc_sensor", test_expected_dlc_sensor},
+        {"hal_dlc_error_frame", test_expected_dlc_error_frame},
+        {"hal_dlc_temp_b", test_expected_dlc_temp_b},
+        {"hal_dlc_unknown_id", test_expected_dlc_unknown_id},
+        {"hal_dlc_null_out", test_expected_dlc_null_output},
+        {"hal_dlc_mismatch_ingest", test_dlc_mismatch_rejected_on_ingest},
+        /* Frame aging tests (Section 1.3) */
+        {"hal_age_fresh_receipt", test_frame_age_fresh_after_receipt},
+        {"hal_age_stale_boundary", test_frame_age_stale_at_exact_threshold},
+        {"hal_age_never_recv", test_frame_age_never_received_not_stale},
+        {"hal_age_unknown_id", test_frame_age_unknown_id_rejected},
+        {"hal_age_null_out", test_frame_age_null_output},
+        /* Queue overflow tests (Section 1.4) */
+        {"hal_sensor_rx_overflow", test_sensor_rx_queue_overflow},
+        {"hal_tx_overflow", test_hal_transmit_bus_overflow}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

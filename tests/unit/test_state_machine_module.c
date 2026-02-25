@@ -450,6 +450,45 @@ static int32_t test_engine_physics_affects_update(void)
     return 1;
 }
 
+/* ------------------------------------------------------------------
+ * Fatal error path tests (Section 3.2)
+ * ------------------------------------------------------------------ */
+
+static int32_t test_fatal_illegal_transition_deterministic(void)
+{
+    EngineState engine;
+
+    /* Illegal transition from INIT→RUNNING must return a deterministic error
+     * and leave the engine state unchanged.
+     */
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    ASSERT_EQ(ENGINE_STATE_INIT, engine.mode);
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_transition_mode(&engine, ENGINE_STATE_RUNNING));
+    /* Mode must be unchanged */
+    ASSERT_EQ(ENGINE_STATE_INIT, engine.mode);
+    return 1;
+}
+
+static int32_t test_fatal_shutdown_from_warning_clears_state(void)
+{
+    EngineState engine;
+
+    /* Full path: start → run → warn → shutdown → verify deterministic cleanup */
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_start(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine)); /* STARTING → RUNNING */
+    engine.rpm = 3000.0f;
+    engine.temperature = 100.0f;
+    engine.is_running = 1;
+    ASSERT_STATUS(STATUS_OK, engine_transition_mode(&engine, ENGINE_STATE_WARNING));
+    ASSERT_STATUS(STATUS_OK, engine_transition_mode(&engine, ENGINE_STATE_SHUTDOWN));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine)); /* SHUTDOWN cleanup */
+    ASSERT_EQ(0, engine.is_running);
+    ASSERT_TRUE(engine.rpm < 1.0f);
+    ASSERT_EQ(ENGINE_STATE_SHUTDOWN, engine.mode);
+    return 1;
+}
+
 int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
@@ -496,7 +535,10 @@ int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *c
         {"physics_configure_invalid", test_engine_configure_physics_invalid},
         {"physics_reset", test_engine_reset_physics},
         {"physics_active", test_engine_get_active_physics},
-        {"physics_affects_update", test_engine_physics_affects_update}};
+        {"physics_affects_update", test_engine_physics_affects_update},
+        /* fatal error path tests (Section 3.2) */
+        {"fatal_illegal_transition", test_fatal_illegal_transition_deterministic},
+        {"fatal_shutdown_cleanup", test_fatal_shutdown_from_warning_clears_state}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

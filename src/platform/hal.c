@@ -48,6 +48,30 @@ static int32_t g_watchdog_enabled = 0;
 static float g_redundant_temp_b = 0.0f;
 static int32_t g_has_redundant_temp = 0;
 
+/* --- Frame aging state (Section 1.3) --- */
+typedef struct
+{
+    uint32_t last_tick;
+    int32_t received;
+} FrameAgingEntry;
+
+static FrameAgingEntry g_frame_aging[FRAME_ID_REGISTRY_COUNT];
+
+static int32_t frame_id_to_index(uint32_t id)
+{
+    switch (id)
+    {
+    case (uint32_t)FRAME_ID_SENSOR:
+        return 0;
+    case (uint32_t)FRAME_ID_SENSOR_ERROR:
+        return 1;
+    case (uint32_t)FRAME_ID_SENSOR_TEMP_B:
+        return 2;
+    default:
+        return -1;
+    }
+}
+
 static void hal_set_error(StatusCode code, const char *function, uint32_t tick, Severity severity)
 {
     g_last_error.code = code;
@@ -213,26 +237,37 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
 
 static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
 {
+    uint8_t expected_dlc;
+
     if (frame == NULL)
     {
         return 0;
     }
 
-    if ((frame->id == HAL_SENSOR_FRAME_ID) && (frame->dlc == 8U))
+    /* Only sensor and sensor-error IDs are ingestible via the sensor path. */
+    if ((frame->id != HAL_SENSOR_FRAME_ID) && (frame->id != HAL_SENSOR_ERROR_FRAME_ID))
     {
-        return 1;
+        return 0;
     }
 
-    if ((frame->id == HAL_SENSOR_ERROR_FRAME_ID) && (frame->dlc == 1U))
+    /* Validate DLC against the frame ID registry (Section 1.2). */
+    if (hal_expected_dlc_for_id(frame->id, &expected_dlc) != STATUS_OK)
     {
-        return 1;
+        return 0;
     }
 
-    return 0;
+    if (frame->dlc != expected_dlc)
+    {
+        return 0;
+    }
+
+    return 1;
 }
 
 StatusCode hal_init(void)
 {
+    uint32_t aging_idx;
+
     queue_reset(&g_sensor_rx_queue);
     queue_reset(&g_bus_rx_queue);
     tx_queue_reset(&g_bus_tx_queue);
@@ -243,12 +278,21 @@ StatusCode hal_init(void)
     g_watchdog_enabled = 0;
     g_redundant_temp_b = 0.0f;
     g_has_redundant_temp = 0;
+
+    for (aging_idx = 0U; aging_idx < FRAME_ID_REGISTRY_COUNT; ++aging_idx)
+    {
+        g_frame_aging[aging_idx].last_tick = 0U;
+        g_frame_aging[aging_idx].received = 0;
+    }
+
     hal_set_error(STATUS_OK, "hal_init", 0U, SEVERITY_INFO);
     return STATUS_OK;
 }
 
 StatusCode hal_shutdown(void)
 {
+    uint32_t aging_idx;
+
     queue_reset(&g_sensor_rx_queue);
     queue_reset(&g_bus_rx_queue);
     tx_queue_reset(&g_bus_tx_queue);
@@ -259,6 +303,13 @@ StatusCode hal_shutdown(void)
     g_watchdog_enabled = 0;
     g_redundant_temp_b = 0.0f;
     g_has_redundant_temp = 0;
+
+    for (aging_idx = 0U; aging_idx < FRAME_ID_REGISTRY_COUNT; ++aging_idx)
+    {
+        g_frame_aging[aging_idx].last_tick = 0U;
+        g_frame_aging[aging_idx].received = 0;
+    }
+
     hal_set_error(STATUS_OK, "hal_shutdown", 0U, SEVERITY_INFO);
     return STATUS_OK;
 }
@@ -285,6 +336,9 @@ StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick)
         hal_set_error(queue_status, "hal_ingest_sensor_frame", tick, SEVERITY_ERROR);
         return queue_status;
     }
+
+    /* Record frame age on successful ingest (Section 1.3). */
+    (void)hal_frame_age_record(frame->id, tick);
 
     hal_set_error(STATUS_OK, "hal_ingest_sensor_frame", tick, SEVERITY_INFO);
     return STATUS_OK;
@@ -422,17 +476,20 @@ StatusCode hal_receive_bus(const HAL_Frame *frame)
 
     if (frame == NULL)
     {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_receive_bus", 0U, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
     }
 
     if (frame->dlc > 8U)
     {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_receive_bus", 0U, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
     }
 
     queue_status = queue_push(&g_bus_rx_queue, frame, HAL_MAX_RX_FRAMES);
     if (queue_status != STATUS_OK)
     {
+        hal_set_error(STATUS_BUFFER_OVERFLOW, "hal_receive_bus", 0U, SEVERITY_WARNING);
         return queue_status;
     }
 
@@ -445,17 +502,20 @@ StatusCode hal_transmit_bus(const HAL_Frame *frame)
 
     if (frame == NULL)
     {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_transmit_bus", 0U, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
     }
 
     if (frame->dlc > 8U)
     {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_transmit_bus", 0U, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
     }
 
     queue_status = tx_queue_push(&g_bus_tx_queue, frame);
     if (queue_status != STATUS_OK)
     {
+        hal_set_error(STATUS_BUFFER_OVERFLOW, "hal_transmit_bus", 0U, SEVERITY_WARNING);
         return queue_status;
     }
 
@@ -582,5 +642,89 @@ StatusCode hal_vote_sensors(float primary_temp, float *voted_temp)
     /* Average the two channels */
     *voted_temp = (primary_temp + g_redundant_temp_b) / 2.0f;
     g_has_redundant_temp = 0;
+    return STATUS_OK;
+}
+
+/* --- Frame ID registry helpers (Section 1.1 / 1.2) --- */
+
+int32_t hal_frame_id_is_known(uint32_t id)
+{
+    return (frame_id_to_index(id) >= 0) ? 1 : 0;
+}
+
+StatusCode hal_expected_dlc_for_id(uint32_t id, uint8_t *dlc_out)
+{
+    if (dlc_out == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    switch (id)
+    {
+    case (uint32_t)FRAME_ID_SENSOR:
+        *dlc_out = 8U;
+        return STATUS_OK;
+    case (uint32_t)FRAME_ID_SENSOR_ERROR:
+        *dlc_out = 1U;
+        return STATUS_OK;
+    case (uint32_t)FRAME_ID_SENSOR_TEMP_B:
+        *dlc_out = 2U;
+        return STATUS_OK;
+    default:
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_expected_dlc_for_id", 0U, SEVERITY_ERROR);
+        return STATUS_INVALID_ARGUMENT;
+    }
+}
+
+/* --- Frame aging model (Section 1.3) --- */
+
+StatusCode hal_frame_age_record(uint32_t id, uint32_t tick)
+{
+    int32_t idx;
+
+    idx = frame_id_to_index(id);
+    if (idx < 0)
+    {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_frame_age_record", tick, SEVERITY_ERROR);
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    g_frame_aging[idx].last_tick = tick;
+    g_frame_aging[idx].received = 1;
+    return STATUS_OK;
+}
+
+StatusCode hal_frame_is_stale(uint32_t id, uint32_t tick, int32_t *stale_out)
+{
+    int32_t idx;
+
+    if (stale_out == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    idx = frame_id_to_index(id);
+    if (idx < 0)
+    {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_frame_is_stale", tick, SEVERITY_ERROR);
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    if (g_frame_aging[idx].received == 0)
+    {
+        /* Never received — not stale, just absent. */
+        *stale_out = 0;
+        return STATUS_OK;
+    }
+
+    if ((tick - g_frame_aging[idx].last_tick) > HAL_FRAME_STALE_THRESHOLD_TICKS)
+    {
+        *stale_out = 1;
+    }
+    else
+    {
+        *stale_out = 0;
+    }
+
     return STATUS_OK;
 }
