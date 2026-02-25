@@ -52,14 +52,14 @@ typedef enum
 #define HAL_FRAME_STALE_THRESHOLD_TICKS 10U
 
 /**
- * @name Queue Overflow Policy — DROP NEWEST
+ * @name Queue Overflow Policy - DROP NEWEST
  *
  * When any internal queue (sensor RX, bus RX, bus TX) is full, the
  * new frame is **rejected** with STATUS_BUFFER_OVERFLOW and a
  * structured error diagnostic is recorded via hal_set_error().
  * Existing queue contents are preserved intact.
  *
- * Rationale: deterministic behavior — the oldest data already in the
+ * Rationale: deterministic behavior - the oldest data already in the
  * queue is never silently discarded, and callers receive an explicit
  * error to handle.
  */

@@ -663,7 +663,7 @@ static int32_t test_frame_age_never_received_not_stale(void)
     int32_t stale = -1;
 
     ASSERT_STATUS(STATUS_OK, hal_init());
-    /* Never recorded — should report not stale */
+    /* Never recorded - should report not stale */
     ASSERT_STATUS(STATUS_OK, hal_frame_is_stale(HAL_SENSOR_FRAME_ID, 999U, &stale));
     ASSERT_EQ(0, stale);
     ASSERT_STATUS(STATUS_OK, hal_shutdown());

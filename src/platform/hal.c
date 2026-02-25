@@ -712,7 +712,7 @@ StatusCode hal_frame_is_stale(uint32_t id, uint32_t tick, int32_t *stale_out)
 
     if (g_frame_aging[idx].received == 0)
     {
-        /* Never received — not stale, just absent. */
+        /* Never received - not stale, just absent. */
         *stale_out = 0;
         return STATUS_OK;
     }

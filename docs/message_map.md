@@ -1,4 +1,4 @@
-# Message Map — BusFrame ID Registry
+# Message Map - BusFrame ID Registry
 
 This document defines every frame ID in the system, its expected DLC,
 encoding, and purpose.  All IDs are centrally declared in the `FrameId`

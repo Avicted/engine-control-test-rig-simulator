@@ -32,7 +32,7 @@ echo "Run 1 hash: $HASH1"
 echo "Run 2 hash: $HASH2"
 
 if [ "$HASH1" != "$HASH2" ]; then
-    echo "FAIL: Determinism violation — output differs between identical runs"
+    echo "FAIL: Determinism violation - output differs between identical runs"
     diff "$TMP1" "$TMP2" | head -20
     exit 1
 fi
