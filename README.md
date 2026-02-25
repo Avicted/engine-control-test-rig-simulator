@@ -19,6 +19,46 @@ applied to a simplified but realistic engine control model.
 
 
 
+## Prerequisites
+
+**Required to build and run:**
+
+| Tool | Purpose |
+|------|---------|
+| `clang` | C11 compiler (default in Makefile) |
+| `make` | Build system |
+| `git` | Embeds commit hash in build metadata |
+
+**Required for the full quality gate (`make ci-check`):**
+
+| Tool | Purpose |
+|------|---------|
+| `cppcheck` | Static analysis and MISRA C:2012 checking |
+| `clang-tidy` | Clang-based static analysis |
+| `llvm-cov` | Code coverage reporting (`llvm-cov gcov`) |
+| `python3` | JSON schema contract validation |
+
+**Optional:**
+
+| Tool | Purpose |
+|------|---------|
+| `raylib` | Visualization dashboard build (`make visualizer`) |
+| `doxygen` | API documentation generation (`make docs`) |
+
+On Debian/Ubuntu:
+
+```bash
+sudo apt install clang llvm make git cppcheck clang-tidy python3
+```
+
+On macOS (Homebrew):
+
+```bash
+brew install llvm make git cppcheck python3
+```
+
+
+
 ## Quick Start
 
 ```bash
