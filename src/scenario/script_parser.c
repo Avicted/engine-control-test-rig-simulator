@@ -17,7 +17,7 @@
 #define SCRIPT_MIN_OIL 0.0f
 #define SCRIPT_MAX_OIL 10.0f
 
-static int parse_strict_uint(const char *token, uint32_t *value)
+static int32_t parse_strict_uint(const char *token, uint32_t *value)
 {
     unsigned long parsed;
     char *endptr;
@@ -43,7 +43,7 @@ static int parse_strict_uint(const char *token, uint32_t *value)
     return 1;
 }
 
-static int parse_strict_float(const char *token, float *value)
+static int32_t parse_strict_float(const char *token, float *value)
 {
     float parsed;
     char *endptr;
@@ -153,7 +153,7 @@ static StatusCode parse_script_line(const char *line,
     return STATUS_OK;
 }
 
-static int line_is_whitespace_only(const char *line)
+static int32_t line_is_whitespace_only(const char *line)
 {
     const unsigned char *cursor;
 
@@ -176,7 +176,7 @@ static int line_is_whitespace_only(const char *line)
     return 1;
 }
 
-static int line_is_comment(const char *line)
+static int32_t line_is_comment(const char *line)
 {
     const unsigned char *cursor;
 

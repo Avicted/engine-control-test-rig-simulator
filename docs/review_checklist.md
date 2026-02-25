@@ -17,7 +17,7 @@ Expected:
 
 - Build succeeds with no compiler warnings promoted to errors.
 - Unit tests pass.
-- `cppcheck`, `clang-tidy`, and sanitizer-enabled debug build pass.
+- `cppcheck`, `clang-tidy`, layering checks, and sanitizer-enabled debug build pass.
 
 ## 2) Deterministic Regression Output
 
@@ -67,10 +67,10 @@ Expected:
 
 Inspect headers:
 
-- `src/engine.h`
-- `src/hal.h`
-- `src/script_parser.h`
-- `src/test_runner.h`
+- `include/engine.h`
+- `include/hal.h`
+- `include/script_parser.h`
+- `include/test_runner.h`
 
 Expected:
 

@@ -69,6 +69,33 @@ Visualizer remains read-only and separate from simulation logic.
 
 
 
+## Layered Source Structure
+
+The simulator source is organized by responsibility:
+
+- `src/app` → CLI and execution orchestration
+- `src/domain` → engine/control core logic
+- `src/platform` → HAL boundary and I/O adaptation
+- `src/scenario` → scenario catalog, profiles, parser, scenario reporting
+- `src/reporting` → output/logging utilities and report metadata
+- `src/legacy` → retained non-primary modules
+- `include` → public API headers/contracts
+
+### Dependency Direction Rules
+
+Allowed dependency directions are intentionally constrained:
+
+- `app` may depend on `domain`, `platform`, `scenario`, `reporting`, and `include` contracts.
+- `domain` may depend on `include` contracts only.
+- `platform` may depend on `domain` + `include` contracts, but not `app`, `scenario`, or `reporting`.
+- `scenario` may depend on `domain`, `platform`, `reporting`, and `include` contracts, but not `app`.
+- `reporting` may depend on `domain`, `platform`, `scenario` data types, and `include` contracts, but not `app`.
+- `legacy` remains isolated from active orchestration/reporting/platform interfaces.
+
+These rules are enforced in CI via `make analyze-layering` using `tools/check_layering.sh`.
+
+
+
 
 ## Determinism Guarantee
 
@@ -235,7 +262,7 @@ changes before hardware deployment.
 
 ## Hardware Abstraction Layer
 
-HAL interfaces are defined in `src/hal.h` and implemented in `src/hal.c`.
+HAL interfaces are defined in `include/hal.h` and implemented in `src/platform/hal.c`.
 
 -   `hal_init()` / `hal_shutdown()` manage HAL lifecycle
 -   `hal_read_sensors()` is the sensor ingress boundary
@@ -251,7 +278,7 @@ pointer validation and explicit `StatusCode` returns.
 
 ## Requirement Traceability
 
-Requirement IDs are defined in `src/requirements.h` and attached to test
+Requirement IDs are defined in `src/scenario/requirements.h` and attached to test
 registry entries.
 
 Console output includes requirement linkage per test, for example:
@@ -270,7 +297,7 @@ Formal requirement mapping matrix is maintained in
 
 ## Error Handling Model
 
-`src/status.h` defines the unified status model:
+`include/status.h` defines the unified status model:
 
 -   `STATUS_OK`
 -   `STATUS_INVALID_ARGUMENT`
@@ -282,7 +309,7 @@ Formal requirement mapping matrix is maintained in
 Script parsing and logger/HAL paths use explicit status returns with no
 silent fallthrough.
 
-Script ingestion is isolated in `src/script_parser.c` / `src/script_parser.h`,
+Script ingestion is isolated in `src/scenario/script_parser.c` with the public contract in `include/script_parser.h`,
 keeping file/text parsing outside the simulation execution loop.
 
 Strict mode is available via `--strict`.
