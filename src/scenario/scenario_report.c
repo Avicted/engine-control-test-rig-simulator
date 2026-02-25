@@ -107,7 +107,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
 {
     char line[TEST_LINE_BUFFER_SIZE];
     HAL_ControlFrame control_frame;
-    int written;
+    int32_t written;
 
     if (engine == (const EngineState *)0)
     {
@@ -119,7 +119,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
                        "TICK | %u  result=%s\n",
                        tick,
                        scenario_report_result_to_string(result));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return ENGINE_ERROR;
     }
@@ -137,7 +137,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
                            engine->temperature,
                            engine->oil_pressure,
                            engine->is_running);
-        if ((written < 0) || (written >= (int)sizeof(line)))
+        if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             return ENGINE_ERROR;
         }
@@ -149,7 +149,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
 
     if (show_control != 0)
     {
-        int control_status;
+        int32_t control_status;
         float control_output = 0.0f;
 
         control_status = compute_control_output(engine, &control_output);
@@ -182,7 +182,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
                            engine->fault_counters[ENGINE_FAULT_TEMP],
                            engine->fault_counters[ENGINE_FAULT_OIL_PRESSURE],
                            engine->fault_counters[ENGINE_FAULT_RPM_TEMP_COMBINED]);
-        if ((written < 0) || (written >= (int)sizeof(line)))
+        if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             return ENGINE_ERROR;
         }
@@ -204,7 +204,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
                                                       int32_t has_expected)
 {
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
     uint32_t index;
     int32_t expected_value;
     int32_t is_pass;
@@ -224,7 +224,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     }
 
     written = snprintf(line, sizeof(line), "      \"scenario\": \"%s\",\n", scenario_name);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -234,7 +234,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     }
 
     written = snprintf(line, sizeof(line), "      \"requirement_id\": \"%s\",\n", requirement_id);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -263,7 +263,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
                            tick_reports[index].control,
                            scenario_report_mode_to_string(tick_reports[index].mode),
                            (index + 1U < tick_count) ? "," : "");
-        if ((written < 0) || (written >= (int)sizeof(line)))
+        if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             return STATUS_BUFFER_OVERFLOW;
         }
@@ -279,7 +279,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     }
 
     written = snprintf(line, sizeof(line), "      \"expected\": \"%s\",\n", scenario_report_result_to_string(expected_value));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -289,7 +289,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     }
 
     written = snprintf(line, sizeof(line), "      \"actual\": \"%s\",\n", scenario_report_result_to_string(actual_result));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -299,7 +299,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     }
 
     written = snprintf(line, sizeof(line), "      \"pass\": %s\n", (is_pass != 0) ? "true" : "false");
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -314,7 +314,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
 StatusCode scenario_report_print_json_header(void)
 {
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
 
     if (output_write_line("{\n") != ENGINE_OK)
     {
@@ -322,7 +322,7 @@ StatusCode scenario_report_print_json_header(void)
     }
 
     written = snprintf(line, sizeof(line), "  \"schema_version\": \"%s\",\n", SIM_SCHEMA_VERSION);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -332,7 +332,7 @@ StatusCode scenario_report_print_json_header(void)
     }
 
     written = snprintf(line, sizeof(line), "  \"software_version\": \"%s\",\n", SIM_SOFTWARE_VERSION);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -342,7 +342,7 @@ StatusCode scenario_report_print_json_header(void)
     }
 
     written = snprintf(line, sizeof(line), "  \"build_commit\": \"%s\",\n", SIM_BUILD_COMMIT);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -357,7 +357,7 @@ StatusCode scenario_report_print_json_header(void)
 StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
 {
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
 
     if ((error_info == (const ErrorInfo *)0) || (error_info->code == STATUS_OK))
     {
@@ -366,13 +366,13 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
 
     written = snprintf(line,
                        sizeof(line),
-                       "  \"error\": {\"code\": \"%s\", \"module\": \"%s\", \"function\": \"%s\", \"tick\": %u, \"severity\": \"%s\"},\n",
+                       "  \"error\": {\"code\": \"%s\", \"severity\": \"%s\", \"module\": \"%s\", \"function\": \"%s\", \"tick\": %u},\n",
                        status_code_to_string(error_info->code),
+                       severity_to_string(error_info->severity),
                        (error_info->module == (const char *)0) ? "unknown" : error_info->module,
                        (error_info->function == (const char *)0) ? "unknown" : error_info->function,
-                       error_info->tick,
-                       severity_to_string(error_info->severity));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+                       error_info->tick);
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -383,7 +383,7 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
 StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, const ErrorInfo *error_info)
 {
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
 
     if (output_write_line("\n  ],\n") != ENGINE_OK)
     {
@@ -400,7 +400,7 @@ StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, cons
                        "  \"summary\": {\"passed\": %d, \"total\": %d}\n}\n",
                        passed,
                        total);
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         return STATUS_BUFFER_OVERFLOW;
     }

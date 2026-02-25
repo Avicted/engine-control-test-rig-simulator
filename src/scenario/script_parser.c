@@ -82,7 +82,7 @@ static StatusCode parse_script_line(const char *line,
     char token_oil[32];
     char key_run[8];
     char token_run[8];
-    int parsed;
+    int32_t parsed;
     uint32_t tick_value;
     float rpm_value;
     float temp_value;
@@ -154,6 +154,41 @@ static StatusCode parse_script_line(const char *line,
     return STATUS_OK;
 }
 
+static StatusCode parse_corrupt_frame_line(const char *line, uint32_t *tick)
+{
+    char key_tick[8];
+    char token_tick[32];
+    char key_frame[8];
+    char token_corrupt[16];
+    int32_t parsed;
+    uint32_t tick_value;
+
+    if ((line == (const char *)0) || (tick == (uint32_t *)0))
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    parsed = sscanf(line, " %7s %31s %7s %15s", key_tick, token_tick, key_frame, token_corrupt);
+    if (parsed != 4)
+    {
+        return STATUS_PARSE_ERROR;
+    }
+
+    if ((strcmp(key_tick, "TICK") != 0) || (strcmp(key_frame, "FRAME") != 0) ||
+        (strcmp(token_corrupt, "CORRUPT") != 0))
+    {
+        return STATUS_PARSE_ERROR;
+    }
+
+    if (parse_strict_uint(token_tick, &tick_value) == 0)
+    {
+        return STATUS_PARSE_ERROR;
+    }
+
+    *tick = tick_value;
+    return STATUS_OK;
+}
+
 static int32_t line_is_whitespace_only(const char *line)
 {
     const unsigned char *cursor;
@@ -210,6 +245,8 @@ StatusCode script_parser_parse_file(const char *script_path,
     float temp_value = 0.0f;
     float oil_value = 0.0f;
     int32_t run_value = 0;
+    HAL_SensorFrame last_sensor;
+    int32_t has_last_sensor = 0;
 
     if ((script_path == (const char *)0) || (scenario_data == (ScriptScenarioData *)0) || (error_message == (char *)0) ||
         (error_message_size == 0U))
@@ -287,16 +324,7 @@ StatusCode script_parser_parse_file(const char *script_path,
                               &rpm_value,
                               &temp_value,
                               &oil_value,
-                              &run_value) != STATUS_OK)
-        {
-            (void)snprintf(error_message,
-                           error_message_size,
-                           "Malformed script line %u: expected 'TICK <n> RPM <v> TEMP <v> OIL <v> RUN <0|1>'",
-                           line_number);
-            (void)fclose(script_file);
-            return STATUS_PARSE_ERROR;
-        }
-
+                              &run_value) == STATUS_OK)
         {
             HAL_SensorFrame sensor_frame;
 
@@ -313,6 +341,43 @@ StatusCode script_parser_parse_file(const char *script_path,
                 (void)fclose(script_file);
                 return STATUS_PARSE_ERROR;
             }
+            last_sensor = sensor_frame;
+            has_last_sensor = 1;
+        }
+        else if (parse_corrupt_frame_line(line_buffer, &scenario_data->tick_values[parsed_ticks]) == STATUS_OK)
+        {
+            HAL_SensorFrame sensor_frame;
+
+            if (has_last_sensor == 0)
+            {
+                (void)snprintf(error_message,
+                               error_message_size,
+                               "Line %u uses CORRUPT frame before first valid sensor frame",
+                               line_number);
+                (void)fclose(script_file);
+                return STATUS_PARSE_ERROR;
+            }
+
+            sensor_frame = last_sensor;
+            if (hal_encode_sensor_frame(&sensor_frame, &scenario_data->sensor_frames[parsed_ticks]) != STATUS_OK)
+            {
+                (void)snprintf(error_message,
+                               error_message_size,
+                               "Line %u failed to build corrupt frame",
+                               line_number);
+                (void)fclose(script_file);
+                return STATUS_PARSE_ERROR;
+            }
+            scenario_data->sensor_frames[parsed_ticks].data[7] ^= 0x5AU;
+        }
+        else
+        {
+            (void)snprintf(error_message,
+                           error_message_size,
+                           "Malformed script line %u: expected sensor line or 'TICK <n> FRAME CORRUPT'",
+                           line_number);
+            (void)fclose(script_file);
+            return STATUS_PARSE_ERROR;
         }
 
         if ((parsed_ticks > 0U) &&

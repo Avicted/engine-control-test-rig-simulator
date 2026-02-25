@@ -1,5 +1,6 @@
 #include "control.h"
 #include "hal.h"
+#include "reporting/logger.h"
 #include "scenario/scenario_report.h"
 #include "scenario/scenario_profiles.h"
 #include "script_parser.h"
@@ -73,9 +74,13 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
         for (sim_tick = current_tick + 1U; sim_tick < target_tick; ++sim_tick)
         {
             status = hal_read_sensors(sim_tick, &sensor_frame);
-            if (status == STATUS_IO_ERROR)
+            if (status == STATUS_TIMEOUT)
             {
-                return ENGINE_ERROR;
+                (void)logger_log_tick("HAL", LOG_LEVEL_ERROR, sim_tick, "Timeout detected", 0);
+                engine->mode = ENGINE_STATE_SHUTDOWN;
+                engine->is_running = 0;
+                engine->rpm = 0.0f;
+                return ENGINE_SHUTDOWN;
             }
         }
 
@@ -85,7 +90,16 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
             return ENGINE_ERROR;
         }
 
-        if (hal_read_sensors(target_tick, &sensor_frame) != STATUS_OK)
+        status = hal_read_sensors(target_tick, &sensor_frame);
+        if (status == STATUS_TIMEOUT)
+        {
+            (void)logger_log_tick("HAL", LOG_LEVEL_ERROR, target_tick, "Timeout detected", 0);
+            engine->mode = ENGINE_STATE_SHUTDOWN;
+            engine->is_running = 0;
+            engine->rpm = 0.0f;
+            return ENGINE_SHUTDOWN;
+        }
+        if (status != STATUS_OK)
         {
             return ENGINE_ERROR;
         }

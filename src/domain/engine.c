@@ -2,7 +2,7 @@
 
 static const char *const engine_mode_str[] = {"INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN"};
 
-static int is_legal_transition(EngineStateMode from_mode, EngineStateMode to_mode)
+static int32_t is_legal_transition(EngineStateMode from_mode, EngineStateMode to_mode)
 {
     if (from_mode == to_mode)
     {

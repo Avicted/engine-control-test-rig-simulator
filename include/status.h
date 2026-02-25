@@ -9,6 +9,7 @@ typedef enum
     STATUS_INVALID_ARGUMENT,
     STATUS_PARSE_ERROR,
     STATUS_IO_ERROR,
+    STATUS_TIMEOUT,
     STATUS_BUFFER_OVERFLOW,
     STATUS_INTERNAL_ERROR
 } StatusCode;
@@ -42,6 +43,8 @@ static inline const char *status_code_to_string(StatusCode code)
         return "STATUS_PARSE_ERROR";
     case STATUS_IO_ERROR:
         return "STATUS_IO_ERROR";
+    case STATUS_TIMEOUT:
+        return "STATUS_TIMEOUT";
     case STATUS_BUFFER_OVERFLOW:
         return "STATUS_BUFFER_OVERFLOW";
     case STATUS_INTERNAL_ERROR:

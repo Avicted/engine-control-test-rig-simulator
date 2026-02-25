@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/engine-control-test-rig/calibration.schema.json",
+  "title": "Engine Control Calibration",
+  "type": "object",
+  "required": ["temperature_limit", "oil_pressure_limit", "persistence_ticks"],
+  "additionalProperties": false,
+  "properties": {
+    "temperature_limit": {
+      "type": "number",
+      "minimum": -50,
+      "maximum": 200
+    },
+    "oil_pressure_limit": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10
+    },
+    "persistence_ticks": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    }
+  }
+}

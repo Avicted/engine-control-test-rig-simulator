@@ -99,7 +99,7 @@ static int32_t run_test_case(const TestCase *test_case,
     else
     {
         char line[TEST_LINE_BUFFER_SIZE];
-        int written;
+        int32_t written;
 
         written = snprintf(line,
                            sizeof(line),
@@ -109,7 +109,7 @@ static int32_t run_test_case(const TestCase *test_case,
                            scenario_report_result_to_display_string(test_case->expected_result, use_color),
                            scenario_report_result_to_display_string(actual_result, use_color),
                            scenario_report_pass_fail_display(actual_result == test_case->expected_result, use_color));
-        if ((written < 0) || (written >= (int)sizeof(line)))
+        if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             return 0;
         }
@@ -161,7 +161,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     int32_t passed = 0;
     int32_t index;
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
 
     if (hal_init() != STATUS_OK)
     {
@@ -221,7 +221,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
         }
 
         written = snprintf(line, sizeof(line), "Summary: %d/%d tests passed\n", passed, total);
-        if ((written < 0) || (written >= (int)sizeof(line)))
+        if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -298,7 +298,7 @@ StatusCode run_named_scenario_with_json(const char *name,
     StatusCode log_status;
     int32_t expected_result;
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
     TickReport tick_reports[MAX_PROFILE_TICKS];
     uint32_t tick_report_count = 0U;
     int32_t local_show_sim;
@@ -402,7 +402,7 @@ StatusCode run_named_scenario_with_json(const char *name,
                        "Scenario '%s' result: %s\n",
                        name,
                        scenario_report_result_to_display_string(result, use_color));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
@@ -461,7 +461,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
     int32_t result;
     char error_message[TEST_LINE_BUFFER_SIZE];
     char line[TEST_LINE_BUFFER_SIZE];
-    int written;
+    int32_t written;
     ErrorInfo error_info;
 
     error_info.code = STATUS_OK;
@@ -620,7 +620,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
                        "Script '%s' result: %s\n",
                        script_path,
                        scenario_report_result_to_display_string(result, use_color));
-    if ((written < 0) || (written >= (int)sizeof(line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;

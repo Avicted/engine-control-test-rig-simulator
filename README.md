@@ -43,11 +43,16 @@ Current core data path:
            +------------------+
                   |
                   v
+              +----------------+
+              | BusFrame Queue |
+              +----------------+
+                  |
+                  v
               +-----------+
               |   HAL     |
               +-----------+
-              | Sensors   |
-              | Actuators |
+              | Decode +  |
+              | Validate  |
               +-----------+
                   |
                   v
@@ -176,6 +181,7 @@ TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1
 TICK 2 RPM 2600 TEMP 80 OIL 3.1 RUN 1 
 TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1 
 TICK 4 RPM 3200 TEMP 84.5 OIL 2.9 RUN 1
+TICK 5 FRAME CORRUPT
 ```
 
 Run:
@@ -185,6 +191,7 @@ Run:
 ```
 
 Supports CI-driven regression and HIL-style replay workflows.
+Corrupt frame directives are accepted and routed through HAL checksum validation.
 
 
 
@@ -271,9 +278,14 @@ HAL interfaces are defined in `include/hal.h` and implemented in `src/platform/h
 -   `hal_apply_sensors()` is the validated sensor-to-engine state boundary
 -   `hal_receive_bus()` / `hal_transmit_bus()` define deterministic bus interfaces
 -   `hal_write_actuators()` is the control egress boundary
+-   timeout detection returns `STATUS_TIMEOUT` after deterministic tick-gap limits
 
 The HAL implementation uses deterministic bounded frame queues, explicit
 frame validation, and a tick-based sensor timeout model.
+
+`BusFrame` is ABI-hardened with compile-time verification:
+
+- `_Static_assert(sizeof(BusFrame) == 13, "Unexpected frame size");`
 
 
 
@@ -320,6 +332,48 @@ keeping file/text parsing outside the simulation execution loop.
 Strict mode is available via `--strict`.
 
 
+## Calibration Configuration
+
+Threshold calibration can be loaded at startup:
+
+```bash
+./build/testrig --run-all --config calibration.json
+```
+
+Supported keys in `calibration.json`:
+
+- `temperature_limit`
+- `oil_pressure_limit`
+- `persistence_ticks`
+
+Validation schema: `schema/calibration.schema.json`.
+
+Configuration is parsed once at startup and cannot be mutated during runtime.
+If `--config` is omitted, deterministic defaults are used.
+
+
+## Logging Discipline
+
+Log levels:
+
+- `DEBUG`
+- `INFO`
+- `WARN`
+- `ERROR`
+
+CLI option:
+
+```bash
+./build/testrig --run-all --log-level DEBUG
+```
+
+Deterministic tick-prefixed format:
+
+`[TICK 004][HAL][ERROR] Timeout detected`
+
+When `CI` is set in the environment, `DEBUG` is automatically suppressed.
+
+
 
 
 ## Static Analysis Compatibility
@@ -331,9 +385,30 @@ Make targets:
 -   `make analyze` (cppcheck + clang-tidy + layering + sanitizers)
 -   `make test-unit`
 -   `make test-all`
+-   `make coverage`
 -   `make validate-json-contract`
 -   `make validate-json`
 -   `make ci-check`
+
+
+## Quality Gate Policy
+
+`make ci-check` is the baseline quality gate. It fails if any of the following fail:
+
+- cppcheck gate
+- clang-tidy gate
+- layering gate
+- JSON schema validation gate
+- unit/integration test gate
+- coverage gate (`>= 75%`)
+
+
+## ABI / Floating-Point Assumptions
+
+The simulator assumes:
+
+- 32-bit IEEE 754 `float`
+- fixed-width integer types (`uint8_t`, `uint32_t`, `int32_t`) for transport and control contracts
 
 
 
