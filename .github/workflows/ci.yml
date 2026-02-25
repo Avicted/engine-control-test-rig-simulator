@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cppcheck clang llvm jq
+          sudo apt-get install -y cppcheck clang llvm lcov jq
 
       - name: Build (release)
         run: make all CC=${{ matrix.compiler }}
