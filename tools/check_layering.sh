@@ -23,7 +23,6 @@ check_forbidden_includes "src/domain" "(app/)?test_runner\.h|(scenario/)?script_
 check_forbidden_includes "src/platform" "(app/)?test_runner\.h|(scenario/)?script_parser\.h|scenario/scenario_.*\.h|(reporting/)?logger\.h|(reporting/)?output\.h|(reporting/)?version\.h" "src/platform must not depend on app/scenario/reporting headers"
 check_forbidden_includes "src/scenario" "(app/)?test_runner\.h" "src/scenario must not depend on app headers"
 check_forbidden_includes "src/reporting" "(app/)?test_runner\.h" "src/reporting must not depend on app headers"
-check_forbidden_includes "src/legacy" "(app/)?test_runner\.h|(scenario/)?script_parser\.h|scenario/scenario_.*\.h|(reporting/)?logger\.h|(reporting/)?output\.h|(reporting/)?version\.h|(platform/)?hal\.h" "src/legacy must stay isolated from active orchestration/reporting/platform headers"
 
 rm -f /tmp/layer_check_matches.txt
 

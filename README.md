@@ -83,7 +83,6 @@ The simulator source is organized by responsibility:
 - `src/platform` → HAL boundary and I/O adaptation
 - `src/scenario` → scenario catalog, profiles, parser, scenario reporting
 - `src/reporting` → output/logging utilities and report metadata
-- `src/legacy` → retained non-primary modules
 - `include` → public API headers/contracts
 
 ### Dependency Direction Rules
@@ -95,7 +94,6 @@ Allowed dependency directions are intentionally constrained:
 - `platform` may depend on `domain` + `include` contracts, but not `app`, `scenario`, or `reporting`.
 - `scenario` may depend on `domain`, `platform`, `reporting`, and `include` contracts, but not `app`.
 - `reporting` may depend on `domain`, `platform`, `scenario` data types, and `include` contracts, but not `app`.
-- `legacy` remains isolated from active orchestration/reporting/platform interfaces.
 
 These rules are enforced in CI via `make analyze-layering` using `tools/check_layering.sh`.
 
@@ -496,11 +494,9 @@ component.
 
 ## Future Extensions
 
--   Configurable thresholds via JSON
 -   Fault-type classification reporting
 -   CSV export for lab analysis
 -   Replay checksum verification
--   Module-level unit testing integration
 
 
 

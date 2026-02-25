@@ -363,13 +363,33 @@ StatusCode hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Fram
 
     frame_out->id = HAL_SENSOR_FRAME_ID;
     frame_out->dlc = 8U;
+
+    /*
+     * Byte layout in the 8-byte CAN payload:
+     * [0] RPM high byte, [1] RPM low byte
+     * [2] Temperature high byte, [3] Temperature low byte
+     * [4] Oil pressure high byte, [5] Oil pressure low byte
+     * [6] Running flag (0 or 1)
+     * [7] Checksum (XOR of bytes 0..6)
+     *
+     * Packing rule for each 16-bit value:
+     * - High byte: (value >> 8) & 0xFF
+     * - Low byte : value & 0xFF
+     *
+     * This uses big-endian byte order inside the frame and keeps scaling precision:
+     * temperature is encoded as (temp + 50) * 10, oil as oil * 100.
+     */
     frame_out->data[0] = (uint8_t)((rpm_encoded >> 8U) & 0xFFU);
     frame_out->data[1] = (uint8_t)(rpm_encoded & 0xFFU);
+
     frame_out->data[2] = (uint8_t)((temp_encoded >> 8U) & 0xFFU);
     frame_out->data[3] = (uint8_t)(temp_encoded & 0xFFU);
+
     frame_out->data[4] = (uint8_t)((oil_encoded >> 8U) & 0xFFU);
     frame_out->data[5] = (uint8_t)(oil_encoded & 0xFFU);
+
     frame_out->data[6] = (uint8_t)sensor_frame->is_running;
+
     frame_out->data[7] = frame_checksum(frame_out);
 
     hal_set_error(STATUS_OK, "hal_encode_sensor_frame", 0U, SEVERITY_INFO);

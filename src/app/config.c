@@ -113,10 +113,10 @@ static const char *find_json_key(const char *buffer, const char *key)
                     return after; /* return pointer to the colon */
                 }
             }
-            /* Not our key — enter the string so we skip its contents */
+            /* Not our key - enter the string so we skip its contents */
             in_string = 1;
         }
-        /* Ignore braces/brackets — we only need string-awareness for correctness
+        /* Ignore braces/brackets - we only need string-awareness for correctness
          * since the config schema is validated separately by validate_only_known_keys(). */
     }
 
