@@ -192,8 +192,27 @@ coverage-html: coverage
 		--title "Engine Control Test Rig" --legend --quiet
 	@echo "HTML coverage report: $(COVERAGE_HTML_DIR)/index.html"
 
+coverage-main: $(BUILD_DIR)
+	mkdir -p $(COVERAGE_DIR)
+	rm -f $(BUILD_DIR)/testrig_cov* $(COVERAGE_DIR)/main.c.gcov $(COVERAGE_DIR)/main_coverage.txt
+	$(CC) $(CPPFLAGS) $(COVERAGE_CFLAGS) -o $(BUILD_DIR)/testrig_cov $(SRCS) $(LDFLAGS)
+	$(BUILD_DIR)/testrig_cov --version > /dev/null
+	$(GCOV) -b -c $(BUILD_DIR)/testrig_cov-main.gcno > $(COVERAGE_DIR)/main_coverage.txt
+	@mv -f ./main.c.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
+
+coverage-html-main: coverage
+	@echo "Generating main.c HTML coverage report..."
+	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		--output-file $(BUILD_DIR)/coverage-main.info --quiet
+	lcov --extract $(BUILD_DIR)/coverage-main.info '*/src/app/main.c' \
+		--output-file $(BUILD_DIR)/coverage-main-src.info --quiet \
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+	genhtml $(BUILD_DIR)/coverage-main-src.info --output-directory $(COVERAGE_DIR)/html-main \
+		--title "Engine Control Test Rig (main.c)" --legend --quiet
+	@echo "HTML main.c report: $(COVERAGE_DIR)/html-main/index.html"
+
 coverage-clean:
-	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info
+	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/testrig_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info
 	rm -rf $(COVERAGE_DIR)
 
 validate-json-contract: $(TARGET)

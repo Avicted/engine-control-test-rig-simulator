@@ -39,5 +39,6 @@ int32_t register_hal_decode_tests(const UnitTestCase **tests_out, uint32_t *coun
 int32_t register_script_parser_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 int32_t register_logger_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 int32_t register_config_tests(const UnitTestCase **tests_out, uint32_t *count_out);
+int32_t register_app_main_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 
 #endif
