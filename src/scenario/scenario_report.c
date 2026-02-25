@@ -123,7 +123,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
     {
         return ENGINE_ERROR;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return ENGINE_ERROR;
     }
@@ -141,7 +141,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
         {
             return ENGINE_ERROR;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -186,7 +186,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
         {
             return ENGINE_ERROR;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -218,7 +218,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     expected_value = (has_expected != 0) ? expected_result : actual_result;
     is_pass = (expected_value == actual_result) ? 1 : 0;
 
-    if (output_write_line("    {\n") != ENGINE_OK)
+    if (output_write_line("    {\n") != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -228,7 +228,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -238,12 +238,12 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
 
-    if (output_write_line("      \"ticks\": [\n") != ENGINE_OK)
+    if (output_write_line("      \"ticks\": [\n") != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -267,13 +267,13 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
         {
             return STATUS_BUFFER_OVERFLOW;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             return STATUS_IO_ERROR;
         }
     }
 
-    if (output_write_line("      ],\n") != ENGINE_OK)
+    if (output_write_line("      ],\n") != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -283,7 +283,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -293,7 +293,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -303,12 +303,12 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
 
-    return (output_write_line("    }") == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
+    return (output_write_line("    }") == STATUS_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }
 
 StatusCode scenario_report_print_json_header(void)
@@ -316,7 +316,7 @@ StatusCode scenario_report_print_json_header(void)
     char line[TEST_LINE_BUFFER_SIZE];
     int32_t written;
 
-    if (output_write_line("{\n") != ENGINE_OK)
+    if (output_write_line("{\n") != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -326,7 +326,7 @@ StatusCode scenario_report_print_json_header(void)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -336,7 +336,7 @@ StatusCode scenario_report_print_json_header(void)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -346,12 +346,12 @@ StatusCode scenario_report_print_json_header(void)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
 
-    return (output_write_line("  \"scenarios\": [\n") == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
+    return (output_write_line("  \"scenarios\": [\n") == STATUS_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }
 
 StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
@@ -378,7 +378,7 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
         return STATUS_BUFFER_OVERFLOW;
     }
 
-    return (output_write_line(line) == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
+    return (output_write_line(line) == STATUS_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }
 
 StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, const ErrorInfo *error_info)
@@ -386,7 +386,7 @@ StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, cons
     char line[TEST_LINE_BUFFER_SIZE];
     int32_t written;
 
-    if (output_write_line("\n  ],\n") != ENGINE_OK)
+    if (output_write_line("\n  ],\n") != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }
@@ -406,5 +406,5 @@ StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, cons
         return STATUS_BUFFER_OVERFLOW;
     }
 
-    return (output_write_line(line) == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
+    return (output_write_line(line) == STATUS_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }

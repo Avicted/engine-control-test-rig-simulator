@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "software_version": "0.3.0",
-  "build_commit": "1018287",
+  "build_commit": "78f5cfc",
   "scenarios": [
     {
       "scenario": "normal_operation",

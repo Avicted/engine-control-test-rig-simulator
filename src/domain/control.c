@@ -3,6 +3,11 @@
 #include <math.h>   /* isfinite */
 #include <stddef.h> /* NULL */
 
+/*
+ * NOTE: All module-level state assumes single-threaded execution.
+ * If threaded scenarios are introduced (see MISRA Dir 5.1/5.2),
+ * add volatile or _Atomic qualifiers and appropriate synchronisation.
+ */
 static ControlCalibration g_calibration = {
     CONTROL_DEFAULT_TEMP_LIMIT,
     CONTROL_DEFAULT_OIL_PRESSURE_LIMIT,
@@ -200,10 +205,10 @@ StatusCode compute_control_output(const EngineState *engine, float *control_outp
         return STATUS_INVALID_ARGUMENT;
     }
 
-    output = 20.0f;
-    output += engine->rpm / 100.0f;
-    output -= (engine->temperature - 25.0f) * 0.25f;
-    output -= (3.0f - engine->oil_pressure) * 10.0f;
+    output = CONTROL_OUTPUT_BASE_BIAS;
+    output += engine->rpm / CONTROL_OUTPUT_RPM_DIVISOR;
+    output -= (engine->temperature - CONTROL_OUTPUT_TEMP_REFERENCE) * CONTROL_OUTPUT_TEMP_COEFFICIENT;
+    output -= (CONTROL_OUTPUT_OIL_REFERENCE - engine->oil_pressure) * CONTROL_OUTPUT_OIL_COEFFICIENT;
 
     *control_output = clamp_output(output);
     return STATUS_OK;

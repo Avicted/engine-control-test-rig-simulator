@@ -16,7 +16,7 @@
 #define TEST_LINE_BUFFER_SIZE 256
 #define MAX_PROFILE_TICKS 26U
 
-static int32_t print_test_separator(void)
+static StatusCode print_test_separator(void)
 {
     return output_write_line("------------------------------------------------------------\n");
 }
@@ -53,7 +53,7 @@ static int32_t run_test_case(const TestCase *test_case,
 
     if (json_output == 0)
     {
-        if (print_test_separator() != ENGINE_OK)
+        if (print_test_separator() != STATUS_OK)
         {
             return 0;
         }
@@ -79,7 +79,7 @@ static int32_t run_test_case(const TestCase *test_case,
     {
         if (json_prefix_comma != 0)
         {
-            if (output_write_line(",\n") != ENGINE_OK)
+            if (output_write_line(",\n") != STATUS_OK)
             {
                 return 0;
             }
@@ -113,7 +113,7 @@ static int32_t run_test_case(const TestCase *test_case,
         {
             return 0;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             return 0;
         }
@@ -214,7 +214,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     }
     else
     {
-        if (print_test_separator() != ENGINE_OK)
+        if (print_test_separator() != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -226,7 +226,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -407,7 +407,7 @@ StatusCode run_named_scenario_with_json(const char *name,
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
@@ -629,7 +629,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
         return STATUS_INTERNAL_ERROR;
     }
 
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;

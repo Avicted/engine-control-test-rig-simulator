@@ -18,6 +18,16 @@
 #define CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS 3U
 #define CONTROL_DEFAULT_COMBINED_WARNING_PERSISTENCE_TICKS 2U
 
+/** @name Control-law coefficients for compute_control_output(). */
+/** @{ */
+#define CONTROL_OUTPUT_BASE_BIAS 20.0f        /**< Baseline output percentage. */
+#define CONTROL_OUTPUT_RPM_DIVISOR 100.0f     /**< RPM-to-output scaling divisor. */
+#define CONTROL_OUTPUT_TEMP_REFERENCE 25.0f   /**< Temperature reference point (deg C). */
+#define CONTROL_OUTPUT_TEMP_COEFFICIENT 0.25f /**< Output reduction per deg C above reference. */
+#define CONTROL_OUTPUT_OIL_REFERENCE 3.0f     /**< Oil-pressure reference point (bar). */
+#define CONTROL_OUTPUT_OIL_COEFFICIENT 10.0f  /**< Output reduction per bar below reference. */
+/** @} */
+
 typedef struct
 {
     float temperature_limit;

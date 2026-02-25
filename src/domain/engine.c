@@ -1,11 +1,16 @@
 #include "engine.h"
 
-#include <math.h>    /* isfinite */
-#include <stddef.h>  /* NULL */
+#include <math.h>   /* isfinite */
+#include <stddef.h> /* NULL */
 
 static const char *const engine_mode_str[] = {"INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN"};
 
 /* --- Engine physics configuration (plant model) --- */
+/*
+ * NOTE: All module-level state assumes single-threaded execution.
+ * If threaded scenarios are introduced (see MISRA Dir 5.1/5.2),
+ * add volatile or _Atomic qualifiers and appropriate synchronisation.
+ */
 static EnginePhysicsConfig g_physics = {
     ENGINE_DEFAULT_TARGET_RPM,
     ENGINE_DEFAULT_TARGET_TEMP,

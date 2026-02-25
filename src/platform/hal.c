@@ -27,6 +27,11 @@ typedef struct
     uint32_t count;
 } HAL_TxFrameQueue;
 
+/*
+ * NOTE: All module-level state assumes single-threaded execution.
+ * If threaded scenarios are introduced (see MISRA Dir 5.1/5.2),
+ * add volatile or _Atomic qualifiers and appropriate synchronisation.
+ */
 static HAL_FrameQueue g_sensor_rx_queue;
 static HAL_FrameQueue g_bus_rx_queue;
 static HAL_TxFrameQueue g_bus_tx_queue;

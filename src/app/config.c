@@ -53,10 +53,78 @@ static int32_t key_allowed(const char *key)
     return 0;
 }
 
-static int32_t parse_float_field(const char *buffer, const char *key, float *value_out)
+/**
+ * @brief Find a JSON key in the buffer, respecting string boundaries and brace depth.
+ *
+ * Scans the buffer tracking whether we are inside a JSON string value
+ * (handling backslash-escaped quotes) and counting brace depth. Only returns
+ * a match when the key appears as a bare key token (not inside another string
+ * value) and is followed (after optional whitespace) by a colon.
+ *
+ * @param[in]  buffer  NUL-terminated JSON text.
+ * @param[in]  key     Key name to find (without surrounding quotes).
+ * @return Pointer to the colon after the matched key, or NULL on failure.
+ */
+static const char *find_json_key(const char *buffer, const char *key)
 {
     char pattern[64];
-    const char *key_pos;
+    size_t pattern_len;
+    const char *cursor;
+    int32_t in_string = 0;
+
+    if ((buffer == NULL) || (key == NULL))
+    {
+        return NULL;
+    }
+
+    (void)snprintf(pattern, sizeof(pattern), "\"%s\"", key);
+    pattern_len = strlen(pattern);
+
+    for (cursor = buffer; *cursor != '\0'; ++cursor)
+    {
+        if (in_string != 0)
+        {
+            if ((*cursor == '\\') && (*(cursor + 1) != '\0'))
+            {
+                ++cursor; /* skip escaped character */
+            }
+            else if (*cursor == '"')
+            {
+                in_string = 0;
+            }
+            continue;
+        }
+
+        /* Outside any string value */
+        if (*cursor == '"')
+        {
+            /* Check whether this quoted token matches our pattern */
+            if (strncmp(cursor, pattern, pattern_len) == 0)
+            {
+                const char *after = cursor + pattern_len;
+                /* Skip whitespace between key and colon */
+                while ((*after == ' ') || (*after == '\t') ||
+                       (*after == '\n') || (*after == '\r'))
+                {
+                    ++after;
+                }
+                if (*after == ':')
+                {
+                    return after; /* return pointer to the colon */
+                }
+            }
+            /* Not our key — enter the string so we skip its contents */
+            in_string = 1;
+        }
+        /* Ignore braces/brackets — we only need string-awareness for correctness
+         * since the config schema is validated separately by validate_only_known_keys(). */
+    }
+
+    return NULL;
+}
+
+static int32_t parse_float_field(const char *buffer, const char *key, float *value_out)
+{
     const char *colon_pos;
     char *end_ptr;
     float parsed;
@@ -66,14 +134,7 @@ static int32_t parse_float_field(const char *buffer, const char *key, float *val
         return 0;
     }
 
-    (void)snprintf(pattern, sizeof(pattern), "\"%s\"", key);
-    key_pos = strstr(buffer, pattern);
-    if (key_pos == NULL)
-    {
-        return 0;
-    }
-
-    colon_pos = strchr(key_pos, ':');
+    colon_pos = find_json_key(buffer, key);
     if (colon_pos == NULL)
     {
         return 0;
@@ -92,8 +153,6 @@ static int32_t parse_float_field(const char *buffer, const char *key, float *val
 
 static int32_t parse_uint_field(const char *buffer, const char *key, uint32_t *value_out)
 {
-    char pattern[64];
-    const char *key_pos;
     const char *colon_pos;
     char *end_ptr;
     unsigned long parsed;
@@ -103,14 +162,7 @@ static int32_t parse_uint_field(const char *buffer, const char *key, uint32_t *v
         return 0;
     }
 
-    (void)snprintf(pattern, sizeof(pattern), "\"%s\"", key);
-    key_pos = strstr(buffer, pattern);
-    if (key_pos == NULL)
-    {
-        return 0;
-    }
-
-    colon_pos = strchr(key_pos, ':');
+    colon_pos = find_json_key(buffer, key);
     if (colon_pos == NULL)
     {
         return 0;

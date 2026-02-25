@@ -10,6 +10,9 @@
 
 #include "engine.h"
 
+/* Forward declaration — full definition in scenario_profiles.h */
+struct TickReport;
+
 /** @brief Maximum number of test cases in a single test suite. */
 #define MAX_TESTS 10
 /** @brief Maximum length of a scenario name string (including NUL). */
@@ -33,7 +36,7 @@ typedef struct
      * @brief Scenario callback.
      * @note Contract: deterministic, no dynamic allocation, bounded ticks.
      */
-    int32_t (*scenario_func)(EngineState *, int32_t, int32_t, int32_t, void *, uint32_t, uint32_t *);
+    int32_t (*scenario_func)(EngineState *, int32_t, int32_t, int32_t, struct TickReport *, uint32_t, uint32_t *);
     int32_t expected_result; /**< Expected return value from scenario_func. */
 } TestCase;
 
