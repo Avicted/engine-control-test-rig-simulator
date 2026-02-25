@@ -4,27 +4,24 @@
 #include "scenario/scenario_profiles.h"
 #include "script_parser.h"
 
-int32_t execute_profile(EngineState *engine,
-                        const uint32_t *tick_values,
-                        const float *rpm_values,
-                        const float *temp_values,
-                        const float *oil_values,
-                        const int32_t *run_values,
-                        uint32_t tick_count,
-                        int32_t show_sim,
-                        int32_t show_control,
-                        int32_t show_state,
-                        TickReport *tick_reports,
-                        uint32_t tick_report_capacity,
-                        uint32_t *tick_report_count)
+static int32_t execute_profile_frames_internal(EngineState *engine,
+                                               const uint32_t *tick_values,
+                                               const HAL_Frame *sensor_frames,
+                                               uint32_t tick_count,
+                                               int32_t show_sim,
+                                               int32_t show_control,
+                                               int32_t show_state,
+                                               TickReport *tick_reports,
+                                               uint32_t tick_report_capacity,
+                                               uint32_t *tick_report_count)
 {
     HAL_SensorFrame sensor_frame;
     uint32_t tick_index;
+    uint32_t current_tick = 0U;
     StatusCode status;
     int32_t result = ENGINE_OK;
 
-    if ((engine == (EngineState *)0) || (rpm_values == (const float *)0) ||
-        (temp_values == (const float *)0) || (oil_values == (const float *)0))
+    if ((engine == (EngineState *)0) || (sensor_frames == (const HAL_Frame *)0))
     {
         return ENGINE_ERROR;
     }
@@ -64,28 +61,31 @@ int32_t execute_profile(EngineState *engine,
 
     for (tick_index = 0U; tick_index < tick_count; ++tick_index)
     {
-        int32_t run_flag;
+        uint32_t target_tick;
+        uint32_t sim_tick;
 
-        if (run_values == (const int32_t *)0)
-        {
-            run_flag = 1;
-        }
-        else
-        {
-            run_flag = run_values[tick_index];
-        }
-
-        if ((run_flag != 0) && (run_flag != 1))
+        target_tick = (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
+        if (target_tick <= current_tick)
         {
             return ENGINE_ERROR;
         }
 
-        sensor_frame.is_running = run_flag;
-        sensor_frame.rpm = rpm_values[tick_index];
-        sensor_frame.temperature = temp_values[tick_index];
-        sensor_frame.oil_pressure = oil_values[tick_index];
+        for (sim_tick = current_tick + 1U; sim_tick < target_tick; ++sim_tick)
+        {
+            status = hal_read_sensors(sim_tick, &sensor_frame);
+            if (status == STATUS_IO_ERROR)
+            {
+                return ENGINE_ERROR;
+            }
+        }
 
-        if (hal_read_sensors(&sensor_frame) != STATUS_OK)
+        status = hal_ingest_sensor_frame(&sensor_frames[tick_index], target_tick);
+        if (status != STATUS_OK)
+        {
+            return ENGINE_ERROR;
+        }
+
+        if (hal_read_sensors(target_tick, &sensor_frame) != STATUS_OK)
         {
             return ENGINE_ERROR;
         }
@@ -110,12 +110,11 @@ int32_t execute_profile(EngineState *engine,
                 return ENGINE_ERROR;
             }
 
-            tick_reports[report_index].tick =
-                (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
-            tick_reports[report_index].rpm = rpm_values[tick_index];
-            tick_reports[report_index].temp = temp_values[tick_index];
-            tick_reports[report_index].oil = oil_values[tick_index];
-            tick_reports[report_index].run = run_flag;
+            tick_reports[report_index].tick = target_tick;
+            tick_reports[report_index].rpm = sensor_frame.rpm;
+            tick_reports[report_index].temp = sensor_frame.temperature;
+            tick_reports[report_index].oil = sensor_frame.oil_pressure;
+            tick_reports[report_index].run = sensor_frame.is_running;
             tick_reports[report_index].result = result;
             tick_reports[report_index].control = control_output;
             tick_reports[report_index].mode = engine->mode;
@@ -123,10 +122,7 @@ int32_t execute_profile(EngineState *engine,
 
         if ((show_sim != 0) || (show_control != 0) || (show_state != 0))
         {
-            uint32_t tick_value;
-
-            tick_value = (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
-            if (scenario_report_print_tick_details(tick_value,
+            if (scenario_report_print_tick_details(target_tick,
                                                    engine,
                                                    result,
                                                    show_sim,
@@ -142,6 +138,8 @@ int32_t execute_profile(EngineState *engine,
         {
             return ENGINE_ERROR;
         }
+
+        current_tick = target_tick;
     }
 
     if (tick_report_count != (uint32_t *)0)
@@ -150,6 +148,99 @@ int32_t execute_profile(EngineState *engine,
     }
 
     return result;
+}
+
+int32_t execute_profile_frames(EngineState *engine,
+                               const uint32_t *tick_values,
+                               const HAL_Frame *sensor_frames,
+                               uint32_t tick_count,
+                               int32_t show_sim,
+                               int32_t show_control,
+                               int32_t show_state,
+                               TickReport *tick_reports,
+                               uint32_t tick_report_capacity,
+                               uint32_t *tick_report_count)
+{
+    return execute_profile_frames_internal(engine,
+                                           tick_values,
+                                           sensor_frames,
+                                           tick_count,
+                                           show_sim,
+                                           show_control,
+                                           show_state,
+                                           tick_reports,
+                                           tick_report_capacity,
+                                           tick_report_count);
+}
+
+int32_t execute_profile(EngineState *engine,
+                        const uint32_t *tick_values,
+                        const float *rpm_values,
+                        const float *temp_values,
+                        const float *oil_values,
+                        const int32_t *run_values,
+                        uint32_t tick_count,
+                        int32_t show_sim,
+                        int32_t show_control,
+                        int32_t show_state,
+                        TickReport *tick_reports,
+                        uint32_t tick_report_capacity,
+                        uint32_t *tick_report_count)
+{
+    HAL_Frame sensor_frames[SCRIPT_PARSER_MAX_TICKS];
+    uint32_t tick_index;
+    HAL_SensorFrame sensor_frame;
+
+    if ((engine == (EngineState *)0) || (rpm_values == (const float *)0) ||
+        (temp_values == (const float *)0) || (oil_values == (const float *)0))
+    {
+        return ENGINE_ERROR;
+    }
+
+    if ((tick_count == 0U) || (tick_count > SCRIPT_PARSER_MAX_TICKS))
+    {
+        return ENGINE_ERROR;
+    }
+
+    for (tick_index = 0U; tick_index < tick_count; ++tick_index)
+    {
+        int32_t run_flag;
+
+        if (run_values == (const int32_t *)0)
+        {
+            run_flag = 1;
+        }
+        else
+        {
+            run_flag = run_values[tick_index];
+        }
+
+        if ((run_flag != 0) && (run_flag != 1))
+        {
+            return ENGINE_ERROR;
+        }
+
+        sensor_frame.rpm = rpm_values[tick_index];
+        sensor_frame.temperature = temp_values[tick_index];
+        sensor_frame.oil_pressure = oil_values[tick_index];
+        sensor_frame.is_running = run_flag;
+
+        if (hal_encode_sensor_frame(&sensor_frame, &sensor_frames[tick_index]) != STATUS_OK)
+        {
+            return ENGINE_ERROR;
+        }
+    }
+
+    return execute_profile_frames_internal(engine,
+                                           tick_values,
+                                           sensor_frames,
+                                           tick_count,
+                                           show_sim,
+                                           show_control,
+                                           show_state,
+                                           tick_reports,
+                                           tick_report_capacity,
+                                           tick_report_count);
 }
 
 int32_t scenario_normal_operation(EngineState *engine,

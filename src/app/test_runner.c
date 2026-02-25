@@ -142,7 +142,7 @@ static int32_t valid_scenario_name(const char *name)
 
 static int32_t validate_hal_negative_cases(void)
 {
-    if (hal_read_sensors((HAL_SensorFrame *)0) != STATUS_INVALID_ARGUMENT)
+    if (hal_read_sensors(0U, (HAL_SensorFrame *)0) != STATUS_INVALID_ARGUMENT)
     {
         return ENGINE_ERROR;
     }
@@ -206,7 +206,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
 
     if (json_output != 0)
     {
-        if (scenario_report_print_json_footer(passed, total) != STATUS_OK)
+        if (scenario_report_print_json_footer(passed, total, (const ErrorInfo *)0) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -367,7 +367,7 @@ StatusCode run_named_scenario_with_json(const char *name,
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
         }
-        if (scenario_report_print_json_footer((result == expected_result) ? 1 : 0, 1) != STATUS_OK)
+        if (scenario_report_print_json_footer((result == expected_result) ? 1 : 0, 1, (const ErrorInfo *)0) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -462,6 +462,13 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
     char error_message[TEST_LINE_BUFFER_SIZE];
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
+    ErrorInfo error_info;
+
+    error_info.code = STATUS_OK;
+    error_info.module = "test_runner";
+    error_info.function = "run_scripted_scenario_with_json";
+    error_info.tick = 0U;
+    error_info.severity = SEVERITY_INFO;
 
     if (hal_init() != STATUS_OK)
     {
@@ -474,9 +481,23 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
                                  (uint32_t)sizeof(error_message),
                                  strict_mode) != STATUS_OK)
     {
+        error_info.code = STATUS_PARSE_ERROR;
+        error_info.module = "script_parser";
+        error_info.function = "script_parser_parse_file";
+        error_info.tick = 0U;
+        error_info.severity = SEVERITY_ERROR;
         if (json_output == 0)
         {
             (void)log_event_with_options("ERROR", error_message, use_color);
+        }
+        else
+        {
+            if ((scenario_report_print_json_header() == STATUS_OK) &&
+                (scenario_report_print_json_footer(0, 0, &error_info) == STATUS_OK))
+            {
+                (void)hal_shutdown();
+                return STATUS_PARSE_ERROR;
+            }
         }
         (void)hal_shutdown();
         return STATUS_PARSE_ERROR;
@@ -504,21 +525,35 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
         }
     }
 
-    result = execute_profile(&engine,
-                             script_data.tick_values,
-                             script_data.rpm_values,
-                             script_data.temp_values,
-                             script_data.oil_values,
-                             script_data.run_values,
-                             script_data.tick_count,
-                             (json_output != 0) ? 0 : show_sim,
-                             (json_output != 0) ? 0 : show_control,
-                             (json_output != 0) ? 0 : show_state,
-                             tick_reports,
-                             SCRIPT_PARSER_MAX_TICKS + 1U,
-                             &tick_report_count);
+    result = execute_profile_frames(&engine,
+                                    script_data.tick_values,
+                                    script_data.sensor_frames,
+                                    script_data.tick_count,
+                                    (json_output != 0) ? 0 : show_sim,
+                                    (json_output != 0) ? 0 : show_control,
+                                    (json_output != 0) ? 0 : show_state,
+                                    tick_reports,
+                                    SCRIPT_PARSER_MAX_TICKS + 1U,
+                                    &tick_report_count);
     if (result == ENGINE_ERROR)
     {
+        if (hal_get_last_error(&error_info) != STATUS_OK)
+        {
+            error_info.code = STATUS_INTERNAL_ERROR;
+            error_info.module = "scenario";
+            error_info.function = "execute_profile_frames";
+            error_info.tick = 0U;
+            error_info.severity = SEVERITY_FATAL;
+        }
+        if (json_output != 0)
+        {
+            if ((scenario_report_print_json_header() == STATUS_OK) &&
+                (scenario_report_print_json_footer(0, 0, &error_info) == STATUS_OK))
+            {
+                (void)hal_shutdown();
+                return STATUS_INTERNAL_ERROR;
+            }
+        }
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
     }
@@ -543,7 +578,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
             return STATUS_INTERNAL_ERROR;
         }
 
-        if (scenario_report_print_json_footer(1, 1) != STATUS_OK)
+        if (scenario_report_print_json_footer(1, 1, (const ErrorInfo *)0) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;

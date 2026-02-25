@@ -48,32 +48,42 @@ _Static_assert((sizeof(((EngineState *)0)->fault_counters) / sizeof(uint32_t)) =
 StatusCode engine_init(EngineState *engine);
 
 /*
- * PRE: engine != NULL.
- * POST: engine is reinitialized to deterministic baseline values.
+ * @requirement REQ-ENG-000
+ * @pre engine != NULL
+ * @post engine is reinitialized to deterministic baseline values
+ * @deterministic yes
  */
 StatusCode engine_reset(EngineState *engine);
 
 /*
- * PRE: engine != NULL and engine->mode == ENGINE_STATE_INIT.
- * POST: engine transitions to STARTING and run flag is enabled.
+ * @requirement REQ-ENG-000
+ * @pre engine != NULL and engine->mode == ENGINE_STATE_INIT
+ * @post engine transitions to STARTING and run flag is enabled
+ * @deterministic yes
  */
 StatusCode engine_start(EngineState *engine);
 
 /*
- * PRE: engine != NULL.
- * POST: engine performs one deterministic update step and legal transitions.
+ * @requirement REQ-ENG-000
+ * @pre engine != NULL
+ * @post engine performs one deterministic update step and legal transitions
+ * @deterministic yes
  */
 StatusCode engine_update(EngineState *engine);
 
 /*
- * PRE: engine != NULL and requested transition is legal.
- * POST: engine->mode == target_mode when STATUS_OK is returned.
+ * @requirement REQ-ENG-000
+ * @pre engine != NULL and requested transition is legal
+ * @post engine->mode == target_mode when STATUS_OK is returned
+ * @deterministic yes
  */
 StatusCode engine_transition_mode(EngineState *engine, EngineStateMode target_mode);
 
 /*
- * PRE: engine != NULL and mode_string != NULL.
- * POST: *mode_string points to stable mode text for the current engine mode.
+ * @requirement REQ-ENG-000
+ * @pre engine != NULL and mode_string != NULL
+ * @post *mode_string points to stable mode text for the current engine mode
+ * @deterministic yes
  */
 StatusCode engine_get_mode_string(const EngineState *engine, const char **mode_string);
 

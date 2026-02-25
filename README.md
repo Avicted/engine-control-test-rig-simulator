@@ -194,6 +194,7 @@ Supports CI-driven regression and HIL-style replay workflows.
 Per-scenario JSON includes:
 
 -   Top-level contract metadata (`schema_version`, `software_version`)
+-   Build metadata (`build_commit`)
 -   Tick-level sensor inputs
 -   Control output
 -   Engine mode
@@ -205,7 +206,7 @@ Per-scenario JSON includes:
 Designed for CI gating and automated validation parsing.
 
 Formal schema is provided at
-`visualization/schema/scenario-result.schema.json`.
+`schema/engine_test_rig.schema.json`.
 
 
 
@@ -265,13 +266,14 @@ changes before hardware deployment.
 HAL interfaces are defined in `include/hal.h` and implemented in `src/platform/hal.c`.
 
 -   `hal_init()` / `hal_shutdown()` manage HAL lifecycle
--   `hal_read_sensors()` is the sensor ingress boundary
+-   `hal_ingest_sensor_frame()` ingests deterministic transport frames
+-   `hal_read_sensors()` decodes frame payloads into validated sensor values
 -   `hal_apply_sensors()` is the validated sensor-to-engine state boundary
 -   `hal_receive_bus()` / `hal_transmit_bus()` define deterministic bus interfaces
 -   `hal_write_actuators()` is the control egress boundary
 
-The current HAL implementation is deterministic pass-through with strict
-pointer validation and explicit `StatusCode` returns.
+The HAL implementation uses deterministic bounded frame queues, explicit
+frame validation, and a tick-based sensor timeout model.
 
 
 
@@ -306,6 +308,9 @@ Formal requirement mapping matrix is maintained in
 -   `STATUS_BUFFER_OVERFLOW`
 -   `STATUS_INTERNAL_ERROR`
 
+Structured diagnostics are exposed through `ErrorInfo` and severity levels
+(`SEVERITY_INFO`, `SEVERITY_WARNING`, `SEVERITY_ERROR`, `SEVERITY_FATAL`).
+
 Script parsing and logger/HAL paths use explicit status returns with no
 silent fallthrough.
 
@@ -323,9 +328,11 @@ Make targets:
 
 -   `make analyze-cppcheck`
 -   `make analyze-clang-tidy`
--   `make debug` (AddressSanitizer + UndefinedBehaviorSanitizer)
+-   `make analyze` (cppcheck + clang-tidy + layering + sanitizers)
 -   `make test-unit`
+-   `make test-all`
 -   `make validate-json-contract`
+-   `make validate-json`
 -   `make ci-check`
 
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.local/engine-control-test-rig/scenario-result.schema.json",
-  "title": "Engine Control Scenario Report",
+  "$id": "https://example.local/engine-control-test-rig/engine_test_rig.schema.json",
+  "title": "Engine Control Test Rig Report",
   "type": "object",
   "required": ["schema_version", "software_version", "build_commit", "scenarios", "summary"],
   "additionalProperties": false,
@@ -20,24 +20,15 @@
     },
     "scenarios": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "object",
-        "required": [
-          "scenario",
-          "requirement_id",
-          "ticks",
-          "expected",
-          "actual",
-          "pass"
-        ],
+        "required": ["scenario", "requirement_id", "ticks", "expected", "actual", "pass"],
         "additionalProperties": false,
         "properties": {
           "scenario": { "type": "string", "minLength": 1 },
           "requirement_id": { "type": "string", "minLength": 1 },
           "ticks": {
             "type": "array",
-            "minItems": 1,
             "items": {
               "type": "object",
               "required": ["tick", "rpm", "temp", "oil", "run", "result", "control", "engine_mode"],
@@ -63,13 +54,25 @@
         }
       }
     },
+    "error": {
+      "type": "object",
+      "required": ["code", "module", "tick", "severity"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "module": { "type": "string", "minLength": 1 },
+        "function": { "type": "string", "minLength": 1 },
+        "tick": { "type": "integer", "minimum": 0 },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "ERROR", "FATAL"] }
+      }
+    },
     "summary": {
       "type": "object",
       "required": ["passed", "total"],
       "additionalProperties": false,
       "properties": {
         "passed": { "type": "integer", "minimum": 0 },
-        "total": { "type": "integer", "minimum": 1 }
+        "total": { "type": "integer", "minimum": 0 }
       }
     }
   }

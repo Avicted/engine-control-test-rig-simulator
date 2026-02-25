@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hal.h"
 #include "script_parser.h"
 
 #define SCRIPT_LINE_BUFFER_SIZE 192
@@ -205,6 +206,10 @@ StatusCode script_parser_parse_file(const char *script_path,
     char line_buffer[SCRIPT_LINE_BUFFER_SIZE];
     uint32_t line_number = 0U;
     uint32_t parsed_ticks = 0U;
+    float rpm_value = 0.0f;
+    float temp_value = 0.0f;
+    float oil_value = 0.0f;
+    int32_t run_value = 0;
 
     if ((script_path == (const char *)0) || (scenario_data == (ScriptScenarioData *)0) || (error_message == (char *)0) ||
         (error_message_size == 0U))
@@ -279,10 +284,10 @@ StatusCode script_parser_parse_file(const char *script_path,
 
         if (parse_script_line(line_buffer,
                               &scenario_data->tick_values[parsed_ticks],
-                              &scenario_data->rpm_values[parsed_ticks],
-                              &scenario_data->temp_values[parsed_ticks],
-                              &scenario_data->oil_values[parsed_ticks],
-                              &scenario_data->run_values[parsed_ticks]) != STATUS_OK)
+                              &rpm_value,
+                              &temp_value,
+                              &oil_value,
+                              &run_value) != STATUS_OK)
         {
             (void)snprintf(error_message,
                            error_message_size,
@@ -290,6 +295,24 @@ StatusCode script_parser_parse_file(const char *script_path,
                            line_number);
             (void)fclose(script_file);
             return STATUS_PARSE_ERROR;
+        }
+
+        {
+            HAL_SensorFrame sensor_frame;
+
+            sensor_frame.rpm = rpm_value;
+            sensor_frame.temperature = temp_value;
+            sensor_frame.oil_pressure = oil_value;
+            sensor_frame.is_running = run_value;
+            if (hal_encode_sensor_frame(&sensor_frame, &scenario_data->sensor_frames[parsed_ticks]) != STATUS_OK)
+            {
+                (void)snprintf(error_message,
+                               error_message_size,
+                               "Line %u contains out-of-range sensor values",
+                               line_number);
+                (void)fclose(script_file);
+                return STATUS_PARSE_ERROR;
+            }
         }
 
         if ((parsed_ticks > 0U) &&

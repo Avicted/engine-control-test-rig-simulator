@@ -14,15 +14,18 @@
 #define RPM_TEMP_WARNING_PERSISTENCE_TICKS 2U
 
 /*
- * PRE: engine != NULL, evaluation_result != NULL.
- * POST: fault persistence counters and mode are deterministically updated;
- *       *evaluation_result reflects resulting ENGINE_OK/WARNING/SHUTDOWN state.
+ * @requirement REQ-ENG-001
+ * @pre engine != NULL, evaluation_result != NULL
+ * @post fault persistence counters and mode are deterministically updated
+ * @deterministic yes
  */
 StatusCode evaluate_engine(EngineState *engine, int32_t *evaluation_result);
 
 /*
- * PRE: engine != NULL, control_output != NULL.
- * POST: *control_output is clamped to [0, 100] and deterministic for same inputs.
+ * @requirement REQ-ENG-003
+ * @pre engine != NULL, control_output != NULL
+ * @post *control_output is clamped to [0, 100]
+ * @deterministic yes
  */
 StatusCode compute_control_output(const EngineState *engine, float *control_output);
 

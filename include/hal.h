@@ -6,6 +6,10 @@
 #include "engine.h"
 #include "status.h"
 
+#define HAL_MAX_FRAMES 32U
+#define HAL_SENSOR_TIMEOUT_TICKS 3U
+#define HAL_SENSOR_FRAME_ID 0x100U
+
 typedef struct
 {
     float rpm;
@@ -22,55 +26,96 @@ typedef struct
 
 typedef struct
 {
-    uint32_t message_id;
+    uint32_t id;
     uint8_t dlc;
-    uint8_t payload[8];
-} HAL_BusFrame;
+    uint8_t data[8];
+} HAL_Frame;
+
+typedef HAL_Frame HAL_BusFrame;
 
 _Static_assert(sizeof(uint8_t) == 1U, "uint8_t must be 8-bit");
-_Static_assert(sizeof(((HAL_BusFrame *)0)->payload) == 8U, "HAL_BusFrame payload must be 8 bytes");
-_Static_assert(sizeof(((HAL_BusFrame *)0)->dlc) == 1U, "HAL_BusFrame dlc must be 1 byte");
+_Static_assert(sizeof(((HAL_Frame *)0)->data) == 8U, "HAL_Frame data must be 8 bytes");
+_Static_assert(sizeof(((HAL_Frame *)0)->dlc) == 1U, "HAL_Frame dlc must be 1 byte");
+_Static_assert(sizeof(HAL_Frame) == 16U, "HAL_Frame size mismatch");
 
 /*
- * PRE: none.
- * POST: HAL subsystem is ready for deterministic simulator I/O calls.
+ * @requirement REQ-ENG-IO-001
+ * @pre none
+ * @post HAL subsystem is ready for deterministic simulator I/O calls
+ * @deterministic yes
  */
 StatusCode hal_init(void);
 
 /*
- * PRE: HAL was initialized.
- * POST: HAL subsystem is cleanly shut down.
+ * @requirement REQ-ENG-IO-001
+ * @pre HAL was initialized
+ * @post HAL subsystem is cleanly shut down
+ * @deterministic yes
  */
 StatusCode hal_shutdown(void);
 
 /*
- * PRE: frame != NULL.
- * POST: returns STATUS_OK only when frame fields are finite and within configured bounds.
+ * @requirement REQ-ENG-IO-002
+ * @pre frame != NULL
+ * @post frame is queued in bounded deterministic RX queue when STATUS_OK is returned
+ * @deterministic yes
  */
-StatusCode hal_read_sensors(const HAL_SensorFrame *frame);
+StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick);
 
 /*
- * PRE: frame != NULL, engine != NULL, frame is valid for hal_read_sensors().
- * POST: engine state fields are updated from frame when STATUS_OK is returned.
+ * @requirement REQ-ENG-IO-003
+ * @pre tick monotonically increases, frame_out != NULL
+ * @post returns STATUS_OK and decodes one queued sensor frame, or STATUS_IO_ERROR on deterministic timeout
+ * @deterministic yes
+ */
+StatusCode hal_read_sensors(uint32_t tick, HAL_SensorFrame *frame_out);
+
+/*
+ * @requirement REQ-ENG-IO-004
+ * @pre sensor_frame != NULL, frame_out != NULL
+ * @post frame_out contains deterministic transport encoding of sensor_frame
+ * @deterministic yes
+ */
+StatusCode hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Frame *frame_out);
+
+/*
+ * @requirement REQ-ENG-001
+ * @pre frame != NULL, engine != NULL, frame is validated
+ * @post engine state fields are updated from frame when STATUS_OK is returned
+ * @deterministic yes
  */
 StatusCode hal_apply_sensors(const HAL_SensorFrame *frame, EngineState *engine);
 
 /*
- * PRE: frame != NULL.
- * POST: returns STATUS_OK when frame metadata is transport-safe for simulator bus ingestion.
+ * @requirement REQ-ENG-IO-005
+ * @pre frame != NULL
+ * @post returns STATUS_OK when frame metadata is transport-safe for simulator bus ingestion
+ * @deterministic yes
  */
-StatusCode hal_receive_bus(const HAL_BusFrame *frame);
+StatusCode hal_receive_bus(const HAL_Frame *frame);
 
 /*
- * PRE: frame != NULL.
- * POST: returns STATUS_OK when frame metadata is transport-safe for simulator bus egress.
+ * @requirement REQ-ENG-IO-006
+ * @pre frame != NULL
+ * @post returns STATUS_OK when frame metadata is transport-safe for simulator bus egress
+ * @deterministic yes
  */
-StatusCode hal_transmit_bus(const HAL_BusFrame *frame);
+StatusCode hal_transmit_bus(const HAL_Frame *frame);
 
 /*
- * PRE: frame != NULL.
- * POST: actuator output is emitted when requested and function returns STATUS_OK.
+ * @requirement REQ-ENG-003
+ * @pre frame != NULL
+ * @post actuator output is emitted when requested and function returns STATUS_OK
+ * @deterministic yes
  */
 StatusCode hal_write_actuators(const HAL_ControlFrame *frame);
+
+/*
+ * @requirement REQ-ENG-DIAG-001
+ * @pre error_info != NULL
+ * @post error_info contains latest HAL diagnostic metadata
+ * @deterministic yes
+ */
+StatusCode hal_get_last_error(ErrorInfo *error_info);
 
 #endif
