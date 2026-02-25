@@ -84,6 +84,16 @@ int main(void)
         return 1;
     }
 
+    if (register_script_parser_internal_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     if (register_logger_tests(&group_tests, &group_count) == 0)
     {
         return 1;
@@ -95,6 +105,16 @@ int main(void)
     }
 
     if (register_config_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_config_internal_tests(&group_tests, &group_count) == 0)
     {
         return 1;
     }

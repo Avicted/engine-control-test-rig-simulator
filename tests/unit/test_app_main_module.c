@@ -4,9 +4,38 @@
 #include "control.h"
 #include "test_harness.h"
 
+static int32_t g_mock_fputs_enabled = 0;
+static int32_t g_mock_fputs_fail_after = -1;
+
+static int mock_main_fputs(const char *line, FILE *stream)
+{
+    size_t line_len;
+    size_t written;
+
+    if (g_mock_fputs_enabled != 0)
+    {
+        if (g_mock_fputs_fail_after <= 0)
+        {
+            return -1;
+        }
+        g_mock_fputs_fail_after -= 1;
+    }
+
+    line_len = strlen(line);
+    written = fwrite(line, 1U, line_len, stream);
+    if (written != line_len)
+    {
+        return -1;
+    }
+
+    return 1;
+}
+
+#define fputs mock_main_fputs
 #define main app_main_entry
 #include "../../src/app/main.c"
 #undef main
+#undef fputs
 
 static StatusCode stub_run_all_status = STATUS_OK;
 static StatusCode stub_run_named_status = STATUS_OK;
@@ -98,6 +127,16 @@ static int32_t test_safe_print_null_fails(void)
     return 1;
 }
 
+static int32_t test_safe_print_fputs_error_fails(void)
+{
+    g_mock_fputs_enabled = 1;
+    g_mock_fputs_fail_after = 0;
+    ASSERT_EQ(ENGINE_ERROR, safe_print("x"));
+    g_mock_fputs_enabled = 0;
+    g_mock_fputs_fail_after = -1;
+    return 1;
+}
+
 static int32_t test_print_usage_null_fails(void)
 {
     ASSERT_EQ(ENGINE_ERROR, print_usage((const char *)0));
@@ -116,6 +155,22 @@ static int32_t test_print_usage_long_name_fails(void)
     long_name[sizeof(long_name) - 1U] = '\0';
 
     ASSERT_EQ(ENGINE_ERROR, print_usage(long_name));
+    return 1;
+}
+
+static int32_t test_print_usage_each_safe_print_failure_path(void)
+{
+    int32_t fail_position;
+
+    for (fail_position = 0; fail_position < 8; ++fail_position)
+    {
+        g_mock_fputs_enabled = 1;
+        g_mock_fputs_fail_after = fail_position;
+        ASSERT_EQ(ENGINE_ERROR, print_usage("prog"));
+    }
+
+    g_mock_fputs_enabled = 0;
+    g_mock_fputs_fail_after = -1;
     return 1;
 }
 
@@ -649,8 +704,10 @@ int32_t register_app_main_tests(const UnitTestCase **tests_out, uint32_t *count_
 {
     static const UnitTestCase tests[] = {
         {"main_safe_print_null", test_safe_print_null_fails},
+        {"main_safe_print_io", test_safe_print_fputs_error_fails},
         {"main_print_usage_null", test_print_usage_null_fails},
         {"main_print_usage_long", test_print_usage_long_name_fails},
+        {"main_print_usage_io_paths", test_print_usage_each_safe_print_failure_path},
         {"main_parse_flags_null", test_parse_optional_flags_null_args},
         {"main_parse_flags_success", test_parse_optional_flags_success_all},
         {"main_parse_flags_cfg_level", test_parse_optional_flags_config_and_log_level},
