@@ -73,16 +73,16 @@ run-script: $(TARGET)
 		exit 1; \
 	fi
 	$(TARGET) --script "$(SCRIPT)"
-
+			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 run-script-json: $(TARGET)
 	@if [ -z "$(SCRIPT)" ]; then \
-		echo "Usage: make run-script-json SCRIPT=scenarios/normal_operation.txt"; \
+			$(CC) $(CPPFLAGS) $(DEBUG_CFLAGS) -o $(TARGET) $(SRCS)
 		exit 1; \
 	fi
-	$(TARGET) --script "$(SCRIPT)" --json
+			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(RAYLIB_LIBS)
 
 run-scenarios: $(TARGET)
-	@set -e; \
+			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
 	files=$$(find scenarios -maxdepth 1 -type f -name '*.txt' | sort); \
 	if [ -z "$$files" ]; then \
 		echo "No scenario scripts found in scenarios/"; \
