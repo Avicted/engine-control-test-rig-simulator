@@ -109,6 +109,7 @@ analyze-cppcheck:
 		--suppress=checkersReport \
 		--suppress=unusedFunction \
 		--suppress=staticFunction \
+		--suppress=unmatchedSuppression \
 		src/
 
 analyze-clang-tidy:

@@ -160,8 +160,6 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     const int32_t total = (int32_t)scenario_catalog_count();
     int32_t passed = 0;
     int32_t index;
-    char line[TEST_LINE_BUFFER_SIZE];
-    int32_t written;
 
     if (hal_init() != STATUS_OK)
     {
@@ -214,6 +212,9 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     }
     else
     {
+        char line[TEST_LINE_BUFFER_SIZE];
+        int32_t written;
+
         if (print_test_separator() != STATUS_OK)
         {
             (void)hal_shutdown();
