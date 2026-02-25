@@ -1,6 +1,8 @@
 #include "engine.h"
 #include "test_harness.h"
 
+StatusCode engine_ut_transition_mode(EngineState *engine, EngineStateMode target_mode);
+
 #define engine_get_default_physics engine_ut_get_default_physics
 #define engine_get_active_physics engine_ut_get_active_physics
 #define engine_configure_physics engine_ut_configure_physics
@@ -22,6 +24,13 @@
 #undef engine_configure_physics
 #undef engine_get_active_physics
 #undef engine_get_default_physics
+
+static StatusCode engine_int_fail_transition(EngineState *engine, EngineStateMode target_mode)
+{
+    (void)engine;
+    (void)target_mode;
+    return STATUS_INVALID_ARGUMENT;
+}
 
 static int32_t test_engine_internal_physics_valid_null(void)
 {
@@ -54,11 +63,32 @@ static int32_t test_engine_internal_wrapper_function_smoke(void)
     return 1;
 }
 
+static int32_t test_engine_internal_start_update_transition_failure_paths(void)
+{
+    EngineState engine;
+
+    ASSERT_STATUS(STATUS_OK, engine_ut_init(&engine));
+    g_transition_impl = engine_int_fail_transition;
+
+    engine.mode = ENGINE_STATE_INIT;
+    engine.is_running = 0;
+    ASSERT_STATUS(STATUS_INTERNAL_ERROR, engine_ut_start(&engine));
+
+    ASSERT_STATUS(STATUS_OK, engine_ut_init(&engine));
+    engine.mode = ENGINE_STATE_STARTING;
+    engine.is_running = 1;
+    ASSERT_STATUS(STATUS_INTERNAL_ERROR, engine_ut_update(&engine));
+
+    g_transition_impl = engine_ut_transition_mode;
+    return 1;
+}
+
 int32_t register_engine_internal_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
         {"engine_int_physics_null", test_engine_internal_physics_valid_null},
-        {"engine_int_wrapper_smoke", test_engine_internal_wrapper_function_smoke}};
+        {"engine_int_wrapper_smoke", test_engine_internal_wrapper_function_smoke},
+        {"engine_int_transition_fail", test_engine_internal_start_update_transition_failure_paths}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

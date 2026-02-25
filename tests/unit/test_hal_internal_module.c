@@ -69,6 +69,13 @@ StatusCode hal_ut_frame_age_record(uint32_t id, uint32_t tick);
 #undef hal_init
 #undef printf
 
+static StatusCode hal_int_fail_expected_dlc(uint32_t id, uint8_t *dlc_out)
+{
+    (void)id;
+    (void)dlc_out;
+    return STATUS_INVALID_ARGUMENT;
+}
+
 static int32_t test_hal_internal_static_null_guards(void)
 {
     HAL_FrameQueue queue;
@@ -232,6 +239,19 @@ static int32_t test_hal_internal_wrapper_function_smoke(void)
     return 1;
 }
 
+static int32_t test_hal_internal_supported_transport_expected_dlc_failure(void)
+{
+    HAL_Frame frame = {0};
+
+    frame.id = HAL_SENSOR_FRAME_ID;
+    frame.dlc = 8U;
+
+    g_expected_dlc_impl = hal_int_fail_expected_dlc;
+    ASSERT_EQ(0, is_supported_sensor_transport_frame(&frame));
+    g_expected_dlc_impl = hal_ut_expected_dlc_for_id;
+    return 1;
+}
+
 int32_t register_hal_internal_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
@@ -241,7 +261,8 @@ int32_t register_hal_internal_tests(const UnitTestCase **tests_out, uint32_t *co
         {"hal_int_validate_paths", test_hal_internal_validate_sensor_frame_defensive_paths},
         {"hal_int_decode_paths", test_hal_internal_decode_sensor_frame_defensive_paths},
         {"hal_int_supported_paths", test_hal_internal_supported_transport_frame_defensive_paths},
-        {"hal_int_wrapper_smoke", test_hal_internal_wrapper_function_smoke}};
+        {"hal_int_wrapper_smoke", test_hal_internal_wrapper_function_smoke},
+        {"hal_int_expected_dlc_fail", test_hal_internal_supported_transport_expected_dlc_failure}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

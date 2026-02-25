@@ -19,6 +19,7 @@ static EnginePhysicsConfig g_physics = {
     ENGINE_DEFAULT_TEMP_RAMP_RATE,
     ENGINE_DEFAULT_OIL_DECAY_RATE};
 static int32_t g_physics_configured = 0;
+static StatusCode (*g_transition_impl)(EngineState *engine, EngineStateMode target_mode) = engine_transition_mode;
 
 static int32_t physics_valid(const EnginePhysicsConfig *config)
 {
@@ -211,7 +212,7 @@ StatusCode engine_start(EngineState *engine)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    transition_status = engine_transition_mode(engine, ENGINE_STATE_STARTING);
+    transition_status = g_transition_impl(engine, ENGINE_STATE_STARTING);
     if (transition_status != STATUS_OK)
     {
         return STATUS_INTERNAL_ERROR;
@@ -232,7 +233,7 @@ StatusCode engine_update(EngineState *engine)
     {
         StatusCode transition_status;
 
-        transition_status = engine_transition_mode(engine, ENGINE_STATE_RUNNING);
+        transition_status = g_transition_impl(engine, ENGINE_STATE_RUNNING);
         if (transition_status != STATUS_OK)
         {
             return STATUS_INTERNAL_ERROR;
