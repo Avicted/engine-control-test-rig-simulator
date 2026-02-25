@@ -1,14 +1,17 @@
 CC = clang
+GCOV = llvm-cov gcov
 CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
+LDFLAGS = -lm
 BUILD_COMMIT = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
 BUILD_DIR = ./build
+COVERAGE_DIR = ./coverage
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
 UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
 VISUALIZER_SRC = visualization/visualizer.c
-UNIT_TEST_SRC = tests/unit/test_engine_control.c
-UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c $(SRC_DIR)/domain/control.c $(SRC_DIR)/platform/hal.c $(SRC_DIR)/scenario/script_parser.c
+UNIT_TEST_SRCS = $(shell find tests/unit -type f -name '*.c' | sort)
+UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c $(SRC_DIR)/domain/control.c $(SRC_DIR)/platform/hal.c $(SRC_DIR)/scenario/script_parser.c $(SRC_DIR)/reporting/logger.c
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 SRC_DIR = src
 SRCS = $(SRC_DIR)/app/main.c \
@@ -20,6 +23,7 @@ SRCS = $(SRC_DIR)/app/main.c \
 	$(SRC_DIR)/scenario/scenario_report.c \
 	$(SRC_DIR)/scenario/scenario_catalog.c \
 	$(SRC_DIR)/reporting/output.c \
+       $(SRC_DIR)/app/config.c \
        $(SRC_DIR)/app/test_runner.c \
 	$(SRC_DIR)/reporting/logger.c \
 	$(SRC_DIR)/platform/hal.c
@@ -27,6 +31,7 @@ SRCS = $(SRC_DIR)/app/main.c \
 TIDY_SRCS = $(shell find src -type f -name '*.c' | sort)
 
 DEBUG_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
+COVERAGE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O0 --coverage
 
 all: $(TARGET)
 
@@ -34,13 +39,13 @@ debug: $(BUILD_DIR) $(SRCS)
 	$(CC) $(CPPFLAGS) $(DEBUG_CFLAGS) -o $(TARGET) $(SRCS)
 
 $(TARGET): $(BUILD_DIR) $(SRCS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(TARGET) $(SRCS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
 $(VISUALIZER_TARGET): $(BUILD_DIR) $(VISUALIZER_SRC)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(VISUALIZER_TARGET) $(VISUALIZER_SRC) $(RAYLIB_LIBS)
 
-$(UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRC) $(UNIT_TEST_DEPS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(UNIT_TEST_TARGET) $(UNIT_TEST_SRC) $(UNIT_TEST_DEPS)
+$(UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(UNIT_TEST_TARGET) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -49,6 +54,8 @@ clean:
 	rm -f $(TARGET)
 	rm -f $(UNIT_TEST_TARGET)
 	rm -f $(VISUALIZER_TARGET)
+	rm -f $(BUILD_DIR)/*.gcno $(BUILD_DIR)/*.gcda $(BUILD_DIR)/*.info
+	rm -rf $(COVERAGE_DIR)
 
 run-script: $(TARGET)
 	@if [ -z "$(SCRIPT)" ]; then \
@@ -104,6 +111,21 @@ analyze-layering:
 test-unit: $(UNIT_TEST_TARGET)
 	$(UNIT_TEST_TARGET)
 
+coverage: $(BUILD_DIR)
+	mkdir -p $(COVERAGE_DIR)
+	rm -f $(BUILD_DIR)/unit_tests_cov* $(COVERAGE_DIR)/*.gcov $(COVERAGE_DIR)/coverage.txt
+	$(CC) $(CPPFLAGS) $(COVERAGE_CFLAGS) -o $(BUILD_DIR)/unit_tests_cov $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
+	$(BUILD_DIR)/unit_tests_cov
+	$(GCOV) -b -c $(BUILD_DIR)/unit_tests_cov-*.gcno > $(COVERAGE_DIR)/coverage.txt
+	@mv -f ./*.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
+	@covered=$$(grep 'Lines executed:' $(COVERAGE_DIR)/coverage.txt | tail -n 1 | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/'); \
+	echo "Coverage: $$covered%"; \
+	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 75.0) ? 0 : 1 }'
+
+coverage-clean:
+	rm -f $(BUILD_DIR)/unit_tests_cov*
+	rm -rf $(COVERAGE_DIR)
+
 validate-json-contract: $(TARGET)
 	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
@@ -127,7 +149,7 @@ analyze: analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers
 test-all: test-unit $(TARGET) validate-json-contract validate-json
 	$(TARGET) --run-all --json > /dev/null
 
-ci-check: all debug analyze test-all
+ci-check: all debug analyze test-all coverage
 	$(TARGET) --run-all --json > /dev/null
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers analyze test-unit test-all validate-json validate-json-contract ci-check
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check

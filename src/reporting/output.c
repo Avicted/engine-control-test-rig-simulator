@@ -5,7 +5,7 @@
 
 int32_t output_write_line(const char *line)
 {
-    int write_result;
+    int32_t write_result;
 
     if (line == (const char *)0)
     {

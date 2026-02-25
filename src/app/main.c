@@ -2,17 +2,19 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "config.h"
 #include "engine.h"
 #include "reporting/logger.h"
 #include "test_runner.h"
 #include "status.h"
 
 #define MAX_CLI_ARG_LEN 24U
-#define MAX_CLI_ARGS 8
+#define MAX_CLI_PATH_LEN 192U
+#define MAX_CLI_ARGS 12
 
-static int safe_print(const char *line)
+static int32_t safe_print(const char *line)
 {
-    int result;
+    int32_t result;
 
     if (line == (const char *)0)
     {
@@ -28,10 +30,10 @@ static int safe_print(const char *line)
     return ENGINE_OK;
 }
 
-static int print_usage(const char *program_name)
+static int32_t print_usage(const char *program_name)
 {
     char usage_line[256];
-    int written;
+    int32_t written;
 
     if (program_name == (const char *)0)
     {
@@ -43,11 +45,16 @@ static int print_usage(const char *program_name)
         return ENGINE_ERROR;
     }
 
+    if (safe_print("  Global options: [--config calibration.json] [--log-level DEBUG|INFO|WARN|ERROR]\n") != ENGINE_OK)
+    {
+        return ENGINE_ERROR;
+    }
+
     written = snprintf(usage_line,
                        sizeof(usage_line),
                        "  %s --run-all [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]\n",
                        program_name);
-    if ((written < 0) || (written >= (int)sizeof(usage_line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(usage_line)))
     {
         return ENGINE_ERROR;
     }
@@ -60,7 +67,7 @@ static int print_usage(const char *program_name)
                        sizeof(usage_line),
                        "  %s --scenario <normal|overheat|pressure_failure|cold_start|high_load|oil_drain|thermal_runaway|intermittent_oil> [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]\n",
                        program_name);
-    if ((written < 0) || (written >= (int)sizeof(usage_line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(usage_line)))
     {
         return ENGINE_ERROR;
     }
@@ -73,7 +80,7 @@ static int print_usage(const char *program_name)
                        sizeof(usage_line),
                        "  %s --script <path> [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]\n",
                        program_name);
-    if ((written < 0) || (written >= (int)sizeof(usage_line)))
+    if ((written < 0) || (written >= (int32_t)sizeof(usage_line)))
     {
         return ENGINE_ERROR;
     }
@@ -81,21 +88,23 @@ static int print_usage(const char *program_name)
     return safe_print(usage_line);
 }
 
-static StatusCode parse_optional_flags(int argc,
+static StatusCode parse_optional_flags(int32_t argc,
                                        char **argv,
-                                       int start_index,
+                                       int32_t start_index,
                                        int32_t *show_sim,
                                        int32_t *use_color,
                                        int32_t *show_control,
                                        int32_t *show_state,
                                        int32_t *json_output,
-                                       int32_t *strict_mode)
+                                       int32_t *strict_mode,
+                                       const char **config_path,
+                                       const char **log_level)
 {
-    int index;
+    int32_t index;
 
     if ((argv == (char **)0) || (show_sim == (int32_t *)0) || (use_color == (int32_t *)0) ||
         (show_control == (int32_t *)0) || (show_state == (int32_t *)0) || (json_output == (int32_t *)0) ||
-        (strict_mode == (int32_t *)0))
+        (strict_mode == (int32_t *)0) || (config_path == (const char **)0) || (log_level == (const char **)0))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -111,6 +120,8 @@ static StatusCode parse_optional_flags(int argc,
     *show_state = 0;
     *json_output = 0;
     *strict_mode = 0;
+    *config_path = (const char *)0;
+    *log_level = "INFO";
 
     for (index = start_index; (index < argc) && (index < MAX_CLI_ARGS); ++index)
     {
@@ -119,6 +130,37 @@ static StatusCode parse_optional_flags(int argc,
         if (argv[index] == (char *)0)
         {
             return STATUS_INVALID_ARGUMENT;
+        }
+
+        if (strcmp(argv[index], "--config") == 0)
+        {
+            if ((*config_path != (const char *)0) || ((index + 1) >= argc))
+            {
+                return STATUS_INVALID_ARGUMENT;
+            }
+            if ((strlen(argv[index + 1]) == 0U) || (strlen(argv[index + 1]) >= MAX_CLI_PATH_LEN))
+            {
+                return STATUS_INVALID_ARGUMENT;
+            }
+            *config_path = argv[index + 1];
+            index += 1;
+            continue;
+        }
+
+        if (strcmp(argv[index], "--log-level") == 0)
+        {
+            if ((index + 1) >= argc)
+            {
+                return STATUS_INVALID_ARGUMENT;
+            }
+            if ((strcmp(argv[index + 1], "DEBUG") != 0) && (strcmp(argv[index + 1], "INFO") != 0) &&
+                (strcmp(argv[index + 1], "WARN") != 0) && (strcmp(argv[index + 1], "ERROR") != 0))
+            {
+                return STATUS_INVALID_ARGUMENT;
+            }
+            *log_level = argv[index + 1];
+            index += 1;
+            continue;
         }
 
         arg_len = strlen(argv[index]);
@@ -184,6 +226,35 @@ static StatusCode parse_optional_flags(int argc,
     return STATUS_OK;
 }
 
+static StatusCode apply_runtime_options(const char *config_path, const char *log_level)
+{
+    ControlCalibration calibration;
+    char error_message[256];
+
+    if (logger_set_level_from_string(log_level) != STATUS_OK)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    if (config_path == (const char *)0)
+    {
+        return STATUS_OK;
+    }
+
+    if (config_load_calibration_file(config_path, &calibration, error_message, (uint32_t)sizeof(error_message)) != STATUS_OK)
+    {
+        (void)log_event("ERROR", error_message);
+        return STATUS_PARSE_ERROR;
+    }
+
+    if (control_configure_calibration(&calibration) != STATUS_OK)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    return STATUS_OK;
+}
+
 int main(int argc, char **argv)
 {
     int32_t show_sim;
@@ -192,6 +263,8 @@ int main(int argc, char **argv)
     int32_t show_state;
     int32_t json_output;
     int32_t strict_mode;
+    const char *config_path = (const char *)0;
+    const char *log_level = "INFO";
 
     if ((argv == (char **)0) || (argc < 1))
     {
@@ -222,9 +295,16 @@ int main(int argc, char **argv)
                                      &show_control,
                                      &show_state,
                                      &json_output,
-                                     &strict_mode) != STATUS_OK)
+                                     &strict_mode,
+                                     &config_path,
+                                     &log_level) != STATUS_OK)
             {
                 (void)print_usage(argv[0]);
+                return 1;
+            }
+
+            if (apply_runtime_options(config_path, log_level) != STATUS_OK)
+            {
                 return 1;
             }
 
@@ -251,9 +331,16 @@ int main(int argc, char **argv)
                                      &show_control,
                                      &show_state,
                                      &json_output,
-                                     &strict_mode) != STATUS_OK)
+                                     &strict_mode,
+                                     &config_path,
+                                     &log_level) != STATUS_OK)
             {
                 (void)print_usage(argv[0]);
+                return 1;
+            }
+
+            if (apply_runtime_options(config_path, log_level) != STATUS_OK)
+            {
                 return 1;
             }
 
@@ -284,9 +371,16 @@ int main(int argc, char **argv)
                                      &show_control,
                                      &show_state,
                                      &json_output,
-                                     &strict_mode) != STATUS_OK)
+                                     &strict_mode,
+                                     &config_path,
+                                     &log_level) != STATUS_OK)
             {
                 (void)print_usage(argv[0]);
+                return 1;
+            }
+
+            if (apply_runtime_options(config_path, log_level) != STATUS_OK)
+            {
                 return 1;
             }
 

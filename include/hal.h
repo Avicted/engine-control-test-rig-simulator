@@ -6,7 +6,14 @@
 #include "engine.h"
 #include "status.h"
 
-#define HAL_MAX_FRAMES 32U
+#if defined(__clang__) || defined(__GNUC__)
+#define HAL_PACKED __attribute__((packed))
+#else
+#define HAL_PACKED
+#endif
+
+#define HAL_MAX_RX_FRAMES 32U
+#define HAL_MAX_TX_FRAMES 32U
 #define HAL_SENSOR_TIMEOUT_TICKS 3U
 #define HAL_SENSOR_FRAME_ID 0x100U
 
@@ -24,19 +31,20 @@ typedef struct
     int32_t emit_control_line;
 } HAL_ControlFrame;
 
-typedef struct
+typedef struct HAL_PACKED
 {
     uint32_t id;
     uint8_t dlc;
     uint8_t data[8];
-} HAL_Frame;
+} BusFrame;
 
-typedef HAL_Frame HAL_BusFrame;
+typedef BusFrame HAL_Frame;
+typedef BusFrame HAL_BusFrame;
 
 _Static_assert(sizeof(uint8_t) == 1U, "uint8_t must be 8-bit");
-_Static_assert(sizeof(((HAL_Frame *)0)->data) == 8U, "HAL_Frame data must be 8 bytes");
-_Static_assert(sizeof(((HAL_Frame *)0)->dlc) == 1U, "HAL_Frame dlc must be 1 byte");
-_Static_assert(sizeof(HAL_Frame) == 16U, "HAL_Frame size mismatch");
+_Static_assert(sizeof(((BusFrame *)0)->data) == 8U, "BusFrame data must be 8 bytes");
+_Static_assert(sizeof(((BusFrame *)0)->dlc) == 1U, "BusFrame dlc must be 1 byte");
+_Static_assert(sizeof(BusFrame) == 13U, "Unexpected frame size");
 
 /*
  * @requirement REQ-ENG-IO-001

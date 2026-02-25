@@ -1,0 +1,5 @@
+{
+  "temperature_limit": 95.0,
+  "oil_pressure_limit": 2.5,
+  "persistence_ticks": 3
+}

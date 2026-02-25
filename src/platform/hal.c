@@ -13,15 +13,23 @@
 
 typedef struct
 {
-    HAL_Frame frames[HAL_MAX_FRAMES];
+    HAL_Frame frames[HAL_MAX_RX_FRAMES];
     uint32_t head;
     uint32_t tail;
     uint32_t count;
 } HAL_FrameQueue;
 
+typedef struct
+{
+    HAL_Frame frames[HAL_MAX_TX_FRAMES];
+    uint32_t head;
+    uint32_t tail;
+    uint32_t count;
+} HAL_TxFrameQueue;
+
 static HAL_FrameQueue g_sensor_rx_queue;
 static HAL_FrameQueue g_bus_rx_queue;
-static HAL_FrameQueue g_bus_tx_queue;
+static HAL_TxFrameQueue g_bus_tx_queue;
 static uint32_t g_last_sensor_tick;
 static int32_t g_has_sensor_tick;
 static ErrorInfo g_last_error;
@@ -48,25 +56,38 @@ static void queue_reset(HAL_FrameQueue *queue)
     queue->count = 0U;
 }
 
-static StatusCode queue_push(HAL_FrameQueue *queue, const HAL_Frame *frame)
+static void tx_queue_reset(HAL_TxFrameQueue *queue)
+{
+    if (queue == (HAL_TxFrameQueue *)0)
+    {
+        return;
+    }
+
+    (void)memset(queue->frames, 0, sizeof(queue->frames));
+    queue->head = 0U;
+    queue->tail = 0U;
+    queue->count = 0U;
+}
+
+static StatusCode queue_push(HAL_FrameQueue *queue, const HAL_Frame *frame, uint32_t capacity)
 {
     if ((queue == (HAL_FrameQueue *)0) || (frame == (const HAL_Frame *)0))
     {
         return STATUS_INVALID_ARGUMENT;
     }
 
-    if (queue->count >= HAL_MAX_FRAMES)
+    if (queue->count >= capacity)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
     queue->frames[queue->tail] = *frame;
-    queue->tail = (queue->tail + 1U) % HAL_MAX_FRAMES;
+    queue->tail = (queue->tail + 1U) % capacity;
     queue->count += 1U;
     return STATUS_OK;
 }
 
-static StatusCode queue_pop(HAL_FrameQueue *queue, HAL_Frame *frame_out)
+static StatusCode queue_pop(HAL_FrameQueue *queue, HAL_Frame *frame_out, uint32_t capacity)
 {
     if ((queue == (HAL_FrameQueue *)0) || (frame_out == (HAL_Frame *)0))
     {
@@ -79,8 +100,26 @@ static StatusCode queue_pop(HAL_FrameQueue *queue, HAL_Frame *frame_out)
     }
 
     *frame_out = queue->frames[queue->head];
-    queue->head = (queue->head + 1U) % HAL_MAX_FRAMES;
+    queue->head = (queue->head + 1U) % capacity;
     queue->count -= 1U;
+    return STATUS_OK;
+}
+
+static StatusCode tx_queue_push(HAL_TxFrameQueue *queue, const HAL_Frame *frame)
+{
+    if ((queue == (HAL_TxFrameQueue *)0) || (frame == (const HAL_Frame *)0))
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    if (queue->count >= HAL_MAX_TX_FRAMES)
+    {
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    queue->frames[queue->tail] = *frame;
+    queue->tail = (queue->tail + 1U) % HAL_MAX_TX_FRAMES;
+    queue->count += 1U;
     return STATUS_OK;
 }
 
@@ -135,7 +174,12 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
         return STATUS_INVALID_ARGUMENT;
     }
 
-    if ((frame->id != HAL_SENSOR_FRAME_ID) || (frame->dlc != 8U) || (frame->data[7] != frame_checksum(frame)))
+    if ((frame->id != HAL_SENSOR_FRAME_ID) || (frame->dlc != 8U))
+    {
+        return STATUS_PARSE_ERROR;
+    }
+
+    if (frame->data[7] != frame_checksum(frame))
     {
         return STATUS_PARSE_ERROR;
     }
@@ -156,7 +200,7 @@ StatusCode hal_init(void)
 {
     queue_reset(&g_sensor_rx_queue);
     queue_reset(&g_bus_rx_queue);
-    queue_reset(&g_bus_tx_queue);
+    tx_queue_reset(&g_bus_tx_queue);
     g_last_sensor_tick = 0U;
     g_has_sensor_tick = 0;
     hal_set_error(STATUS_OK, "hal_init", 0U, SEVERITY_INFO);
@@ -167,7 +211,7 @@ StatusCode hal_shutdown(void)
 {
     queue_reset(&g_sensor_rx_queue);
     queue_reset(&g_bus_rx_queue);
-    queue_reset(&g_bus_tx_queue);
+    tx_queue_reset(&g_bus_tx_queue);
     g_last_sensor_tick = 0U;
     g_has_sensor_tick = 0;
     hal_set_error(STATUS_OK, "hal_shutdown", 0U, SEVERITY_INFO);
@@ -190,7 +234,7 @@ StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    queue_status = queue_push(&g_sensor_rx_queue, frame);
+    queue_status = queue_push(&g_sensor_rx_queue, frame, HAL_MAX_RX_FRAMES);
     if (queue_status != STATUS_OK)
     {
         hal_set_error(queue_status, "hal_ingest_sensor_frame", tick, SEVERITY_ERROR);
@@ -212,19 +256,19 @@ StatusCode hal_read_sensors(uint32_t tick, HAL_SensorFrame *frame_out)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    status = queue_pop(&g_sensor_rx_queue, &frame);
+    status = queue_pop(&g_sensor_rx_queue, &frame, HAL_MAX_RX_FRAMES);
     if (status != STATUS_OK)
     {
         if ((g_has_sensor_tick == 0) && (tick > HAL_SENSOR_TIMEOUT_TICKS))
         {
-            hal_set_error(STATUS_IO_ERROR, "hal_read_sensors", tick, SEVERITY_FATAL);
-            return STATUS_IO_ERROR;
+            hal_set_error(STATUS_TIMEOUT, "hal_read_sensors", tick, SEVERITY_FATAL);
+            return STATUS_TIMEOUT;
         }
 
         if ((g_has_sensor_tick != 0) && ((tick - g_last_sensor_tick) > HAL_SENSOR_TIMEOUT_TICKS))
         {
-            hal_set_error(STATUS_IO_ERROR, "hal_read_sensors", tick, SEVERITY_FATAL);
-            return STATUS_IO_ERROR;
+            hal_set_error(STATUS_TIMEOUT, "hal_read_sensors", tick, SEVERITY_FATAL);
+            return STATUS_TIMEOUT;
         }
 
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_read_sensors", tick, SEVERITY_WARNING);
@@ -315,7 +359,7 @@ StatusCode hal_receive_bus(const HAL_Frame *frame)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    queue_status = queue_push(&g_bus_rx_queue, frame);
+    queue_status = queue_push(&g_bus_rx_queue, frame, HAL_MAX_RX_FRAMES);
     if (queue_status != STATUS_OK)
     {
         return queue_status;
@@ -338,7 +382,7 @@ StatusCode hal_transmit_bus(const HAL_Frame *frame)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    queue_status = queue_push(&g_bus_tx_queue, frame);
+    queue_status = tx_queue_push(&g_bus_tx_queue, frame);
     if (queue_status != STATUS_OK)
     {
         return queue_status;
@@ -356,7 +400,7 @@ StatusCode hal_write_actuators(const HAL_ControlFrame *frame)
 
     if (frame->emit_control_line != 0)
     {
-        int written;
+        int32_t written;
 
         written = printf("CTRL | output=%6.2f%%\n", frame->control_output);
         if (written < 0)
