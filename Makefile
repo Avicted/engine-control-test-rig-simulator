@@ -1,37 +1,47 @@
 CC = clang
 GCOV = llvm-cov gcov
-CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
-LDFLAGS = -lm
-BUILD_COMMIT = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
-CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
+
+SRC_DIR = src
 BUILD_DIR = ./build
 COVERAGE_DIR = ./coverage
+
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
 UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
+
 VISUALIZER_SRC = visualization/visualizer.c
 UNIT_TEST_SRCS = $(shell find tests/unit -type f -name '*.c' | sort)
-UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c $(SRC_DIR)/domain/control.c $(SRC_DIR)/platform/hal.c $(SRC_DIR)/scenario/script_parser.c $(SRC_DIR)/reporting/logger.c
-RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
-SRC_DIR = src
+TIDY_SRCS = $(shell find src -type f -name '*.c' | sort)
+
 SRCS = $(SRC_DIR)/app/main.c \
-       $(SRC_DIR)/domain/engine.c \
-	$(SRC_DIR)/legacy/sensors.c \
+	$(SRC_DIR)/app/config.c \
+	$(SRC_DIR)/app/test_runner.c \
+	$(SRC_DIR)/domain/engine.c \
 	$(SRC_DIR)/domain/control.c \
 	$(SRC_DIR)/scenario/script_parser.c \
 	$(SRC_DIR)/scenario/scenario_profiles.c \
 	$(SRC_DIR)/scenario/scenario_report.c \
 	$(SRC_DIR)/scenario/scenario_catalog.c \
 	$(SRC_DIR)/reporting/output.c \
-       $(SRC_DIR)/app/config.c \
-       $(SRC_DIR)/app/test_runner.c \
 	$(SRC_DIR)/reporting/logger.c \
 	$(SRC_DIR)/platform/hal.c
 
-TIDY_SRCS = $(shell find src -type f -name '*.c' | sort)
+UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c \
+	$(SRC_DIR)/domain/control.c \
+	$(SRC_DIR)/platform/hal.c \
+	$(SRC_DIR)/scenario/script_parser.c \
+	$(SRC_DIR)/reporting/logger.c
 
-DEBUG_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
-COVERAGE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O0 --coverage
+BUILD_COMMIT = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+
+COMMON_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic
+CFLAGS = $(COMMON_CFLAGS) -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
+DEBUG_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
+COVERAGE_CFLAGS = $(COMMON_CFLAGS) -O0 --coverage
+
+CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
+LDFLAGS = -lm
+RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 
 all: $(TARGET)
 
