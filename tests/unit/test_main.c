@@ -44,7 +44,37 @@ int main(void)
         return 1;
     }
 
+    if (register_control_internal_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_status_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     if (register_state_machine_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_engine_internal_tests(&group_tests, &group_count) == 0)
     {
         return 1;
     }
@@ -64,7 +94,27 @@ int main(void)
         return 1;
     }
 
+    if (register_hal_internal_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     if (register_script_parser_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_script_parser_internal_tests(&group_tests, &group_count) == 0)
     {
         return 1;
     }
@@ -84,7 +134,37 @@ int main(void)
         return 1;
     }
 
+    if (register_logger_internal_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     if (register_config_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_config_internal_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
+    if (register_app_main_tests(&group_tests, &group_count) == 0)
     {
         return 1;
     }

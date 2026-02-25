@@ -1,3 +1,4 @@
+#include <math.h>
 #include <string.h>
 
 #include "engine.h"
@@ -302,6 +303,17 @@ static int32_t test_engine_get_mode_string_null_string(void)
     return 1;
 }
 
+static int32_t test_engine_get_mode_string_invalid_mode(void)
+{
+    EngineState engine;
+    const char *mode_str = (const char *)0;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = (EngineStateMode)99;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_get_mode_string(&engine, &mode_str));
+    return 1;
+}
+
 /* --- engine_init / engine_reset tests --- */
 
 static int32_t test_engine_init_sets_defaults(void)
@@ -339,6 +351,16 @@ static int32_t test_engine_transition_null(void)
     return 1;
 }
 
+static int32_t test_engine_transition_unknown_from_mode_rejected(void)
+{
+    EngineState engine;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = (EngineStateMode)99;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_transition_mode(&engine, ENGINE_STATE_INIT));
+    return 1;
+}
+
 /* --- Engine physics configuration tests --- */
 
 static int32_t test_engine_get_default_physics(void)
@@ -351,6 +373,12 @@ static int32_t test_engine_get_default_physics(void)
     ASSERT_TRUE(config.rpm_ramp_rate == ENGINE_DEFAULT_RPM_RAMP_RATE);
     ASSERT_TRUE(config.temp_ramp_rate == ENGINE_DEFAULT_TEMP_RAMP_RATE);
     ASSERT_TRUE(config.oil_decay_rate == ENGINE_DEFAULT_OIL_DECAY_RATE);
+    return 1;
+}
+
+static int32_t test_engine_get_default_physics_null(void)
+{
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_get_default_physics((EnginePhysicsConfig *)0));
     return 1;
 }
 
@@ -394,6 +422,35 @@ static int32_t test_engine_configure_physics_invalid(void)
     (void)engine_get_default_physics(&config);
     config.target_rpm = -1.0f; /* invalid */
     ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+    (void)engine_reset_physics();
+    return 1;
+}
+
+static int32_t test_engine_configure_physics_invalid_each_field(void)
+{
+    EnginePhysicsConfig config;
+
+    (void)engine_reset_physics();
+    (void)engine_get_default_physics(&config);
+    config.target_temperature = NAN;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.target_oil_pressure = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.rpm_ramp_rate = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.temp_ramp_rate = -0.1f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.oil_decay_rate = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
     (void)engine_reset_physics();
     return 1;
 }
@@ -445,6 +502,30 @@ static int32_t test_engine_physics_affects_update(void)
     ASSERT_STATUS(STATUS_OK, engine_update(&engine)); /* ramp with custom physics */
     ASSERT_TRUE(engine.rpm == 500.0f);
     ASSERT_TRUE(engine.temperature == 50.0f);
+
+    (void)engine_reset_physics();
+    return 1;
+}
+
+static int32_t test_engine_update_rpm_clamps_to_target(void)
+{
+    EngineState engine;
+    EnginePhysicsConfig config;
+
+    (void)engine_reset_physics();
+    config.target_rpm = 100.0f;
+    config.target_temperature = 90.0f;
+    config.target_oil_pressure = 3.0f;
+    config.rpm_ramp_rate = 250.0f;
+    config.temp_ramp_rate = 0.1f;
+    config.oil_decay_rate = 0.01f;
+    ASSERT_STATUS(STATUS_OK, engine_configure_physics(&config));
+
+    ASSERT_STATUS(STATUS_OK, engine_init(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_start(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine));
+    ASSERT_TRUE(engine.rpm == 100.0f);
 
     (void)engine_reset_physics();
     return 1;
@@ -522,20 +603,25 @@ int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *c
         {"state_mode_str_running", test_engine_get_mode_string_running},
         {"state_mode_str_null_engine", test_engine_get_mode_string_null_engine},
         {"state_mode_str_null_string", test_engine_get_mode_string_null_string},
+        {"state_mode_str_invalid_mode", test_engine_get_mode_string_invalid_mode},
         /* engine_init / engine_reset null tests */
         {"state_init_defaults", test_engine_init_sets_defaults},
         {"state_init_null", test_engine_init_null},
         {"state_reset_null", test_engine_reset_null},
         {"state_transition_null", test_engine_transition_null},
+        {"state_transition_unknown_mode", test_engine_transition_unknown_from_mode_rejected},
         /* engine physics config tests */
         {"physics_default", test_engine_get_default_physics},
+        {"physics_default_null", test_engine_get_default_physics_null},
         {"physics_configure", test_engine_configure_physics},
         {"physics_configure_null", test_engine_configure_physics_null},
         {"physics_configure_twice", test_engine_configure_physics_twice},
         {"physics_configure_invalid", test_engine_configure_physics_invalid},
+        {"physics_configure_invalid_each", test_engine_configure_physics_invalid_each_field},
         {"physics_reset", test_engine_reset_physics},
         {"physics_active", test_engine_get_active_physics},
         {"physics_affects_update", test_engine_physics_affects_update},
+        {"physics_rpm_clamp", test_engine_update_rpm_clamps_to_target},
         /* fatal error path tests (Section 3.2) */
         {"fatal_illegal_transition", test_fatal_illegal_transition_deterministic},
         {"fatal_shutdown_cleanup", test_fatal_shutdown_from_warning_clears_state}};

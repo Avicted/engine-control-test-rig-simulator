@@ -56,6 +56,7 @@ typedef struct
 } FrameAgingEntry;
 
 static FrameAgingEntry g_frame_aging[FRAME_ID_REGISTRY_COUNT];
+static StatusCode (*g_expected_dlc_impl)(uint32_t id, uint8_t *dlc_out) = hal_expected_dlc_for_id;
 
 static int32_t frame_id_to_index(uint32_t id)
 {
@@ -237,7 +238,7 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
 
 static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
 {
-    uint8_t expected_dlc;
+    uint8_t expected_dlc = 0U;
 
     if (frame == NULL)
     {
@@ -251,7 +252,7 @@ static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
     }
 
     /* Validate DLC against the frame ID registry (Section 1.2). */
-    if (hal_expected_dlc_for_id(frame->id, &expected_dlc) != STATUS_OK)
+    if (g_expected_dlc_impl(frame->id, &expected_dlc) != STATUS_OK)
     {
         return 0;
     }

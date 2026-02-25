@@ -4,6 +4,7 @@ GCOV = llvm-cov gcov
 SRC_DIR = src
 BUILD_DIR = ./build
 COVERAGE_DIR = ./coverage
+COVERAGE_HTML_DIR = ./coverage/html
 
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
@@ -149,39 +150,63 @@ test-unit: $(UNIT_TEST_TARGET)
 
 coverage: $(BUILD_DIR)
 	mkdir -p $(COVERAGE_DIR)
-	rm -f $(BUILD_DIR)/unit_tests_cov* $(COVERAGE_DIR)/*.gcov $(COVERAGE_DIR)/coverage.txt
+	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info $(COVERAGE_DIR)/*.gcov $(COVERAGE_DIR)/coverage.txt
 	$(CC) $(CPPFLAGS) $(COVERAGE_CFLAGS) -o $(BUILD_DIR)/unit_tests_cov $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
 	$(BUILD_DIR)/unit_tests_cov
 	$(GCOV) -b -c $(BUILD_DIR)/unit_tests_cov-*.gcno > $(COVERAGE_DIR)/coverage.txt
 	@mv -f ./*.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
-	@total_lines=0; covered_lines=0; \
-	while IFS= read -r fline; do \
-		case "$$fline" in \
-		"File 'src/"*) current_src=1 ;; \
-		"File 'tests/"*) current_src=0 ;; \
-		"File "*) current_src=0 ;; \
-		esac; \
-		if [ "$$current_src" = "1" ]; then \
-			case "$$fline" in \
-			"Lines executed:"*) \
-				pct=$$(echo "$$fline" | sed -E 's/.*Lines executed:([0-9.]+)% of ([0-9]+).*/\1/'); \
-				lines=$$(echo "$$fline" | sed -E 's/.*Lines executed:([0-9.]+)% of ([0-9]+).*/\2/'); \
-				hit=$$(awk -v p="$$pct" -v l="$$lines" 'BEGIN { printf "%d", (p/100.0)*l + 0.5 }'); \
-				total_lines=$$((total_lines + lines)); \
-				covered_lines=$$((covered_lines + hit)); \
-				;; \
-			esac; \
-		fi; \
-	done < $(COVERAGE_DIR)/coverage.txt; \
-	if [ "$$total_lines" -eq 0 ]; then \
-		echo "Coverage: 0% (no source lines found)"; exit 1; \
-	fi; \
-	covered=$$(awk -v h="$$covered_lines" -v t="$$total_lines" 'BEGIN { printf "%.2f", (h/t)*100.0 }'); \
-	echo "Source-only coverage: $$covered% ($$covered_lines/$$total_lines lines)"; \
-	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 80.0) ? 0 : 1 }'
+	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		--output-file $(BUILD_DIR)/coverage.info --quiet
+	lcov --remove $(BUILD_DIR)/coverage.info '*/tests/*' \
+		--output-file $(BUILD_DIR)/coverage-src.info --quiet \
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+	@awk '\
+		/^DA:/ { \
+			total += 1; \
+			split($$0, a, ":"); \
+			split(a[2], b, ","); \
+			if ((b[2] + 0) > 0) { \
+				covered += 1; \
+			} \
+		} \
+		END { \
+			if (total == 0) { \
+				print "Coverage: 0% (no source lines found)"; \
+				exit 1; \
+			} \
+			pct_total = (covered / total) * 100.0; \
+			printf "Source-only coverage: %.2f%% (%d/%d lines)\n", pct_total, covered, total; \
+			exit (pct_total >= 80.0) ? 0 : 1; \
+		} \
+	' $(BUILD_DIR)/coverage-src.info
+
+coverage-html: coverage
+	@echo "Generating HTML coverage report..."
+	genhtml $(BUILD_DIR)/coverage-src.info --output-directory $(COVERAGE_HTML_DIR) \
+		--title "Engine Control Test Rig" --legend --quiet
+	@echo "HTML coverage report: $(COVERAGE_HTML_DIR)/index.html"
+
+coverage-main: $(BUILD_DIR)
+	mkdir -p $(COVERAGE_DIR)
+	rm -f $(BUILD_DIR)/testrig_cov* $(COVERAGE_DIR)/main.c.gcov $(COVERAGE_DIR)/main_coverage.txt
+	$(CC) $(CPPFLAGS) $(COVERAGE_CFLAGS) -o $(BUILD_DIR)/testrig_cov $(SRCS) $(LDFLAGS)
+	$(BUILD_DIR)/testrig_cov --version > /dev/null
+	$(GCOV) -b -c $(BUILD_DIR)/testrig_cov-main.gcno > $(COVERAGE_DIR)/main_coverage.txt
+	@mv -f ./main.c.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
+
+coverage-html-main: coverage
+	@echo "Generating main.c HTML coverage report..."
+	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		--output-file $(BUILD_DIR)/coverage-main.info --quiet
+	lcov --extract $(BUILD_DIR)/coverage-main.info '*/src/app/main.c' \
+		--output-file $(BUILD_DIR)/coverage-main-src.info --quiet \
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+	genhtml $(BUILD_DIR)/coverage-main-src.info --output-directory $(COVERAGE_DIR)/html-main \
+		--title "Engine Control Test Rig (main.c)" --legend --quiet
+	@echo "HTML main.c report: $(COVERAGE_DIR)/html-main/index.html"
 
 coverage-clean:
-	rm -f $(BUILD_DIR)/unit_tests_cov*
+	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/testrig_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info
 	rm -rf $(COVERAGE_DIR)
 
 validate-json-contract: $(TARGET)

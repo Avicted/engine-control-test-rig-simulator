@@ -242,6 +242,97 @@ static int32_t test_physics_config_missing_section_defaults(void)
     return 1;
 }
 
+static int32_t test_config_allowed_keys_and_combined_override(void)
+{
+    ControlCalibration cal;
+    char err[128];
+    const char *path = "build/unit_config_allowed_keys.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"temperature_limit\" 95.0,\n"
+                                  "  \"temperature_limit\"\n"
+                                  "\t: 95.0,\n"
+                                  "  \"oil_pressure_limit\": 2.5,\n"
+                                  "  \"persistence_ticks\": 3,\n"
+                                  "  \"combined_warning_persistence_ticks\": 7,\n"
+                                  "  \"physics\": \"escaped \\\"target_rpm\\\" marker\",\n"
+                                  "  \"target_rpm\": 3000.0,\n"
+                                  "  \"target_temperature\": 90.0,\n"
+                                  "  \"target_oil_pressure\": 3.4,\n"
+                                  "  \"rpm_ramp_rate\": 150.0,\n"
+                                  "  \"temp_ramp_rate\": 0.6,\n"
+                                  "  \"oil_decay_rate\": 0.01\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_OK,
+                  config_load_calibration_file(path, &cal, err, (uint32_t)sizeof(err)));
+    ASSERT_EQ(7U, cal.combined_warning_persistence_ticks);
+    return 1;
+}
+
+static int32_t test_config_zero_persistence_rejected(void)
+{
+    ControlCalibration cal;
+    char err[128];
+    const char *path = "build/unit_config_zero_persistence.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"temperature_limit\": 95.0,\n"
+                                  "  \"oil_pressure_limit\": 2.5,\n"
+                                  "  \"persistence_ticks\": 0\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_calibration_file(path, &cal, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "persistence_ticks") != (char *)0);
+    return 1;
+}
+
+static int32_t test_physics_config_no_valid_fields_rejected(void)
+{
+    EnginePhysicsConfig physics;
+    char err[128];
+    const char *path = "build/unit_config_physics_no_valid_fields.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"physics\": {\n"
+                                  "    \"target_rpm\": \"fast\"\n"
+                                  "  }\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_physics_file(path, &physics, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "no valid fields") != (char *)0);
+    return 1;
+}
+
+static int32_t test_physics_config_non_positive_rejected(void)
+{
+    EnginePhysicsConfig physics;
+    char err[128];
+    const char *path = "build/unit_config_physics_non_positive.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"physics\": {\n"
+                                  "    \"target_rpm\": 0.0,\n"
+                                  "    \"target_temperature\": 90.0,\n"
+                                  "    \"target_oil_pressure\": 3.4,\n"
+                                  "    \"rpm_ramp_rate\": 150.0,\n"
+                                  "    \"temp_ramp_rate\": 0.6,\n"
+                                  "    \"oil_decay_rate\": 0.01\n"
+                                  "  }\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_physics_file(path, &physics, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "must be positive") != (char *)0);
+    return 1;
+}
+
 static int32_t test_physics_config_null_path(void)
 {
     EnginePhysicsConfig physics;
@@ -250,6 +341,117 @@ static int32_t test_physics_config_null_path(void)
     ASSERT_STATUS(STATUS_INVALID_ARGUMENT,
                   config_load_physics_file((const char *)0,
                                            &physics, err, (uint32_t)sizeof(err)));
+    return 1;
+}
+
+static int32_t test_config_unknown_key_with_whitespace_before_colon_rejected(void)
+{
+    ControlCalibration cal;
+    char err[128];
+    const char *path = "build/unit_config_unknown_ws_colon.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"temperature_limit\": 95.0,\n"
+                                  "  \"oil_pressure_limit\": 2.5,\n"
+                                  "  \"persistence_ticks\": 3,\n"
+                                  "  \"rogue_ws_key\"  \n"
+                                  "\t : 42\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_calibration_file(path, &cal, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "unsupported") != (char *)0);
+    return 1;
+}
+
+static int32_t test_config_overlong_unknown_key_rejected(void)
+{
+    ControlCalibration cal;
+    char err[128];
+    const char *path = "build/unit_config_overlong_key.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"temperature_limit\": 95.0,\n"
+                                  "  \"oil_pressure_limit\": 2.5,\n"
+                                  "  \"persistence_ticks\": 3,\n"
+                                  "  \"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnop\": 1\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_calibration_file(path, &cal, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "unsupported") != (char *)0);
+    return 1;
+}
+
+static int32_t test_config_calibration_file_size_limit(void)
+{
+    ControlCalibration cal;
+    char err[128];
+    const char *path = "build/unit_config_too_large.json";
+    FILE *file;
+    uint32_t idx;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    for (idx = 0U; idx < (CONFIG_FILE_MAX_BYTES + 8U); ++idx)
+    {
+        ASSERT_TRUE(fputc('A', file) != EOF);
+    }
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_calibration_file(path, &cal, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "exceeds") != (char *)0);
+    return 1;
+}
+
+static int32_t test_config_physics_file_size_limit(void)
+{
+    EnginePhysicsConfig physics;
+    char err[128];
+    const char *path = "build/unit_config_physics_too_large.json";
+    FILE *file;
+    uint32_t idx;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    for (idx = 0U; idx < (CONFIG_FILE_MAX_BYTES + 8U); ++idx)
+    {
+        ASSERT_TRUE(fputc('B', file) != EOF);
+    }
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  config_load_physics_file(path, &physics, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(strstr(err, "exceeds") != (char *)0);
+    return 1;
+}
+
+static int32_t test_physics_config_escaped_string_key_scan(void)
+{
+    EnginePhysicsConfig physics;
+    char err[128];
+    const char *path = "build/unit_config_physics_escaped_scan.json";
+
+    ASSERT_TRUE(write_test_config(path,
+                                  "{\n"
+                                  "  \"physics\": {\n"
+                                  "    \"target_rpm\": 3000.0,\n"
+                                  "    \"target_temperature\": 90.0,\n"
+                                  "    \"target_oil_pressure\": 3.4,\n"
+                                  "    \"rpm_ramp_rate\": 150.0,\n"
+                                  "    \"temp_ramp_rate\": 0.6,\n"
+                                  "    \"oil_decay_rate\": 0.01,\n"
+                                  "    \"note\": \"contains escaped quote: \\\"target_temperature\\\"\"\n"
+                                  "  }\n"
+                                  "}\n"));
+
+    ASSERT_STATUS(STATUS_OK,
+                  config_load_physics_file(path, &physics, err, (uint32_t)sizeof(err)));
+    ASSERT_TRUE(physics.target_temperature > 89.0f);
+    ASSERT_TRUE(physics.target_temperature < 91.0f);
     return 1;
 }
 
@@ -268,7 +470,16 @@ int32_t register_config_tests(const UnitTestCase **tests_out, uint32_t *count_ou
         {"config_zero_errsize", test_config_zero_error_size},
         {"config_physics_valid", test_physics_config_valid},
         {"config_physics_defaults", test_physics_config_missing_section_defaults},
-        {"config_physics_null", test_physics_config_null_path}};
+        {"config_allowed_keys_override", test_config_allowed_keys_and_combined_override},
+        {"config_zero_persist_rejected", test_config_zero_persistence_rejected},
+        {"config_physics_no_valid_fields", test_physics_config_no_valid_fields_rejected},
+        {"config_physics_non_positive", test_physics_config_non_positive_rejected},
+        {"config_physics_null", test_physics_config_null_path},
+        {"config_unknown_ws_colon", test_config_unknown_key_with_whitespace_before_colon_rejected},
+        {"config_overlong_key", test_config_overlong_unknown_key_rejected},
+        {"config_size_limit", test_config_calibration_file_size_limit},
+        {"config_physics_size_limit", test_config_physics_file_size_limit},
+        {"config_physics_escaped_scan", test_physics_config_escaped_string_key_scan}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

@@ -150,6 +150,66 @@ static int32_t test_logger_log_tick_with_color(void)
     return 1;
 }
 
+static int32_t test_logger_log_tick_level_string_variants(void)
+{
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_DEBUG));
+    ASSERT_STATUS(STATUS_OK, logger_log_tick("CTRL", LOG_LEVEL_DEBUG, 7U, "debug path", 1));
+    ASSERT_STATUS(STATUS_OK, logger_log_tick("CTRL", LOG_LEVEL_ERROR, 8U, "error path", 1));
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_INFO));
+    return 1;
+}
+
+static int32_t test_log_event_unknown_level_uses_raw_level(void)
+{
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_DEBUG));
+    ASSERT_STATUS(STATUS_OK, log_event_with_options("TRACE", "unknown level still logs", 1));
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_INFO));
+    return 1;
+}
+
+static int32_t test_log_event_level_buffer_overflow_rejected(void)
+{
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_DEBUG));
+    ASSERT_STATUS(STATUS_BUFFER_OVERFLOW,
+                  log_event_with_options("LEVEL_NAME_EXCEEDING_BUFFER_SIZE_FOR_TEST", "msg", 0));
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_INFO));
+    return 1;
+}
+
+static int32_t test_log_event_message_buffer_overflow_rejected(void)
+{
+    char long_message[160];
+    uint32_t index;
+
+    for (index = 0U; index < (uint32_t)(sizeof(long_message) - 1U); ++index)
+    {
+        long_message[index] = 'X';
+    }
+    long_message[sizeof(long_message) - 1U] = '\0';
+
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_DEBUG));
+    ASSERT_STATUS(STATUS_BUFFER_OVERFLOW, log_event_with_options("INFO", long_message, 0));
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_INFO));
+    return 1;
+}
+
+static int32_t test_logger_log_tick_buffer_overflow_rejected(void)
+{
+    char long_message[160];
+    uint32_t index;
+
+    for (index = 0U; index < (uint32_t)(sizeof(long_message) - 1U); ++index)
+    {
+        long_message[index] = 'Y';
+    }
+    long_message[sizeof(long_message) - 1U] = '\0';
+
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_DEBUG));
+    ASSERT_STATUS(STATUS_BUFFER_OVERFLOW, logger_log_tick("MODULE", LOG_LEVEL_INFO, 1U, long_message, 0));
+    ASSERT_STATUS(STATUS_OK, logger_set_level(LOG_LEVEL_INFO));
+    return 1;
+}
+
 /* --- CI environment behavior test --- */
 
 static int32_t test_logger_ci_env_suppresses_debug(void)
@@ -197,6 +257,11 @@ int32_t register_logger_tests(const UnitTestCase **tests_out, uint32_t *count_ou
         {"logger_tick_null_module", test_logger_log_tick_null_module},
         {"logger_tick_null_message", test_logger_log_tick_null_message},
         {"logger_tick_with_color", test_logger_log_tick_with_color},
+        {"logger_tick_level_variants", test_logger_log_tick_level_string_variants},
+        {"logger_unknown_level_raw", test_log_event_unknown_level_uses_raw_level},
+        {"logger_level_overflow", test_log_event_level_buffer_overflow_rejected},
+        {"logger_event_overflow", test_log_event_message_buffer_overflow_rejected},
+        {"logger_tick_overflow", test_logger_log_tick_buffer_overflow_rejected},
         {"logger_ci_suppresses_debug", test_logger_ci_env_suppresses_debug}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
