@@ -1,6 +1,6 @@
 # Engine Control Validation & HIL Test Rig Simulator
 
-> **Status**: Feature-complete · 161 unit tests · 80%+ coverage gate · MISRA C:2012 analysis · Static analysis clean
+> **Status**: Feature-complete · 255 unit tests · 100% line coverage · MISRA C:2012 analysis · Static analysis clean
 
 A deterministic C11 engine-control validation simulator designed with
 safety-critical principles and CI-driven hardware-in-the-loop (HIL)
@@ -94,7 +94,7 @@ JSON machine-readable output for CI gating:
 $ ./build/testrig --script scenarios/normal_operation.txt --json
 {
   "schema_version": "1.0.0",
-  "software_version": "1.2.1",
+  "software_version": "1.3.0",
   "build_commit": "b16d190",
   "scenarios": [
     {
@@ -384,10 +384,10 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 | clang-tidy | `make analyze-clang-tidy` | Zero findings |
 | Layering | `make analyze-layering` | No dependency violations |
 | Sanitizers | `make analyze-sanitizers` | No ASan/UBSan findings |
-| Unit tests | `make test-unit` | 161/161 pass |
+| Unit tests | `make test-unit` | 255/255 pass |
 | Integration | `make test-all` | All scenarios pass |
 | JSON contract | `make validate-json` | Schema-valid output |
-| Coverage | `make coverage` | ≥ 80% source-only lines |
+| Coverage | `make coverage` | 100% source-only lines (1354/1354) |
 | Coverage HTML | `make coverage-html` | Browsable HTML report in `coverage/html/` |
 
 
