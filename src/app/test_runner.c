@@ -4,12 +4,12 @@
 #include "control.h"
 #include "engine.h"
 #include "hal.h"
-#include "logger.h"
-#include "output.h"
-#include "requirements.h"
-#include "scenario_catalog.h"
-#include "scenario_profiles.h"
-#include "scenario_report.h"
+#include "reporting/logger.h"
+#include "reporting/output.h"
+#include "scenario/requirements.h"
+#include "scenario/scenario_catalog.h"
+#include "scenario/scenario_profiles.h"
+#include "scenario/scenario_report.h"
 #include "script_parser.h"
 #include "test_runner.h"
 
@@ -19,155 +19,6 @@
 static int32_t print_test_separator(void)
 {
     return output_write_line("------------------------------------------------------------\n");
-}
-
-int32_t execute_profile(EngineState *engine,
-                        const uint32_t *tick_values,
-                        const float *rpm_values,
-                        const float *temp_values,
-                        const float *oil_values,
-                        const int32_t *run_values,
-                        uint32_t tick_count,
-                        int32_t show_sim,
-                        int32_t show_control,
-                        int32_t show_state,
-                        TickReport *tick_reports,
-                        uint32_t tick_report_capacity,
-                        uint32_t *tick_report_count)
-{
-    HAL_SensorFrame sensor_frame;
-    uint32_t tick_index;
-    StatusCode status;
-    int32_t result = ENGINE_OK;
-
-    if ((engine == (EngineState *)0) || (rpm_values == (const float *)0) ||
-        (temp_values == (const float *)0) || (oil_values == (const float *)0))
-    {
-        return ENGINE_ERROR;
-    }
-
-    if ((tick_count == 0U) || (tick_count > SCRIPT_PARSER_MAX_TICKS))
-    {
-        return ENGINE_ERROR;
-    }
-
-    if (tick_report_count != (uint32_t *)0)
-    {
-        *tick_report_count = 0U;
-    }
-
-    if ((tick_reports != (TickReport *)0) && (tick_report_capacity < tick_count + 1U))
-    {
-        return ENGINE_ERROR;
-    }
-
-    /* Record tick 0: INIT state before engine_start */
-    if (tick_reports != (TickReport *)0)
-    {
-        tick_reports[0U].tick = 0U;
-        tick_reports[0U].rpm = engine->rpm;
-        tick_reports[0U].temp = engine->temperature;
-        tick_reports[0U].oil = engine->oil_pressure;
-        tick_reports[0U].run = engine->is_running;
-        tick_reports[0U].result = ENGINE_OK;
-        tick_reports[0U].control = 0.0f;
-        tick_reports[0U].mode = engine->mode;
-    }
-
-    status = engine_start(engine);
-    if (status != STATUS_OK)
-    {
-        return ENGINE_ERROR;
-    }
-
-    for (tick_index = 0U; tick_index < tick_count; ++tick_index)
-    {
-        int32_t run_flag;
-
-        if (run_values == (const int32_t *)0)
-        {
-            run_flag = 1;
-        }
-        else
-        {
-            run_flag = run_values[tick_index];
-        }
-
-        if ((run_flag != 0) && (run_flag != 1))
-        {
-            return ENGINE_ERROR;
-        }
-
-        sensor_frame.is_running = run_flag;
-        sensor_frame.rpm = rpm_values[tick_index];
-        sensor_frame.temperature = temp_values[tick_index];
-        sensor_frame.oil_pressure = oil_values[tick_index];
-
-        if (hal_read_sensors(&sensor_frame) != STATUS_OK)
-        {
-            return ENGINE_ERROR;
-        }
-
-        if (hal_apply_sensors(&sensor_frame, engine) != STATUS_OK)
-        {
-            return ENGINE_ERROR;
-        }
-
-        if (evaluate_engine(engine, &result) != STATUS_OK)
-        {
-            return ENGINE_ERROR;
-        }
-
-        if (tick_reports != (TickReport *)0)
-        {
-            float control_output = 0.0f;
-            uint32_t report_index = tick_index + 1U; /* +1: index 0 is the pre-start INIT tick */
-
-            if (compute_control_output(engine, &control_output) != STATUS_OK)
-            {
-                return ENGINE_ERROR;
-            }
-
-            tick_reports[report_index].tick =
-                (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
-            tick_reports[report_index].rpm = rpm_values[tick_index];
-            tick_reports[report_index].temp = temp_values[tick_index];
-            tick_reports[report_index].oil = oil_values[tick_index];
-            tick_reports[report_index].run = run_flag;
-            tick_reports[report_index].result = result;
-            tick_reports[report_index].control = control_output;
-            tick_reports[report_index].mode = engine->mode;
-        }
-
-        if ((show_sim != 0) || (show_control != 0) || (show_state != 0))
-        {
-            uint32_t tick_value;
-
-            tick_value = (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
-            if (scenario_report_print_tick_details(tick_value,
-                                                   engine,
-                                                   result,
-                                                   show_sim,
-                                                   show_control,
-                                                   show_state) != ENGINE_OK)
-            {
-                return ENGINE_ERROR;
-            }
-        }
-
-        status = engine_update(engine);
-        if (status != STATUS_OK)
-        {
-            return ENGINE_ERROR;
-        }
-    }
-
-    if (tick_report_count != (uint32_t *)0)
-    {
-        *tick_report_count = tick_count + 1U; /* +1 for the pre-start INIT tick at index 0 */
-    }
-
-    return result;
 }
 
 static int32_t run_test_case(const TestCase *test_case,

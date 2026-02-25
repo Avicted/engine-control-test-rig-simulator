@@ -3,9 +3,9 @@
 #include "control.h"
 #include "engine.h"
 #include "hal.h"
-#include "output.h"
-#include "scenario_report.h"
-#include "version.h"
+#include "reporting/output.h"
+#include "scenario/scenario_report.h"
+#include "reporting/version.h"
 
 #define TEST_LINE_BUFFER_SIZE 256
 

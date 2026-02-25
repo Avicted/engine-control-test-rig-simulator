@@ -6,10 +6,10 @@ This matrix provides a code-level mapping between requirement IDs, scenario vali
 
 | Requirement ID | Description | Primary Logic |
 |---|---|---|
-| REQ-ENG-001 | Persistent over-temperature leads to shutdown | `evaluate_engine()` in `src/control.c` (temperature persistence path) |
-| REQ-ENG-002 | Persistent low oil pressure leads to shutdown | `evaluate_engine()` in `src/control.c` (oil persistence path) |
-| REQ-ENG-003 | Combined high RPM + high temperature persistence leads to warning | `evaluate_engine()` in `src/control.c` (combined warning path) |
-| REQ-ENG-SCRIPT | Script-driven scenario ingestion contract and deterministic execution | `script_parser_parse_file()` in `src/script_parser.c`, `run_scripted_scenario_with_json()` in `src/test_runner.c` |
+| REQ-ENG-001 | Persistent over-temperature leads to shutdown | `evaluate_engine()` in `src/domain/control.c` (temperature persistence path) |
+| REQ-ENG-002 | Persistent low oil pressure leads to shutdown | `evaluate_engine()` in `src/domain/control.c` (oil persistence path) |
+| REQ-ENG-003 | Combined high RPM + high temperature persistence leads to warning | `evaluate_engine()` in `src/domain/control.c` (combined warning path) |
+| REQ-ENG-SCRIPT | Script-driven scenario ingestion contract and deterministic execution | `script_parser_parse_file()` in `src/scenario/script_parser.c`, `run_scripted_scenario_with_json()` in `src/app/test_runner.c` |
 
 ## Scenario-to-Requirement Mapping
 

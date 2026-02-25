@@ -1,8 +1,8 @@
 #include <string.h>
 
-#include "requirements.h"
-#include "scenario_catalog.h"
-#include "scenario_profiles.h"
+#include "scenario/requirements.h"
+#include "scenario/scenario_catalog.h"
+#include "scenario/scenario_profiles.h"
 
 typedef struct
 {

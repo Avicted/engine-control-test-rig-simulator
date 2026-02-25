@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "scenario_profiles.h"
+#include "scenario/scenario_profiles.h"
 #include "status.h"
 
 const char *scenario_report_result_to_string(int32_t result);

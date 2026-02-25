@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "engine.h"
-#include "logger.h"
+#include "reporting/logger.h"
 #include "test_runner.h"
 #include "status.h"
 
