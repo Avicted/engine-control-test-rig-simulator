@@ -36,3 +36,15 @@ Named scenario routing in `run_named_scenario_with_json()` uses `requirement_for
 - Console output: requirement linkage per test case.
 - JSON output: `requirement_id`, `expected`, `actual`, and `pass` per scenario.
 - CI gate: `make validate-json-contract` ensures required JSON envelope and fields exist.
+
+## Unit-Test Evidence Mapping
+
+| Requirement ID | Unit Test Evidence |
+|---|---|
+| REQ-ENG-001 | `control_temp_persistence_boundary`, `control_persistence_reset` |
+| REQ-ENG-002 | `control_oil_persistence_boundary` |
+| REQ-ENG-003 | `control_combined_warning`, `control_single_tick_threshold` |
+| REQ-ENG-IO-001 | `hal_valid_decode`, `hal_timeout`, `hal_timeout_after_last_sample` |
+| REQ-ENG-IO-002 | `hal_invalid_id`, `hal_wrong_dlc`, `hal_error_frame` |
+| REQ-ENG-IO-003 | `hal_corrupt_payload`, `hal_fifo_order` |
+| REQ-ENG-SCRIPT | `parser_missing_tokens`, `parser_non_numeric`, `parser_out_of_order`, `parser_corrupt_before_sensor` |

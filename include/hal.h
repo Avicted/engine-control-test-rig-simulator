@@ -16,6 +16,7 @@
 #define HAL_MAX_TX_FRAMES 32U
 #define HAL_SENSOR_TIMEOUT_TICKS 3U
 #define HAL_SENSOR_FRAME_ID 0x100U
+#define HAL_SENSOR_ERROR_FRAME_ID 0x10EU
 
 typedef struct
 {
@@ -65,7 +66,7 @@ StatusCode hal_shutdown(void);
 /*
  * @requirement REQ-ENG-IO-002
  * @pre frame != NULL
- * @post frame is queued in bounded deterministic RX queue when STATUS_OK is returned
+ * @post sensor frame or supported sensor error frame is queued in bounded deterministic RX queue when STATUS_OK is returned
  * @deterministic yes
  */
 StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick);
@@ -73,7 +74,7 @@ StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick);
 /*
  * @requirement REQ-ENG-IO-003
  * @pre tick monotonically increases, frame_out != NULL
- * @post returns STATUS_OK and decodes one queued sensor frame, or STATUS_IO_ERROR on deterministic timeout
+ * @post returns STATUS_OK and decodes one queued sensor frame, STATUS_PARSE_ERROR for queued sensor error frames, or STATUS_TIMEOUT on deterministic timeout
  * @deterministic yes
  */
 StatusCode hal_read_sensors(uint32_t tick, HAL_SensorFrame *frame_out);

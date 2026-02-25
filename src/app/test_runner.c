@@ -469,6 +469,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
     error_info.function = "run_scripted_scenario_with_json";
     error_info.tick = 0U;
     error_info.severity = SEVERITY_INFO;
+    error_info.recoverability = RECOVERABILITY_RECOVERABLE;
 
     if (hal_init() != STATUS_OK)
     {
@@ -486,6 +487,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
         error_info.function = "script_parser_parse_file";
         error_info.tick = 0U;
         error_info.severity = SEVERITY_ERROR;
+        error_info.recoverability = RECOVERABILITY_RECOVERABLE;
         if (json_output == 0)
         {
             (void)log_event_with_options("ERROR", error_message, use_color);
@@ -544,6 +546,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
             error_info.function = "execute_profile_frames";
             error_info.tick = 0U;
             error_info.severity = SEVERITY_FATAL;
+            error_info.recoverability = RECOVERABILITY_NON_RECOVERABLE;
         }
         if (json_output != 0)
         {

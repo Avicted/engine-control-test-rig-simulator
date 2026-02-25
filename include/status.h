@@ -22,6 +22,12 @@ typedef enum
     SEVERITY_FATAL
 } Severity;
 
+typedef enum
+{
+    RECOVERABILITY_RECOVERABLE = 0,
+    RECOVERABILITY_NON_RECOVERABLE
+} Recoverability;
+
 typedef struct
 {
     StatusCode code;
@@ -29,6 +35,7 @@ typedef struct
     const char *function;
     uint32_t tick;
     Severity severity;
+    Recoverability recoverability;
 } ErrorInfo;
 
 static inline const char *status_code_to_string(StatusCode code)
@@ -69,6 +76,29 @@ static inline const char *severity_to_string(Severity severity)
     default:
         return "UNKNOWN";
     }
+}
+
+static inline const char *recoverability_to_string(Recoverability recoverability)
+{
+    switch (recoverability)
+    {
+    case RECOVERABILITY_RECOVERABLE:
+        return "RECOVERABLE";
+    case RECOVERABILITY_NON_RECOVERABLE:
+        return "NON_RECOVERABLE";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+static inline Recoverability status_code_default_recoverability(StatusCode code)
+{
+    if ((code == STATUS_INTERNAL_ERROR) || (code == STATUS_IO_ERROR))
+    {
+        return RECOVERABILITY_NON_RECOVERABLE;
+    }
+
+    return RECOVERABILITY_RECOVERABLE;
 }
 
 #endif

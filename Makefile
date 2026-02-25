@@ -120,7 +120,7 @@ coverage: $(BUILD_DIR)
 	@mv -f ./*.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
 	@covered=$$(grep 'Lines executed:' $(COVERAGE_DIR)/coverage.txt | tail -n 1 | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/'); \
 	echo "Coverage: $$covered%"; \
-	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 75.0) ? 0 : 1 }'
+	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 80.0) ? 0 : 1 }'
 
 coverage-clean:
 	rm -f $(BUILD_DIR)/unit_tests_cov*

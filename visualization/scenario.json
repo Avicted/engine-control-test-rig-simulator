@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "software_version": "0.3.0",
-  "build_commit": "f11315c",
+  "build_commit": "a15cadb",
   "scenarios": [
     {
       "scenario": "normal_operation",

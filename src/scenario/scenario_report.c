@@ -366,9 +366,10 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
 
     written = snprintf(line,
                        sizeof(line),
-                       "  \"error\": {\"code\": \"%s\", \"severity\": \"%s\", \"module\": \"%s\", \"function\": \"%s\", \"tick\": %u},\n",
+                       "  \"error\": {\"code\": \"%s\", \"severity\": \"%s\", \"recoverability\": \"%s\", \"module\": \"%s\", \"function\": \"%s\", \"tick\": %u},\n",
                        status_code_to_string(error_info->code),
                        severity_to_string(error_info->severity),
+                       recoverability_to_string(error_info->recoverability),
                        (error_info->module == (const char *)0) ? "unknown" : error_info->module,
                        (error_info->function == (const char *)0) ? "unknown" : error_info->function,
                        error_info->tick);
