@@ -19,7 +19,7 @@ This FMEA covers sensor-level and communication-level failure modes in the engin
 | ID | Component | Failure Mode | Local Effect | System Effect | Severity | Occurrance | Detection | Risk Priority Number | Detection Mechanism | System Response | Test Evidence |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | FM-001 | Temperature sensor | Stuck high (above limit) | Sustained over-temp reading | Persistence counter increments continuously | 4 | 2 | 1 | 8 | `evaluate_engine()` fault counter | SHUTDOWN after persistence threshold | `overheat_ge_persistence`, `control_temp_persistence_boundary` |
-| FM-002 | Temperature sensor | Stuck low (below limit) | Normal-range reading despite actual fault | No shutdown triggered (masked fault) - mitigated by dual-channel voting | 4 | 2 | 1 | 8 | Dual-channel sensor voting via `hal_vote_sensors()` detects disagreement | Cross-check disagreement triggers STATUS_SENSOR_MISMATCH | `hal_vote_dual_disagree`, `hal_vote_single`, `hal_vote_dual_agree` |
+| FM-002 | Temperature sensor | Stuck low (below limit) | Normal-range reading despite actual fault | No shutdown triggered (masked fault) - mitigated by dual-channel voting | 4 | 2 | 1 | 8 | Dual-channel sensor voting via `hal_vote_sensors()` detects disagreement | Cross-check disagreement triggers STATUS_PARSE_ERROR | `hal_vote_dual_disagree`, `hal_vote_single`, `hal_vote_dual_agree` |
 | FM-003 | Temperature sensor | Intermittent spike | Counter increments then resets | No shutdown if spikes don't persist | 2 | 3 | 1 | 6 | Counter reset on recovery in `update_fault_counter()` | Correct: no false shutdown | `control_persistence_reset` |
 | FM-004 | Oil pressure sensor | Stuck low (below limit) | Sustained low-oil reading | Persistence counter increments | 4 | 2 | 1 | 8 | `evaluate_engine()` fault counter | SHUTDOWN after persistence threshold | `oil_low_ge_persistence`, `control_oil_persistence_boundary` |
 | FM-005 | Oil pressure sensor | Gradual decay | Slow decrease over many ticks | SHUTDOWN triggered when persistence window met | 4 | 3 | 1 | 12 | Counter tracks consecutive low ticks | SHUTDOWN | `oil_drain` scenario |
@@ -38,8 +38,8 @@ This FMEA covers sensor-level and communication-level failure modes in the engin
 
 | RPN Range | Count | Action |
 |---|---|---|
-| 1-9 | 12 | Acceptable risk - detection mechanism verified by test |
-| 10-19 | 2 | Low risk - monitored, tested |
+| 1-9 | 14 | Acceptable risk - detection mechanism verified by test |
+| 10-19 | 1 | Low risk - monitored, tested |
 | 20-39 | 0 | None (FM-002 mitigated by dual-channel voting, RPN reduced from 32 to 8) |
 | 40+ | 0 | None |
 
