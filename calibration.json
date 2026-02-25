@@ -1,5 +1,13 @@
 {
   "temperature_limit": 95.0,
   "oil_pressure_limit": 2.5,
-  "persistence_ticks": 3
+  "persistence_ticks": 3,
+  "physics": {
+    "target_rpm": 3000.0,
+    "target_temperature": 90.0,
+    "target_oil_pressure": 3.4,
+    "rpm_ramp_rate": 150.0,
+    "temp_ramp_rate": 0.6,
+    "oil_decay_rate": 0.01
+  }
 }

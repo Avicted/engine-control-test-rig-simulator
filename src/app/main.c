@@ -16,7 +16,7 @@ static int32_t safe_print(const char *line)
 {
     int32_t result;
 
-    if (line == (const char *)0)
+    if (line == NULL)
     {
         return ENGINE_ERROR;
     }
@@ -35,7 +35,7 @@ static int32_t print_usage(const char *program_name)
     char usage_line[256];
     int32_t written;
 
-    if (program_name == (const char *)0)
+    if (program_name == NULL)
     {
         return ENGINE_ERROR;
     }
@@ -100,11 +100,10 @@ static StatusCode parse_optional_flags(int32_t argc,
                                        const char **config_path,
                                        const char **log_level)
 {
-    int32_t index;
 
-    if ((argv == (char **)0) || (show_sim == (int32_t *)0) || (use_color == (int32_t *)0) ||
-        (show_control == (int32_t *)0) || (show_state == (int32_t *)0) || (json_output == (int32_t *)0) ||
-        (strict_mode == (int32_t *)0) || (config_path == (const char **)0) || (log_level == (const char **)0))
+    if ((argv == NULL) || (show_sim == NULL) || (use_color == NULL) ||
+        (show_control == NULL) || (show_state == NULL) || (json_output == NULL) ||
+        (strict_mode == NULL) || (config_path == NULL) || (log_level == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -120,108 +119,118 @@ static StatusCode parse_optional_flags(int32_t argc,
     *show_state = 0;
     *json_output = 0;
     *strict_mode = 0;
-    *config_path = (const char *)0;
+    *config_path = NULL;
     *log_level = "INFO";
 
-    for (index = start_index; (index < argc) && (index < MAX_CLI_ARGS); ++index)
     {
-        size_t arg_len;
+        int32_t index;
+        int32_t skip_next = 0;
+        for (index = start_index; (index < argc) && (index < MAX_CLI_ARGS); ++index)
+        {
+            size_t arg_len;
 
-        if (argv[index] == (char *)0)
-        {
-            return STATUS_INVALID_ARGUMENT;
-        }
+            if (skip_next != 0)
+            {
+                skip_next = 0;
+                continue;
+            }
 
-        if (strcmp(argv[index], "--config") == 0)
-        {
-            if ((*config_path != (const char *)0) || ((index + 1) >= argc))
+            if (argv[index] == NULL)
             {
                 return STATUS_INVALID_ARGUMENT;
             }
-            if ((strlen(argv[index + 1]) == 0U) || (strlen(argv[index + 1]) >= MAX_CLI_PATH_LEN))
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *config_path = argv[index + 1];
-            index += 1;
-            continue;
-        }
 
-        if (strcmp(argv[index], "--log-level") == 0)
-        {
-            if ((index + 1) >= argc)
+            if (strcmp(argv[index], "--config") == 0)
             {
-                return STATUS_INVALID_ARGUMENT;
+                if ((*config_path != NULL) || ((index + 1) >= argc))
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                if ((strlen(argv[index + 1]) == 0U) || (strlen(argv[index + 1]) >= MAX_CLI_PATH_LEN))
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *config_path = argv[index + 1];
+                skip_next = 1;
+                continue;
             }
-            if ((strcmp(argv[index + 1], "DEBUG") != 0) && (strcmp(argv[index + 1], "INFO") != 0) &&
-                (strcmp(argv[index + 1], "WARN") != 0) && (strcmp(argv[index + 1], "ERROR") != 0))
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *log_level = argv[index + 1];
-            index += 1;
-            continue;
-        }
 
-        arg_len = strlen(argv[index]);
-        if ((arg_len == 0U) || (arg_len >= MAX_CLI_ARG_LEN))
-        {
-            return STATUS_INVALID_ARGUMENT;
-        }
+            if (strcmp(argv[index], "--log-level") == 0)
+            {
+                if ((index + 1) >= argc)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                if ((strcmp(argv[index + 1], "DEBUG") != 0) && (strcmp(argv[index + 1], "INFO") != 0) &&
+                    (strcmp(argv[index + 1], "WARN") != 0) && (strcmp(argv[index + 1], "ERROR") != 0))
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *log_level = argv[index + 1];
+                skip_next = 1;
+                continue;
+            }
 
-        if (strncmp(argv[index], "--show-sim", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*show_sim != 0)
+            arg_len = strlen(argv[index]);
+            if ((arg_len == 0U) || (arg_len >= MAX_CLI_ARG_LEN))
             {
                 return STATUS_INVALID_ARGUMENT;
             }
-            *show_sim = 1;
-        }
-        else if (strncmp(argv[index], "--show-control", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*show_control != 0)
+
+            if (strncmp(argv[index], "--show-sim", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*show_sim != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *show_sim = 1;
+            }
+            else if (strncmp(argv[index], "--show-control", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*show_control != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *show_control = 1;
+            }
+            else if (strncmp(argv[index], "--color", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*use_color != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *use_color = 1;
+            }
+            else if (strncmp(argv[index], "--show-state", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*show_state != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *show_state = 1;
+            }
+            else if (strncmp(argv[index], "--json", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*json_output != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *json_output = 1;
+            }
+            else if (strncmp(argv[index], "--strict", MAX_CLI_ARG_LEN) == 0)
+            {
+                if (*strict_mode != 0)
+                {
+                    return STATUS_INVALID_ARGUMENT;
+                }
+                *strict_mode = 1;
+            }
+            else
             {
                 return STATUS_INVALID_ARGUMENT;
             }
-            *show_control = 1;
         }
-        else if (strncmp(argv[index], "--color", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*use_color != 0)
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *use_color = 1;
-        }
-        else if (strncmp(argv[index], "--show-state", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*show_state != 0)
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *show_state = 1;
-        }
-        else if (strncmp(argv[index], "--json", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*json_output != 0)
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *json_output = 1;
-        }
-        else if (strncmp(argv[index], "--strict", MAX_CLI_ARG_LEN) == 0)
-        {
-            if (*strict_mode != 0)
-            {
-                return STATUS_INVALID_ARGUMENT;
-            }
-            *strict_mode = 1;
-        }
-        else
-        {
-            return STATUS_INVALID_ARGUMENT;
-        }
-    }
+    } /* end skip_next scope */
 
     return STATUS_OK;
 }
@@ -236,7 +245,7 @@ static StatusCode apply_runtime_options(const char *config_path, const char *log
         return STATUS_INVALID_ARGUMENT;
     }
 
-    if (config_path == (const char *)0)
+    if (config_path == NULL)
     {
         return STATUS_OK;
     }
@@ -263,10 +272,10 @@ int main(int argc, char **argv)
     int32_t show_state;
     int32_t json_output;
     int32_t strict_mode;
-    const char *config_path = (const char *)0;
+    const char *config_path = NULL;
     const char *log_level = "INFO";
 
-    if ((argv == (char **)0) || (argc < 1))
+    if ((argv == NULL) || (argc < 1))
     {
         return 1;
     }

@@ -34,6 +34,15 @@ static uint32_t g_last_sensor_tick;
 static int32_t g_has_sensor_tick;
 static ErrorInfo g_last_error;
 
+/* --- Software watchdog state --- */
+static uint32_t g_watchdog_timeout = 0U; /* 0 = disabled */
+static uint32_t g_watchdog_counter = 0U;
+static int32_t g_watchdog_enabled = 0;
+
+/* --- Sensor voting state --- */
+static float g_redundant_temp_b = 0.0f;
+static int32_t g_has_redundant_temp = 0;
+
 static void hal_set_error(StatusCode code, const char *function, uint32_t tick, Severity severity)
 {
     g_last_error.code = code;
@@ -46,7 +55,7 @@ static void hal_set_error(StatusCode code, const char *function, uint32_t tick, 
 
 static void queue_reset(HAL_FrameQueue *queue)
 {
-    if (queue == (HAL_FrameQueue *)0)
+    if (queue == NULL)
     {
         return;
     }
@@ -59,7 +68,7 @@ static void queue_reset(HAL_FrameQueue *queue)
 
 static void tx_queue_reset(HAL_TxFrameQueue *queue)
 {
-    if (queue == (HAL_TxFrameQueue *)0)
+    if (queue == NULL)
     {
         return;
     }
@@ -72,7 +81,7 @@ static void tx_queue_reset(HAL_TxFrameQueue *queue)
 
 static StatusCode queue_push(HAL_FrameQueue *queue, const HAL_Frame *frame, uint32_t capacity)
 {
-    if ((queue == (HAL_FrameQueue *)0) || (frame == (const HAL_Frame *)0))
+    if ((queue == NULL) || (frame == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -90,7 +99,7 @@ static StatusCode queue_push(HAL_FrameQueue *queue, const HAL_Frame *frame, uint
 
 static StatusCode queue_pop(HAL_FrameQueue *queue, HAL_Frame *frame_out, uint32_t capacity)
 {
-    if ((queue == (HAL_FrameQueue *)0) || (frame_out == (HAL_Frame *)0))
+    if ((queue == NULL) || (frame_out == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -108,7 +117,7 @@ static StatusCode queue_pop(HAL_FrameQueue *queue, HAL_Frame *frame_out, uint32_
 
 static StatusCode tx_queue_push(HAL_TxFrameQueue *queue, const HAL_Frame *frame)
 {
-    if ((queue == (HAL_TxFrameQueue *)0) || (frame == (const HAL_Frame *)0))
+    if ((queue == NULL) || (frame == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -129,7 +138,7 @@ static uint8_t frame_checksum(const HAL_Frame *frame)
     uint8_t checksum = 0U;
     uint32_t idx;
 
-    if (frame == (const HAL_Frame *)0)
+    if (frame == NULL)
     {
         return 0U;
     }
@@ -144,7 +153,7 @@ static uint8_t frame_checksum(const HAL_Frame *frame)
 
 static StatusCode validate_sensor_frame(const HAL_SensorFrame *frame)
 {
-    if (frame == (const HAL_SensorFrame *)0)
+    if (frame == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -170,7 +179,7 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
     uint16_t temp_encoded;
     uint16_t oil_encoded;
 
-    if ((frame == (const HAL_Frame *)0) || (sensor_frame == (HAL_SensorFrame *)0))
+    if ((frame == NULL) || (sensor_frame == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -199,7 +208,7 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
 
 static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
 {
-    if (frame == (const HAL_Frame *)0)
+    if (frame == NULL)
     {
         return 0;
     }
@@ -224,6 +233,11 @@ StatusCode hal_init(void)
     tx_queue_reset(&g_bus_tx_queue);
     g_last_sensor_tick = 0U;
     g_has_sensor_tick = 0;
+    g_watchdog_timeout = 0U;
+    g_watchdog_counter = 0U;
+    g_watchdog_enabled = 0;
+    g_redundant_temp_b = 0.0f;
+    g_has_redundant_temp = 0;
     hal_set_error(STATUS_OK, "hal_init", 0U, SEVERITY_INFO);
     return STATUS_OK;
 }
@@ -235,6 +249,11 @@ StatusCode hal_shutdown(void)
     tx_queue_reset(&g_bus_tx_queue);
     g_last_sensor_tick = 0U;
     g_has_sensor_tick = 0;
+    g_watchdog_timeout = 0U;
+    g_watchdog_counter = 0U;
+    g_watchdog_enabled = 0;
+    g_redundant_temp_b = 0.0f;
+    g_has_redundant_temp = 0;
     hal_set_error(STATUS_OK, "hal_shutdown", 0U, SEVERITY_INFO);
     return STATUS_OK;
 }
@@ -243,7 +262,7 @@ StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick)
 {
     StatusCode queue_status;
 
-    if (frame == (const HAL_Frame *)0)
+    if (frame == NULL)
     {
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_ingest_sensor_frame", tick, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
@@ -271,7 +290,7 @@ StatusCode hal_read_sensors(uint32_t tick, HAL_SensorFrame *frame_out)
     HAL_Frame frame;
     StatusCode status;
 
-    if (frame_out == (HAL_SensorFrame *)0)
+    if (frame_out == NULL)
     {
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_read_sensors", tick, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
@@ -321,7 +340,7 @@ StatusCode hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Fram
     uint16_t temp_encoded;
     uint16_t oil_encoded;
 
-    if ((sensor_frame == (const HAL_SensorFrame *)0) || (frame_out == (HAL_Frame *)0))
+    if ((sensor_frame == NULL) || (frame_out == NULL))
     {
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_encode_sensor_frame", 0U, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
@@ -334,8 +353,8 @@ StatusCode hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Fram
     }
 
     rpm_encoded = (uint16_t)(sensor_frame->rpm + 0.5f);
-    temp_encoded = (uint16_t)((sensor_frame->temperature + 50.0f) * 10.0f + 0.5f);
-    oil_encoded = (uint16_t)(sensor_frame->oil_pressure * 100.0f + 0.5f);
+    temp_encoded = (uint16_t)(((sensor_frame->temperature + 50.0f) * 10.0f) + 0.5f);
+    oil_encoded = (uint16_t)((sensor_frame->oil_pressure * 100.0f) + 0.5f);
 
     frame_out->id = HAL_SENSOR_FRAME_ID;
     frame_out->dlc = 8U;
@@ -354,7 +373,7 @@ StatusCode hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Fram
 
 StatusCode hal_apply_sensors(const HAL_SensorFrame *frame, EngineState *engine)
 {
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -376,7 +395,7 @@ StatusCode hal_receive_bus(const HAL_Frame *frame)
 {
     StatusCode queue_status;
 
-    if (frame == (const HAL_BusFrame *)0)
+    if (frame == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -399,7 +418,7 @@ StatusCode hal_transmit_bus(const HAL_Frame *frame)
 {
     StatusCode queue_status;
 
-    if (frame == (const HAL_BusFrame *)0)
+    if (frame == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -420,7 +439,7 @@ StatusCode hal_transmit_bus(const HAL_Frame *frame)
 
 StatusCode hal_write_actuators(const HAL_ControlFrame *frame)
 {
-    if (frame == (const HAL_ControlFrame *)0)
+    if (frame == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -441,11 +460,102 @@ StatusCode hal_write_actuators(const HAL_ControlFrame *frame)
 
 StatusCode hal_get_last_error(ErrorInfo *error_info)
 {
-    if (error_info == (ErrorInfo *)0)
+    if (error_info == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
 
     *error_info = g_last_error;
+    return STATUS_OK;
+}
+
+/* --- Software watchdog implementation --- */
+
+StatusCode hal_watchdog_configure(uint32_t timeout_ticks)
+{
+    if (timeout_ticks > HAL_WATCHDOG_MAX_TICKS)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    g_watchdog_timeout = timeout_ticks;
+    g_watchdog_counter = 0U;
+    g_watchdog_enabled = (timeout_ticks > 0U) ? 1 : 0;
+    return STATUS_OK;
+}
+
+StatusCode hal_watchdog_kick(void)
+{
+    g_watchdog_counter = 0U;
+    return STATUS_OK;
+}
+
+StatusCode hal_watchdog_check(uint32_t tick)
+{
+    if (g_watchdog_enabled == 0)
+    {
+        return STATUS_OK;
+    }
+
+    g_watchdog_counter++;
+    if (g_watchdog_counter > g_watchdog_timeout)
+    {
+        hal_set_error(STATUS_TIMEOUT, "hal_watchdog_check", tick, SEVERITY_FATAL);
+        return STATUS_TIMEOUT;
+    }
+
+    return STATUS_OK;
+}
+
+/* --- Sensor voting implementation --- */
+
+StatusCode hal_submit_redundant_temp(float temperature_b, uint32_t tick)
+{
+    if (!isfinite(temperature_b))
+    {
+        hal_set_error(STATUS_INVALID_ARGUMENT, "hal_submit_redundant_temp", tick, SEVERITY_ERROR);
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)tick; /* reserved for future diagnostics */
+    g_redundant_temp_b = temperature_b;
+    g_has_redundant_temp = 1;
+    return STATUS_OK;
+}
+
+StatusCode hal_vote_sensors(float primary_temp, float *voted_temp)
+{
+    float diff;
+
+    if (voted_temp == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+
+    if (g_has_redundant_temp == 0)
+    {
+        /* Single-channel mode - pass through primary */
+        *voted_temp = primary_temp;
+        return STATUS_OK;
+    }
+
+    /* Compute absolute difference */
+    diff = primary_temp - g_redundant_temp_b;
+    if (diff < 0.0f)
+    {
+        diff = -diff;
+    }
+
+    if (diff > HAL_SENSOR_VOTING_TOLERANCE)
+    {
+        hal_set_error(STATUS_PARSE_ERROR, "hal_vote_sensors", 0U, SEVERITY_ERROR);
+        /* Clear redundant reading for next cycle */
+        g_has_redundant_temp = 0;
+        return STATUS_PARSE_ERROR;
+    }
+
+    /* Average the two channels */
+    *voted_temp = (primary_temp + g_redundant_temp_b) / 2.0f;
+    g_has_redundant_temp = 0;
     return STATUS_OK;
 }

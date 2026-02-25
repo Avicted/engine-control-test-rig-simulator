@@ -1,5 +1,8 @@
 #include "control.h"
 
+#include <math.h>   /* isfinite */
+#include <stddef.h> /* NULL */
+
 static ControlCalibration g_calibration = {
     CONTROL_DEFAULT_TEMP_LIMIT,
     CONTROL_DEFAULT_OIL_PRESSURE_LIMIT,
@@ -12,7 +15,13 @@ static int32_t g_calibration_configured = 0;
 
 static int32_t calibration_valid(const ControlCalibration *calibration)
 {
-    if (calibration == (const ControlCalibration *)0)
+    if (calibration == NULL)
+    {
+        return 0;
+    }
+
+    if (!isfinite(calibration->temperature_limit) || !isfinite(calibration->oil_pressure_limit) ||
+        !isfinite(calibration->high_rpm_warning_threshold) || !isfinite(calibration->high_temp_warning_threshold))
     {
         return 0;
     }
@@ -32,7 +41,7 @@ static int32_t calibration_valid(const ControlCalibration *calibration)
 
 static void update_fault_counter(int32_t fault_active, uint32_t *counter)
 {
-    if (counter == (uint32_t *)0)
+    if (counter == NULL)
     {
         return;
     }
@@ -52,7 +61,7 @@ static void update_fault_counter(int32_t fault_active, uint32_t *counter)
 
 static StatusCode transition_engine_mode_by_result(EngineState *engine, int32_t evaluation_result)
 {
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -85,13 +94,17 @@ static StatusCode transition_engine_mode_by_result(EngineState *engine, int32_t 
             }
         }
     }
+    else
+    {
+        /* No action required for other modes - MISRA 15.7 terminal else */
+    }
 
     return STATUS_OK;
 }
 
 static int32_t mode_to_result_code(const EngineState *engine)
 {
-    if (engine == (const EngineState *)0)
+    if (engine == NULL)
     {
         return ENGINE_ERROR;
     }
@@ -127,7 +140,7 @@ StatusCode evaluate_engine(EngineState *engine, int32_t *evaluation_result)
     int32_t warning_fault;
     int32_t eval_result_code;
 
-    if ((engine == (EngineState *)0) || (evaluation_result == (int32_t *)0))
+    if ((engine == NULL) || (evaluation_result == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -182,7 +195,7 @@ StatusCode compute_control_output(const EngineState *engine, float *control_outp
 {
     float output;
 
-    if ((engine == (const EngineState *)0) || (control_output == (float *)0))
+    if ((engine == NULL) || (control_output == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -198,7 +211,7 @@ StatusCode compute_control_output(const EngineState *engine, float *control_outp
 
 StatusCode control_get_default_calibration(ControlCalibration *calibration_out)
 {
-    if (calibration_out == (ControlCalibration *)0)
+    if (calibration_out == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -215,7 +228,7 @@ StatusCode control_get_default_calibration(ControlCalibration *calibration_out)
 
 StatusCode control_get_active_calibration(ControlCalibration *calibration_out)
 {
-    if (calibration_out == (ControlCalibration *)0)
+    if (calibration_out == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -238,5 +251,18 @@ StatusCode control_configure_calibration(const ControlCalibration *calibration)
 
     g_calibration = *calibration;
     g_calibration_configured = 1;
+    return STATUS_OK;
+}
+
+StatusCode control_reset_calibration(void)
+{
+    g_calibration.temperature_limit = CONTROL_DEFAULT_TEMP_LIMIT;
+    g_calibration.oil_pressure_limit = CONTROL_DEFAULT_OIL_PRESSURE_LIMIT;
+    g_calibration.high_rpm_warning_threshold = CONTROL_DEFAULT_HIGH_RPM_WARNING_THRESHOLD;
+    g_calibration.high_temp_warning_threshold = CONTROL_DEFAULT_HIGH_TEMP_WARNING_THRESHOLD;
+    g_calibration.temp_persistence_ticks = CONTROL_DEFAULT_TEMP_PERSISTENCE_TICKS;
+    g_calibration.oil_persistence_ticks = CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS;
+    g_calibration.combined_warning_persistence_ticks = CONTROL_DEFAULT_COMBINED_WARNING_PERSISTENCE_TICKS;
+    g_calibration_configured = 0;
     return STATUS_OK;
 }

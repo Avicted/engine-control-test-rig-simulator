@@ -1,6 +1,8 @@
 #include "control.h"
 #include "hal.h"
 #include "reporting/logger.h"
+
+#include <stddef.h>  /* NULL */
 #include "scenario/scenario_report.h"
 #include "scenario/scenario_profiles.h"
 #include "script_parser.h"
@@ -22,7 +24,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
     StatusCode status;
     int32_t result = ENGINE_OK;
 
-    if ((engine == (EngineState *)0) || (sensor_frames == (const HAL_Frame *)0))
+    if ((engine == NULL) || (sensor_frames == NULL))
     {
         return ENGINE_ERROR;
     }
@@ -32,17 +34,17 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
         return ENGINE_ERROR;
     }
 
-    if (tick_report_count != (uint32_t *)0)
+    if (tick_report_count != NULL)
     {
         *tick_report_count = 0U;
     }
 
-    if ((tick_reports != (TickReport *)0) && (tick_report_capacity < tick_count + 1U))
+    if ((tick_reports != NULL) && (tick_report_capacity < (tick_count + 1U)))
     {
         return ENGINE_ERROR;
     }
 
-    if (tick_reports != (TickReport *)0)
+    if (tick_reports != NULL)
     {
         tick_reports[0U].tick = 0U;
         tick_reports[0U].rpm = engine->rpm;
@@ -65,7 +67,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
         uint32_t target_tick;
         uint32_t sim_tick;
 
-        target_tick = (tick_values == (const uint32_t *)0) ? (tick_index + 1U) : tick_values[tick_index];
+        target_tick = (tick_values == NULL) ? (tick_index + 1U) : tick_values[tick_index];
         if (target_tick <= current_tick)
         {
             return ENGINE_ERROR;
@@ -77,7 +79,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
             if (status == STATUS_TIMEOUT)
             {
                 (void)logger_log_tick("HAL", LOG_LEVEL_ERROR, sim_tick, "Timeout detected", 0);
-                engine->mode = ENGINE_STATE_SHUTDOWN;
+                (void)engine_transition_mode(engine, ENGINE_STATE_SHUTDOWN);
                 engine->is_running = 0;
                 engine->rpm = 0.0f;
                 return ENGINE_SHUTDOWN;
@@ -94,7 +96,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
         if (status == STATUS_TIMEOUT)
         {
             (void)logger_log_tick("HAL", LOG_LEVEL_ERROR, target_tick, "Timeout detected", 0);
-            engine->mode = ENGINE_STATE_SHUTDOWN;
+            (void)engine_transition_mode(engine, ENGINE_STATE_SHUTDOWN);
             engine->is_running = 0;
             engine->rpm = 0.0f;
             return ENGINE_SHUTDOWN;
@@ -114,7 +116,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
             return ENGINE_ERROR;
         }
 
-        if (tick_reports != (TickReport *)0)
+        if (tick_reports != NULL)
         {
             float control_output = 0.0f;
             uint32_t report_index = tick_index + 1U;
@@ -156,7 +158,7 @@ static int32_t execute_profile_frames_internal(EngineState *engine,
         current_tick = target_tick;
     }
 
-    if (tick_report_count != (uint32_t *)0)
+    if (tick_report_count != NULL)
     {
         *tick_report_count = tick_count + 1U;
     }
@@ -205,8 +207,8 @@ int32_t execute_profile(EngineState *engine,
     uint32_t tick_index;
     HAL_SensorFrame sensor_frame;
 
-    if ((engine == (EngineState *)0) || (rpm_values == (const float *)0) ||
-        (temp_values == (const float *)0) || (oil_values == (const float *)0))
+    if ((engine == NULL) || (rpm_values == NULL) ||
+        (temp_values == NULL) || (oil_values == NULL))
     {
         return ENGINE_ERROR;
     }
@@ -220,7 +222,7 @@ int32_t execute_profile(EngineState *engine,
     {
         int32_t run_flag;
 
-        if (run_values == (const int32_t *)0)
+        if (run_values == NULL)
         {
             run_flag = 1;
         }
@@ -270,11 +272,11 @@ int32_t scenario_normal_operation(EngineState *engine,
     static const float oil_values[] = {3.2f, 3.1f, 3.0f, 2.9f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -297,11 +299,11 @@ int32_t scenario_overheat_short_duration(EngineState *engine,
     static const float oil_values[] = {3.1f, 3.1f, 3.1f, 3.1f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -324,11 +326,11 @@ int32_t scenario_overheat_persistent(EngineState *engine,
     static const float oil_values[] = {3.0f, 3.0f, 3.0f, 3.0f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -351,11 +353,11 @@ int32_t scenario_oil_pressure_persistent(EngineState *engine,
     static const float oil_values[] = {2.4f, 2.3f, 2.2f, 2.1f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -378,11 +380,11 @@ int32_t scenario_combined_warning_persistent(EngineState *engine,
     static const float oil_values[] = {3.0f, 3.0f, 3.0f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -420,11 +422,11 @@ int32_t scenario_cold_start_warmup_and_ramp(EngineState *engine,
         3.1f, 3.2f, 3.3f, 3.4f, 3.5f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -459,11 +461,11 @@ int32_t scenario_high_load_warning_then_recovery(EngineState *engine,
         3.2f, 3.3f, 3.3f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -498,11 +500,11 @@ int32_t scenario_oil_pressure_gradual_drain(EngineState *engine,
         2.0f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -534,11 +536,11 @@ int32_t scenario_thermal_runaway_with_load_surge(EngineState *engine,
         3.0f, 3.0f, 3.0f, 3.0f, 3.0f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,
@@ -573,11 +575,11 @@ int32_t scenario_intermittent_oil_then_combined_fault(EngineState *engine,
         3.1f};
 
     return execute_profile(engine,
-                           (const uint32_t *)0,
+                           NULL,
                            rpm_values,
                            temp_values,
                            oil_values,
-                           (const int32_t *)0,
+                           NULL,
                            (uint32_t)(sizeof(rpm_values) / sizeof(rpm_values[0])),
                            show_sim,
                            show_control,

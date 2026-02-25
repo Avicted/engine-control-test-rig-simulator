@@ -109,7 +109,7 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
     HAL_ControlFrame control_frame;
     int32_t written;
 
-    if (engine == (const EngineState *)0)
+    if (engine == NULL)
     {
         return ENGINE_ERROR;
     }
@@ -209,13 +209,13 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
     int32_t expected_value;
     int32_t is_pass;
 
-    if ((scenario_name == (const char *)0) || (requirement_id == (const char *)0) ||
-        (tick_reports == (const TickReport *)0))
+    if ((scenario_name == NULL) || (requirement_id == NULL) ||
+        (tick_reports == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
 
-    expected_value = has_expected != 0 ? expected_result : actual_result;
+    expected_value = (has_expected != 0) ? expected_result : actual_result;
     is_pass = (expected_value == actual_result) ? 1 : 0;
 
     if (output_write_line("    {\n") != ENGINE_OK)
@@ -262,7 +262,7 @@ StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
                            scenario_report_result_to_string(tick_reports[index].result),
                            tick_reports[index].control,
                            scenario_report_mode_to_string(tick_reports[index].mode),
-                           (index + 1U < tick_count) ? "," : "");
+                           ((index + 1U) < tick_count) ? "," : "");
         if ((written < 0) || (written >= (int32_t)sizeof(line)))
         {
             return STATUS_BUFFER_OVERFLOW;
@@ -359,7 +359,7 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
     char line[TEST_LINE_BUFFER_SIZE];
     int32_t written;
 
-    if ((error_info == (const ErrorInfo *)0) || (error_info->code == STATUS_OK))
+    if ((error_info == NULL) || (error_info->code == STATUS_OK))
     {
         return STATUS_OK;
     }
@@ -370,8 +370,8 @@ StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
                        status_code_to_string(error_info->code),
                        severity_to_string(error_info->severity),
                        recoverability_to_string(error_info->recoverability),
-                       (error_info->module == (const char *)0) ? "unknown" : error_info->module,
-                       (error_info->function == (const char *)0) ? "unknown" : error_info->function,
+                       (error_info->module == NULL) ? "unknown" : error_info->module,
+                       (error_info->function == NULL) ? "unknown" : error_info->function,
                        error_info->tick);
     if ((written < 0) || (written >= (int32_t)sizeof(line)))
     {

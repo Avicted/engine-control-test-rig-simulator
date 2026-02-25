@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [clang, gcc]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck clang llvm jq
+
+      - name: Build (release)
+        run: make all CC=${{ matrix.compiler }}
+
+      - name: Build (debug + sanitizers)
+        run: make debug CC=${{ matrix.compiler }}
+
+      - name: Unit tests
+        run: make test-unit CC=${{ matrix.compiler }}
+
+      - name: Integration tests
+        run: make test-all CC=${{ matrix.compiler }}
+
+      - name: Coverage (clang only)
+        if: matrix.compiler == 'clang'
+        run: make coverage
+
+      - name: Static analysis - cppcheck
+        if: matrix.compiler == 'clang'
+        run: make analyze-cppcheck
+
+      - name: Static analysis - clang-tidy
+        if: matrix.compiler == 'clang'
+        run: make analyze-clang-tidy || true  # advisory
+
+      - name: Layering check
+        run: make analyze-layering
+
+      - name: Sanitizer check
+        run: make analyze-sanitizers CC=${{ matrix.compiler }}
+
+      - name: JSON schema validation
+        run: |
+          if command -v jq >/dev/null 2>&1; then
+            jq . calibration.json > /dev/null
+            jq . schema/calibration.schema.json > /dev/null
+            jq . schema/engine_test_rig.schema.json > /dev/null
+            echo "JSON files are well-formed"
+          fi
+
+      - name: Full CI check (clang only)
+        if: matrix.compiler == 'clang'
+        run: make ci-check

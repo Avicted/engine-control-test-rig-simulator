@@ -20,6 +20,50 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 1000
+    },
+    "physics": {
+      "type": "object",
+      "description": "Engine plant-model physics parameters (optional; defaults used when omitted)",
+      "additionalProperties": false,
+      "required": ["target_rpm", "target_temperature", "target_oil_pressure", "rpm_ramp_rate", "temp_ramp_rate", "oil_decay_rate"],
+      "properties": {
+        "target_rpm": {
+          "type": "number",
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Steady-state RPM target"
+        },
+        "target_temperature": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Steady-state temperature target (deg C)"
+        },
+        "target_oil_pressure": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 10,
+          "description": "Steady-state oil pressure target (bar)"
+        },
+        "rpm_ramp_rate": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1000,
+          "description": "RPM increase per tick"
+        },
+        "temp_ramp_rate": {
+          "type": "number",
+          "minimum": 0.001,
+          "maximum": 50,
+          "description": "Temperature increase per tick (deg C)"
+        },
+        "oil_decay_rate": {
+          "type": "number",
+          "minimum": 0.0001,
+          "maximum": 5,
+          "description": "Oil pressure decrease per tick (bar)"
+        }
+      }
     }
   }
 }
