@@ -108,7 +108,7 @@ CLAIM: The simulator correctly detects and responds to all identified hazards.
 |---|---|---|
 | Engine physics model is simplified | Clearly documented as simulation, not plant model | Accepted |
 | No RTOS/interrupt modeling | Tick-based determinism covers logical correctness; timing analysis is out of scope | Accepted |
-| Single sensor channel (no redundancy) | Identified as future enhancement (dual-sensor voting) | Open |
+| Single sensor channel (no redundancy) | Dual-channel temperature voting implemented (`hal_submit_redundant_temp()` / `hal_vote_sensors()` with configurable tolerance). Cross-check disagreement detection tested (`hal_vote_dual_disagree`). | Mitigated |
 | Calibration values are trusted after validation | `calibration_valid()` enforces bounds; production system would use CRC-protected NVM | Accepted |
 
 ## 7. Conclusion

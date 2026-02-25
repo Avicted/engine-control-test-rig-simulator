@@ -10,7 +10,7 @@
 
 #include "engine.h"
 
-/* Forward declaration — full definition in scenario_profiles.h */
+/* Forward declaration - full definition in scenario_profiles.h */
 struct TickReport;
 
 /** @brief Maximum number of test cases in a single test suite. */

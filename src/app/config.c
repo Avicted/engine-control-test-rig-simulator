@@ -49,6 +49,10 @@ static int32_t key_allowed(const char *key)
     {
         return 1;
     }
+    if (strcmp(key, "combined_warning_persistence_ticks") == 0)
+    {
+        return 1;
+    }
 
     return 0;
 }
@@ -113,10 +117,10 @@ static const char *find_json_key(const char *buffer, const char *key)
                     return after; /* return pointer to the colon */
                 }
             }
-            /* Not our key — enter the string so we skip its contents */
+            /* Not our key - enter the string so we skip its contents */
             in_string = 1;
         }
-        /* Ignore braces/brackets — we only need string-awareness for correctness
+        /* Ignore braces/brackets - we only need string-awareness for correctness
          * since the config schema is validated separately by validate_only_known_keys(). */
     }
 
@@ -308,6 +312,15 @@ StatusCode config_load_calibration_file(const char *path,
 
     calibration.oil_persistence_ticks = calibration.temp_persistence_ticks;
     calibration.combined_warning_persistence_ticks = calibration.temp_persistence_ticks;
+
+    /* Optional override for combined warning persistence (defaults to persistence_ticks above). */
+    {
+        uint32_t combined_ticks = 0U;
+        if (parse_uint_field(buffer, "combined_warning_persistence_ticks", &combined_ticks) != 0)
+        {
+            calibration.combined_warning_persistence_ticks = combined_ticks;
+        }
+    }
 
     *calibration_out = calibration;
     return STATUS_OK;
