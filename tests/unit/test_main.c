@@ -44,6 +44,16 @@ int main(void)
         return 1;
     }
 
+    if (register_status_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     if (register_state_machine_tests(&group_tests, &group_count) == 0)
     {
         return 1;

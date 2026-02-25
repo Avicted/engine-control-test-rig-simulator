@@ -284,6 +284,107 @@ static int32_t test_script_file_not_found_and_invalid_arguments(void)
                                            error_message,
                                            (uint32_t)sizeof(error_message),
                                            0));
+
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT,
+                  script_parser_parse_file("scenarios/normal_operation.txt",
+                                           (ScriptScenarioData *)0,
+                                           error_message,
+                                           (uint32_t)sizeof(error_message),
+                                           0));
+
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT,
+                  script_parser_parse_file("scenarios/normal_operation.txt",
+                                           &scenario_data,
+                                           (char *)0,
+                                           (uint32_t)sizeof(error_message),
+                                           0));
+
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT,
+                  script_parser_parse_file("scenarios/normal_operation.txt",
+                                           &scenario_data,
+                                           error_message,
+                                           0U,
+                                           0));
+
+    return 1;
+}
+
+static int32_t test_empty_script_rejected(void)
+{
+    ScriptScenarioData scenario_data;
+    char error_message[128];
+    const char *path = "build/unit_script_empty.txt";
+    FILE *file;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  script_parser_parse_file(path, &scenario_data, error_message, (uint32_t)sizeof(error_message), 0));
+    ASSERT_TRUE(strstr(error_message, "contains no tick data") != (char *)0);
+    return 1;
+}
+
+static int32_t test_corrupt_directive_missing_token_rejected(void)
+{
+    ScriptScenarioData scenario_data;
+    char error_message[128];
+    const char *path = "build/unit_script_corrupt_missing_token.txt";
+    FILE *file;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    ASSERT_TRUE(fputs("TICK 1 RPM 2500 TEMP 80 OIL 3.0 RUN 1\n", file) >= 0);
+    ASSERT_TRUE(fputs("TICK 2 FRAME\n", file) >= 0);
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  script_parser_parse_file(path, &scenario_data, error_message, (uint32_t)sizeof(error_message), 0));
+    ASSERT_TRUE(strstr(error_message, "Malformed") != (char *)0);
+    return 1;
+}
+
+static int32_t test_corrupt_directive_invalid_tick_rejected(void)
+{
+    ScriptScenarioData scenario_data;
+    char error_message[128];
+    const char *path = "build/unit_script_corrupt_invalid_tick.txt";
+    FILE *file;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    ASSERT_TRUE(fputs("TICK 1 RPM 2500 TEMP 80 OIL 3.0 RUN 1\n", file) >= 0);
+    ASSERT_TRUE(fputs("TICK +2 FRAME CORRUPT\n", file) >= 0);
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  script_parser_parse_file(path, &scenario_data, error_message, (uint32_t)sizeof(error_message), 0));
+    ASSERT_TRUE(strstr(error_message, "Malformed") != (char *)0);
+    return 1;
+}
+
+static int32_t test_tick_count_limit_rejected(void)
+{
+    ScriptScenarioData scenario_data;
+    char error_message[128];
+    const char *path = "build/unit_script_tick_limit.txt";
+    FILE *file;
+    uint32_t tick;
+
+    file = fopen(path, "w");
+    ASSERT_TRUE(file != (FILE *)0);
+    for (tick = 1U; tick <= (SCRIPT_PARSER_MAX_TICKS + 1U); ++tick)
+    {
+        ASSERT_TRUE(fprintf(file,
+                            "TICK %u RPM 2500 TEMP 80 OIL 3.0 RUN 1\n",
+                            tick) > 0);
+    }
+    ASSERT_EQ(0, fclose(file));
+
+    ASSERT_STATUS(STATUS_PARSE_ERROR,
+                  script_parser_parse_file(path, &scenario_data, error_message, (uint32_t)sizeof(error_message), 0));
+    ASSERT_TRUE(strstr(error_message, "tick count exceeds limit") != (char *)0);
     return 1;
 }
 
@@ -304,7 +405,11 @@ int32_t register_script_parser_tests(const UnitTestCase **tests_out, uint32_t *c
         {"parser_range_rejected", test_out_of_range_sensor_value_rejected},
         {"parser_invalid_tick", test_invalid_tick_value_rejected},
         {"parser_overlong_line", test_overlong_line_rejected},
-        {"parser_io_and_args", test_script_file_not_found_and_invalid_arguments}};
+        {"parser_io_and_args", test_script_file_not_found_and_invalid_arguments},
+        {"parser_empty_script", test_empty_script_rejected},
+        {"parser_corrupt_missing_token", test_corrupt_directive_missing_token_rejected},
+        {"parser_corrupt_invalid_tick", test_corrupt_directive_invalid_tick_rejected},
+        {"parser_tick_limit", test_tick_count_limit_rejected}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

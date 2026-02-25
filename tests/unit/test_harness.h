@@ -34,6 +34,7 @@ typedef struct
 #define ASSERT_STATUS(expected, actual) ASSERT_EQ((expected), (actual))
 
 int32_t register_control_tests(const UnitTestCase **tests_out, uint32_t *count_out);
+int32_t register_status_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 int32_t register_hal_decode_tests(const UnitTestCase **tests_out, uint32_t *count_out);
 int32_t register_script_parser_tests(const UnitTestCase **tests_out, uint32_t *count_out);

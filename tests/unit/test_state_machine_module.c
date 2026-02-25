@@ -302,6 +302,17 @@ static int32_t test_engine_get_mode_string_null_string(void)
     return 1;
 }
 
+static int32_t test_engine_get_mode_string_invalid_mode(void)
+{
+    EngineState engine;
+    const char *mode_str = (const char *)0;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = (EngineStateMode)99;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_get_mode_string(&engine, &mode_str));
+    return 1;
+}
+
 /* --- engine_init / engine_reset tests --- */
 
 static int32_t test_engine_init_sets_defaults(void)
@@ -336,6 +347,16 @@ static int32_t test_engine_reset_null(void)
 static int32_t test_engine_transition_null(void)
 {
     ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_transition_mode((EngineState *)0, ENGINE_STATE_INIT));
+    return 1;
+}
+
+static int32_t test_engine_transition_unknown_from_mode_rejected(void)
+{
+    EngineState engine;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = (EngineStateMode)99;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_transition_mode(&engine, ENGINE_STATE_INIT));
     return 1;
 }
 
@@ -450,6 +471,30 @@ static int32_t test_engine_physics_affects_update(void)
     return 1;
 }
 
+static int32_t test_engine_update_rpm_clamps_to_target(void)
+{
+    EngineState engine;
+    EnginePhysicsConfig config;
+
+    (void)engine_reset_physics();
+    config.target_rpm = 100.0f;
+    config.target_temperature = 90.0f;
+    config.target_oil_pressure = 3.0f;
+    config.rpm_ramp_rate = 250.0f;
+    config.temp_ramp_rate = 0.1f;
+    config.oil_decay_rate = 0.01f;
+    ASSERT_STATUS(STATUS_OK, engine_configure_physics(&config));
+
+    ASSERT_STATUS(STATUS_OK, engine_init(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_start(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine));
+    ASSERT_STATUS(STATUS_OK, engine_update(&engine));
+    ASSERT_TRUE(engine.rpm == 100.0f);
+
+    (void)engine_reset_physics();
+    return 1;
+}
+
 /* ------------------------------------------------------------------
  * Fatal error path tests (Section 3.2)
  * ------------------------------------------------------------------ */
@@ -522,11 +567,13 @@ int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *c
         {"state_mode_str_running", test_engine_get_mode_string_running},
         {"state_mode_str_null_engine", test_engine_get_mode_string_null_engine},
         {"state_mode_str_null_string", test_engine_get_mode_string_null_string},
+        {"state_mode_str_invalid_mode", test_engine_get_mode_string_invalid_mode},
         /* engine_init / engine_reset null tests */
         {"state_init_defaults", test_engine_init_sets_defaults},
         {"state_init_null", test_engine_init_null},
         {"state_reset_null", test_engine_reset_null},
         {"state_transition_null", test_engine_transition_null},
+        {"state_transition_unknown_mode", test_engine_transition_unknown_from_mode_rejected},
         /* engine physics config tests */
         {"physics_default", test_engine_get_default_physics},
         {"physics_configure", test_engine_configure_physics},
@@ -536,6 +583,7 @@ int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *c
         {"physics_reset", test_engine_reset_physics},
         {"physics_active", test_engine_get_active_physics},
         {"physics_affects_update", test_engine_physics_affects_update},
+        {"physics_rpm_clamp", test_engine_update_rpm_clamps_to_target},
         /* fatal error path tests (Section 3.2) */
         {"fatal_illegal_transition", test_fatal_illegal_transition_deterministic},
         {"fatal_shutdown_cleanup", test_fatal_shutdown_from_warning_clears_state}};
