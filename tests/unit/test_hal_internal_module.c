@@ -27,6 +27,7 @@ static int hal_ut_printf(const char *format, ...)
 StatusCode hal_ut_expected_dlc_for_id(uint32_t id, uint8_t *dlc_out);
 StatusCode hal_ut_frame_age_record(uint32_t id, uint32_t tick);
 
+#undef printf
 #define printf hal_ut_printf
 #define hal_init hal_ut_init
 #define hal_shutdown hal_ut_shutdown

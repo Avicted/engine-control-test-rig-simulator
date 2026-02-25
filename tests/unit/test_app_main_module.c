@@ -61,7 +61,9 @@ StatusCode mock_main_log_event(const char *level, const char *message)
     return stub_log_event_status;
 }
 
+#undef fputs
 #define fputs mock_main_fputs
+#undef snprintf
 #define snprintf mock_main_snprintf
 #define log_event mock_main_log_event
 #define main app_main_entry
