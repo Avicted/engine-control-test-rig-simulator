@@ -4,6 +4,7 @@ GCOV = llvm-cov gcov
 SRC_DIR = src
 BUILD_DIR = ./build
 COVERAGE_DIR = ./coverage
+COVERAGE_HTML_DIR = ./coverage/html
 
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
@@ -180,8 +181,19 @@ coverage: $(BUILD_DIR)
 	echo "Source-only coverage: $$covered% ($$covered_lines/$$total_lines lines)"; \
 	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 80.0) ? 0 : 1 }'
 
+coverage-html: coverage
+	@echo "Generating HTML coverage report..."
+	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		--output-file $(BUILD_DIR)/coverage.info --quiet
+	lcov --remove $(BUILD_DIR)/coverage.info '*/tests/*' \
+		--output-file $(BUILD_DIR)/coverage-src.info --quiet \
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+	genhtml $(BUILD_DIR)/coverage-src.info --output-directory $(COVERAGE_HTML_DIR) \
+		--title "Engine Control Test Rig" --legend --quiet
+	@echo "HTML coverage report: $(COVERAGE_HTML_DIR)/index.html"
+
 coverage-clean:
-	rm -f $(BUILD_DIR)/unit_tests_cov*
+	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info
 	rm -rf $(COVERAGE_DIR)
 
 validate-json-contract: $(TARGET)

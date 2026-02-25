@@ -36,6 +36,7 @@ applied to a simplified but realistic engine control model.
 | `cppcheck` | Static analysis and MISRA C:2012 checking |
 | `clang-tidy` | Clang-based static analysis |
 | `llvm-cov` | Code coverage reporting (`llvm-cov gcov`) |
+| `lcov` | HTML coverage report generation (`make coverage-html`) |
 | `python3` | JSON schema contract validation |
 
 **Optional:**
@@ -48,13 +49,13 @@ applied to a simplified but realistic engine control model.
 On Debian/Ubuntu:
 
 ```bash
-sudo apt install clang llvm make git cppcheck clang-tidy python3
+sudo apt install clang llvm make git cppcheck clang-tidy python3 lcov
 ```
 
 On macOS (Homebrew):
 
 ```bash
-brew install llvm make git cppcheck python3
+brew install llvm make git cppcheck python3 lcov
 ```
 
 
@@ -387,6 +388,7 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 | Integration | `make test-all` | All scenarios pass |
 | JSON contract | `make validate-json` | Schema-valid output |
 | Coverage | `make coverage` | ≥ 80% source-only lines |
+| Coverage HTML | `make coverage-html` | Browsable HTML report in `coverage/html/` |
 
 
 
