@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "control.h"
@@ -6,6 +7,11 @@
 
 static int32_t g_mock_fputs_enabled = 0;
 static int32_t g_mock_fputs_fail_after = -1;
+static int32_t g_mock_snprintf_enabled = 0;
+static int32_t g_mock_snprintf_fail_call = -1;
+static int32_t g_mock_snprintf_call_count = 0;
+
+static StatusCode stub_log_event_status = STATUS_OK;
 
 static int mock_main_fputs(const char *line, FILE *stream)
 {
@@ -31,10 +37,38 @@ static int mock_main_fputs(const char *line, FILE *stream)
     return 1;
 }
 
+static int mock_main_snprintf(char *buffer, size_t buffer_size, const char *format, ...)
+{
+    int result;
+    va_list args;
+
+    g_mock_snprintf_call_count += 1;
+    if ((g_mock_snprintf_enabled != 0) && (g_mock_snprintf_call_count == g_mock_snprintf_fail_call))
+    {
+        return -1;
+    }
+
+    va_start(args, format);
+    result = vsnprintf(buffer, buffer_size, format, args);
+    va_end(args);
+    return result;
+}
+
+StatusCode mock_main_log_event(const char *level, const char *message)
+{
+    (void)level;
+    (void)message;
+    return stub_log_event_status;
+}
+
 #define fputs mock_main_fputs
+#define snprintf mock_main_snprintf
+#define log_event mock_main_log_event
 #define main app_main_entry
 #include "../../src/app/main.c"
 #undef main
+#undef log_event
+#undef snprintf
 #undef fputs
 
 static StatusCode stub_run_all_status = STATUS_OK;
@@ -171,6 +205,34 @@ static int32_t test_print_usage_each_safe_print_failure_path(void)
 
     g_mock_fputs_enabled = 0;
     g_mock_fputs_fail_after = -1;
+    return 1;
+}
+
+static int32_t test_print_usage_scenario_snprintf_failure_path(void)
+{
+    g_mock_snprintf_enabled = 1;
+    g_mock_snprintf_fail_call = 2;
+    g_mock_snprintf_call_count = 0;
+
+    ASSERT_EQ(ENGINE_ERROR, print_usage("prog"));
+
+    g_mock_snprintf_enabled = 0;
+    g_mock_snprintf_fail_call = -1;
+    g_mock_snprintf_call_count = 0;
+    return 1;
+}
+
+static int32_t test_print_usage_script_snprintf_failure_path(void)
+{
+    g_mock_snprintf_enabled = 1;
+    g_mock_snprintf_fail_call = 3;
+    g_mock_snprintf_call_count = 0;
+
+    ASSERT_EQ(ENGINE_ERROR, print_usage("prog"));
+
+    g_mock_snprintf_enabled = 0;
+    g_mock_snprintf_fail_call = -1;
+    g_mock_snprintf_call_count = 0;
     return 1;
 }
 
@@ -700,6 +762,22 @@ static int32_t test_app_main_unknown_three_args_and_null_prog_name(void)
     return 1;
 }
 
+static int32_t test_app_main_log_event_failure_after_usage_print_failure(void)
+{
+    char *argv_unknown_three[] = {(char *)"prog", (char *)"--not-a-command", (char *)"x"};
+
+    g_mock_fputs_enabled = 1;
+    g_mock_fputs_fail_after = 0;
+    stub_log_event_status = STATUS_IO_ERROR;
+
+    ASSERT_EQ(1, app_main_entry(3, argv_unknown_three));
+
+    g_mock_fputs_enabled = 0;
+    g_mock_fputs_fail_after = -1;
+    stub_log_event_status = STATUS_OK;
+    return 1;
+}
+
 int32_t register_app_main_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
@@ -708,6 +786,8 @@ int32_t register_app_main_tests(const UnitTestCase **tests_out, uint32_t *count_
         {"main_print_usage_null", test_print_usage_null_fails},
         {"main_print_usage_long", test_print_usage_long_name_fails},
         {"main_print_usage_io_paths", test_print_usage_each_safe_print_failure_path},
+        {"main_print_usage_scenario_snprintf_fail", test_print_usage_scenario_snprintf_failure_path},
+        {"main_print_usage_script_snprintf_fail", test_print_usage_script_snprintf_failure_path},
         {"main_parse_flags_null", test_parse_optional_flags_null_args},
         {"main_parse_flags_success", test_parse_optional_flags_success_all},
         {"main_parse_flags_cfg_level", test_parse_optional_flags_config_and_log_level},
@@ -721,7 +801,8 @@ int32_t register_app_main_tests(const UnitTestCase **tests_out, uint32_t *count_
         {"main_entry_run_all", test_app_main_run_all_paths},
         {"main_entry_scenario", test_app_main_scenario_paths},
         {"main_entry_script", test_app_main_script_paths},
-        {"main_entry_unknown_three", test_app_main_unknown_three_args_and_null_prog_name}};
+        {"main_entry_unknown_three", test_app_main_unknown_three_args_and_null_prog_name},
+        {"main_entry_usage_log_fail", test_app_main_log_event_failure_after_usage_print_failure}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {

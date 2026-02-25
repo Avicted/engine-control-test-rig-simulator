@@ -1,3 +1,4 @@
+#include <math.h>
 #include <string.h>
 
 #include "engine.h"
@@ -375,6 +376,12 @@ static int32_t test_engine_get_default_physics(void)
     return 1;
 }
 
+static int32_t test_engine_get_default_physics_null(void)
+{
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_get_default_physics((EnginePhysicsConfig *)0));
+    return 1;
+}
+
 static int32_t test_engine_configure_physics(void)
 {
     EnginePhysicsConfig config;
@@ -415,6 +422,35 @@ static int32_t test_engine_configure_physics_invalid(void)
     (void)engine_get_default_physics(&config);
     config.target_rpm = -1.0f; /* invalid */
     ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+    (void)engine_reset_physics();
+    return 1;
+}
+
+static int32_t test_engine_configure_physics_invalid_each_field(void)
+{
+    EnginePhysicsConfig config;
+
+    (void)engine_reset_physics();
+    (void)engine_get_default_physics(&config);
+    config.target_temperature = NAN;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.target_oil_pressure = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.rpm_ramp_rate = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.temp_ramp_rate = -0.1f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
+    (void)engine_get_default_physics(&config);
+    config.oil_decay_rate = 0.0f;
+    ASSERT_STATUS(STATUS_INVALID_ARGUMENT, engine_configure_physics(&config));
+
     (void)engine_reset_physics();
     return 1;
 }
@@ -576,10 +612,12 @@ int32_t register_state_machine_tests(const UnitTestCase **tests_out, uint32_t *c
         {"state_transition_unknown_mode", test_engine_transition_unknown_from_mode_rejected},
         /* engine physics config tests */
         {"physics_default", test_engine_get_default_physics},
+        {"physics_default_null", test_engine_get_default_physics_null},
         {"physics_configure", test_engine_configure_physics},
         {"physics_configure_null", test_engine_configure_physics_null},
         {"physics_configure_twice", test_engine_configure_physics_twice},
         {"physics_configure_invalid", test_engine_configure_physics_invalid},
+        {"physics_configure_invalid_each", test_engine_configure_physics_invalid_each_field},
         {"physics_reset", test_engine_reset_physics},
         {"physics_active", test_engine_get_active_physics},
         {"physics_affects_update", test_engine_physics_affects_update},
