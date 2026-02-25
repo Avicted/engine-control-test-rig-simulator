@@ -3,6 +3,12 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.2.1] - 2026-02-25
+
+### Fixed
+- Stale `software_version` (0.3.0) in README, schema_evolution.md, and visualization/scenario.json - now tracks `include/version.h`.
+- Removed orphaned `src/reporting/version.h` (superseded by `include/version.h`).
+
 ## [1.2.0] - 2026-02-25
 
 ### Added
