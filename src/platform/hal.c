@@ -238,7 +238,7 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
 
 static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
 {
-    uint8_t expected_dlc;
+    uint8_t expected_dlc = 0U;
 
     if (frame == NULL)
     {
