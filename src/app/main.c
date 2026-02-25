@@ -7,6 +7,7 @@
 #include "reporting/logger.h"
 #include "test_runner.h"
 #include "status.h"
+#include "version.h"
 
 #define MAX_CLI_ARG_LEN 24U
 #define MAX_CLI_PATH_LEN 192U
@@ -41,6 +42,19 @@ static int32_t print_usage(const char *program_name)
     }
 
     if (safe_print("Usage:\n") != ENGINE_OK)
+    {
+        return ENGINE_ERROR;
+    }
+
+    if (safe_print("  ") != ENGINE_OK)
+    {
+        return ENGINE_ERROR;
+    }
+    if (safe_print(program_name) != ENGINE_OK)
+    {
+        return ENGINE_ERROR;
+    }
+    if (safe_print(" --version\n") != ENGINE_OK)
     {
         return ENGINE_ERROR;
     }
@@ -284,6 +298,12 @@ int main(int argc, char **argv)
     {
         (void)print_usage(argv[0]);
         return 1;
+    }
+
+    if ((argc == 2) && (strcmp(argv[1], "--version") == 0))
+    {
+        (void)printf("%s\n", SIM_SOFTWARE_VERSION);
+        return 0;
     }
 
     if (argc >= 2)

@@ -5,7 +5,7 @@
 #include "hal.h"
 #include "reporting/output.h"
 #include "scenario/scenario_report.h"
-#include "reporting/version.h"
+#include "version.h"
 
 #define TEST_LINE_BUFFER_SIZE 256
 

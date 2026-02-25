@@ -1,6 +1,6 @@
 # Engine Control Validation & HIL Test Rig Simulator
 
-> **Status**: Feature-complete · 131 unit tests · 80%+ coverage gate · MISRA C:2012 analysis · Static analysis clean
+> **Status**: Feature-complete · 161 unit tests · 80%+ coverage gate · MISRA C:2012 analysis · Static analysis clean
 
 A deterministic C11 engine-control validation simulator designed with
 safety-critical principles and CI-driven hardware-in-the-loop (HIL)
@@ -23,7 +23,7 @@ applied to a simplified but realistic engine control model.
 
 ```bash
 make                  # Build the simulator
-make test-unit        # Run 131 unit tests
+make test-unit        # Run 161 unit tests
 make ci-check         # Full quality gate (build + analysis + tests + coverage)
 ```
 
@@ -256,10 +256,11 @@ Primary public interfaces are intentionally narrow and defined under `include/`:
 
 | Header | Key Functions | Purpose |
 |--------|--------------|---------|
-| `hal.h` | `hal_ingest_sensor_frame()`, `hal_read_sensors()`, `hal_receive_bus()`, `hal_transmit_bus()` | Deterministic sensor transport, bus I/O, structured diagnostics |
+| `hal.h` | `hal_ingest_sensor_frame()`, `hal_read_sensors()`, `hal_receive_bus()`, `hal_transmit_bus()`, `hal_vote_sensors()`, `hal_watchdog_check()` | Deterministic sensor transport, bus I/O, sensor voting, watchdog, structured diagnostics |
 | `control.h` | `evaluate_engine()`, `compute_control_output()`, `control_configure_calibration()` | Persistence-threshold safety rules, actuator demand, calibration |
 | `engine.h` | `engine_start()`, `engine_update()`, `engine_transition_mode()` | State machine transitions, physics update |
 | `script_parser.h` | `script_parser_parse_file()` | Scenario script validation and tick/frame emission |
+| `config.h` | `config_load_calibration_file()`, `config_load_physics_file()` | JSON calibration and physics configuration loading |
 | `test_runner.h` | `run_all_tests()`, `run_scripted_scenario_with_json()` | Scenario orchestration and JSON/console entry points |
 
 
@@ -304,11 +305,12 @@ Full requirement-to-test mapping: `docs/requirements_traceability_matrix.md`
 | Status | Severity | Recoverability |
 |--------|----------|----------------|
 | `STATUS_OK` | `SEVERITY_INFO` | - |
-| `STATUS_INVALID_ARGUMENT` | `SEVERITY_WARNING` | `RECOVERABLE` |
+| `STATUS_INVALID_ARGUMENT` | `SEVERITY_ERROR` | `RECOVERABLE` |
 | `STATUS_PARSE_ERROR` | `SEVERITY_ERROR` | `RECOVERABLE` |
 | `STATUS_IO_ERROR` | `SEVERITY_ERROR` | `NON_RECOVERABLE` |
-| `STATUS_BUFFER_OVERFLOW` | `SEVERITY_FATAL` | `NON_RECOVERABLE` |
-| `STATUS_TIMEOUT` | `SEVERITY_FATAL` | `NON_RECOVERABLE` |
+| `STATUS_TIMEOUT` | `SEVERITY_FATAL` | `RECOVERABLE` |
+| `STATUS_BUFFER_OVERFLOW` | `SEVERITY_WARNING` | `RECOVERABLE` |
+| `STATUS_INTERNAL_ERROR` | `SEVERITY_FATAL` | `NON_RECOVERABLE` |
 
 All paths use explicit status returns with no silent fallthrough.
 Strict mode is available via `--strict`.
@@ -341,7 +343,7 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 | clang-tidy | `make analyze-clang-tidy` | Zero findings |
 | Layering | `make analyze-layering` | No dependency violations |
 | Sanitizers | `make analyze-sanitizers` | No ASan/UBSan findings |
-| Unit tests | `make test-unit` | 131/131 pass |
+| Unit tests | `make test-unit` | 161/161 pass |
 | Integration | `make test-all` | All scenarios pass |
 | JSON contract | `make validate-json` | Schema-valid output |
 | Coverage | `make coverage` | ≥ 80% source-only lines |
@@ -354,9 +356,9 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 Usage:
   Global options: [--config calibration.json] [--log-level DEBUG|INFO|WARN|ERROR]
 
-  ./build/testrig --run-all [--json] [--color] [--strict] [--show-sim] [--show-control] [--show-state]
-  ./build/testrig --scenario <name> [--json] [--color] [--strict]
-  ./build/testrig --script <path> [--json] [--color] [--strict]
+  ./build/testrig --run-all [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]
+  ./build/testrig --scenario <name> [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]
+  ./build/testrig --script <path> [--show-sim] [--show-control] [--show-state] [--color] [--json] [--strict]
 ```
 
 | Flag | Description |
@@ -369,6 +371,9 @@ Usage:
 | `--log-level <level>` | Set log verbosity (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
 | `--color` | Enable ANSI color output (disabled by default for CI) |
 | `--strict` | Strict validation mode |
+| `--show-sim` | Display per-tick simulation values during execution |
+| `--show-control` | Display per-tick control output during execution |
+| `--show-state` | Display per-tick engine state transitions during execution |
 
 
 

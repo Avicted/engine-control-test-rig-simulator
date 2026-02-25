@@ -29,7 +29,7 @@ The JSON envelope includes:
   "schema_version": "1.0.0",
   "software_version": "...",
   "build_commit": "...",
-  "results": [
+  "scenarios": [
     {
       "scenario": "...",
       "requirement_id": "REQ-ENG-001",
@@ -39,7 +39,7 @@ The JSON envelope includes:
       "ticks": [...]
     }
   ],
-  "summary": { "passed": N, "failed": M, "total": N+M }
+  "summary": { "passed": N, "total": N }
 }
 ```
 

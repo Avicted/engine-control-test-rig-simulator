@@ -3,6 +3,23 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.2.0] - 2026-02-25
+
+### Added
+- **Frame ID Registry** (`FrameId` enum): Centralized frame ID declarations with `hal_frame_id_is_known()` and `hal_expected_dlc_for_id()` helpers for deterministic DLC validation.
+- **Combined warning persistence in calibration**: `combined_warning_persistence_ticks` field in calibration JSON and `ControlCalibration` struct.
+- **Control-law coefficient documentation**: Named constants for `compute_control_output()` bias, divisors, and coefficients.
+- **Configuration module unit tests** (13 tests): `config_load_calibration_file()` and `config_load_physics_file()` coverage including missing fields, unknown keys, NULL arguments, and physics defaults.
+- **MISRA deviations expanded**: 14 formally documented deviations (DEV-001 through DEV-014) with rationale and mitigation (was 5).
+- **Message map** (`docs/message_map.md`): BusFrame ID registry documentation with payload layouts.
+- **Error severity model** (`docs/error_severity_model.md`): Structured severity/recoverability classification reference.
+- **Schema evolution policy** (`docs/schema_evolution.md`): Semantic versioning policy for JSON output schema.
+- **161 unit tests total** (was 131): Expanded HAL, state machine, and new config module coverage.
+
+### Changed
+- **HAL tests**: Expanded from 38 to 53 tests - frame ID registry, DLC validation, frame staleness, additional edge cases.
+- **Engine state machine tests**: Expanded from 38 to 40 tests.
+
 ## [1.1.0] - 2025-01-25
 
 ### Added
