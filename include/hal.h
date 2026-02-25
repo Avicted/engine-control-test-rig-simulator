@@ -20,12 +20,51 @@
 #define HAL_MAX_RX_FRAMES 32U
 #define HAL_MAX_TX_FRAMES 32U
 #define HAL_SENSOR_TIMEOUT_TICKS 3U
-#define HAL_SENSOR_FRAME_ID 0x100U
-#define HAL_SENSOR_ERROR_FRAME_ID 0x10EU
+
+/**
+ * @brief Centralized frame ID registry.
+ *
+ * All valid frame IDs are declared here. Unknown IDs are rejected
+ * deterministically by HAL ingestion and validation functions.
+ * New frame types must be added to this enum and to
+ * hal_expected_dlc_for_id().
+ */
+typedef enum
+{
+    FRAME_ID_SENSOR = 0x100U,       /**< Primary sensor data frame.         DLC = 8. */
+    FRAME_ID_SENSOR_ERROR = 0x10EU, /**< Sensor error / diagnostic frame.   DLC = 1. */
+    FRAME_ID_SENSOR_TEMP_B = 0x110U /**< Redundant temperature channel B.   DLC = 2. */
+} FrameId;
+
+/** @brief Number of entries in the FrameId registry. */
+#define FRAME_ID_REGISTRY_COUNT 3U
+
+/* Backward-compatible ID macros (prefer FrameId enum in new code). */
+#define HAL_SENSOR_FRAME_ID ((uint32_t)FRAME_ID_SENSOR)
+#define HAL_SENSOR_ERROR_FRAME_ID ((uint32_t)FRAME_ID_SENSOR_ERROR)
 /** @brief Redundant temperature sensor B frame ID for dual-channel voting. */
-#define HAL_SENSOR_TEMP_B_FRAME_ID 0x110U
+#define HAL_SENSOR_TEMP_B_FRAME_ID ((uint32_t)FRAME_ID_SENSOR_TEMP_B)
 /** @brief Maximum acceptable disagreement between temperature channels (deg C). */
 #define HAL_SENSOR_VOTING_TOLERANCE 5.0f
+
+/** @brief Frame staleness threshold in ticks.
+ *  A frame ID with no reception for this many ticks is considered stale. */
+#define HAL_FRAME_STALE_THRESHOLD_TICKS 10U
+
+/**
+ * @name Queue Overflow Policy - DROP NEWEST
+ *
+ * When any internal queue (sensor RX, bus RX, bus TX) is full, the
+ * new frame is **rejected** with STATUS_BUFFER_OVERFLOW and a
+ * structured error diagnostic is recorded via hal_set_error().
+ * Existing queue contents are preserved intact.
+ *
+ * Rationale: deterministic behavior - the oldest data already in the
+ * queue is never silently discarded, and callers receive an explicit
+ * error to handle.
+ */
+/** @{ */
+/** @} */
 
 /** @brief Default watchdog timeout in ticks. 0 = disabled. */
 #define HAL_WATCHDOG_DEFAULT_TICKS 0U
@@ -60,6 +99,8 @@ _Static_assert(sizeof(uint8_t) == 1U, "uint8_t must be 8-bit");
 _Static_assert(sizeof(((BusFrame){0}).data) == 8U, "BusFrame data must be 8 bytes");
 _Static_assert(sizeof(((BusFrame){0}).dlc) == 1U, "BusFrame dlc must be 1 byte");
 _Static_assert(sizeof(BusFrame) == 13U, "Unexpected frame size");
+_Static_assert(sizeof(HAL_SensorFrame) == 16U, "HAL_SensorFrame ABI contract changed");
+_Static_assert(sizeof(HAL_ControlFrame) == 8U, "HAL_ControlFrame ABI contract changed");
 
 /**
  * @brief Initialize HAL subsystem - reset all queues and state.
@@ -274,5 +315,59 @@ StatusCode hal_submit_redundant_temp(float temperature_b, uint32_t tick);
  * @retval STATUS_INVALID_ARGUMENT NULL pointer.
  */
 StatusCode hal_vote_sensors(float primary_temp, float *voted_temp);
+
+/* ------------------------------------------------------------------ */
+/*  Frame ID Registry helpers (Section 1.1 / 1.2)                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * @brief Return whether a frame ID belongs to the registry.
+ * @param[in] id  Frame ID to check.
+ * @return 1 if registered, 0 otherwise.
+ */
+int32_t hal_frame_id_is_known(uint32_t id);
+
+/**
+ * @brief Return the expected DLC for a registered frame ID.
+ *
+ * @requirement REQ-ENG-IO-007
+ * @param[in]  id       Frame ID to query.
+ * @param[out] dlc_out  Receives expected DLC.
+ * @retval STATUS_OK              Known ID, DLC written.
+ * @retval STATUS_INVALID_ARGUMENT Unknown ID or NULL pointer.
+ */
+StatusCode hal_expected_dlc_for_id(uint32_t id, uint8_t *dlc_out);
+
+/* ------------------------------------------------------------------ */
+/*  Frame Aging Model (Section 1.3)                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * @brief Record receipt of a frame ID at the given tick.
+ *
+ * @requirement REQ-ENG-IO-008
+ * @param[in] id    Frame ID that was received.
+ * @param[in] tick  Current simulation tick.
+ * @retval STATUS_OK              Recorded.
+ * @retval STATUS_INVALID_ARGUMENT Unknown frame ID.
+ */
+StatusCode hal_frame_age_record(uint32_t id, uint32_t tick);
+
+/**
+ * @brief Query whether a frame ID is stale at the given tick.
+ *
+ * A frame is stale if it has been received at least once and
+ * (current_tick − last_received_tick) > HAL_FRAME_STALE_THRESHOLD_TICKS.
+ * A frame that has never been received is not considered stale (it is
+ * "unknown", not "aged").
+ *
+ * @requirement REQ-ENG-IO-008
+ * @param[in]  id        Frame ID to check.
+ * @param[in]  tick      Current simulation tick.
+ * @param[out] stale_out Receives 1 if stale, 0 if fresh or never received.
+ * @retval STATUS_OK              Query succeeded.
+ * @retval STATUS_INVALID_ARGUMENT Unknown ID or NULL pointer.
+ */
+StatusCode hal_frame_is_stale(uint32_t id, uint32_t tick, int32_t *stale_out);
 
 #endif

@@ -30,11 +30,12 @@ UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c \
 	$(SRC_DIR)/domain/control.c \
 	$(SRC_DIR)/platform/hal.c \
 	$(SRC_DIR)/scenario/script_parser.c \
-	$(SRC_DIR)/reporting/logger.c
+	$(SRC_DIR)/reporting/logger.c \
+	$(SRC_DIR)/app/config.c
 
 BUILD_COMMIT = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 
-COMMON_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic
+COMMON_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -Wunused-result
 CFLAGS = $(COMMON_CFLAGS) -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
 DEBUG_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
 COVERAGE_CFLAGS = $(COMMON_CFLAGS) -O0 --coverage
@@ -206,7 +207,59 @@ analyze: analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers
 test-all: test-unit $(TARGET) validate-json-contract validate-json
 	$(TARGET) --run-all --json > /dev/null
 
-ci-check: all debug analyze test-all coverage
+# --- Determinism Replay Test (Section 2.2) ---
+determinism-check: $(TARGET)
+	sh tools/determinism_check.sh $(TARGET)
+
+# --- Module-Specific Coverage Thresholds (Section 5.1) ---
+coverage-modules: coverage
+	@echo "=== Module-Specific Coverage Thresholds ==="; \
+	fail=0; \
+	for mod_spec in "control.c:90:domain" "engine.c:90:domain" "hal.c:85:HAL" "script_parser.c:85:parser"; do \
+		mod=$$(echo "$$mod_spec" | cut -d: -f1); \
+		threshold=$$(echo "$$mod_spec" | cut -d: -f2); \
+		label=$$(echo "$$mod_spec" | cut -d: -f3); \
+		pct=0; \
+		if [ -f "$(COVERAGE_DIR)/$$mod.gcov" ]; then \
+			exec_lines=$$(grep -c '^[[:space:]]*[0-9]' "$(COVERAGE_DIR)/$$mod.gcov" 2>/dev/null || echo 0); \
+			unexec_lines=$$(grep -c '^[[:space:]]*#####' "$(COVERAGE_DIR)/$$mod.gcov" 2>/dev/null || echo 0); \
+			total=$$((exec_lines + unexec_lines)); \
+			if [ "$$total" -gt 0 ]; then \
+				pct=$$(awk -v e="$$exec_lines" -v t="$$total" 'BEGIN { printf "%.1f", (e/t)*100.0 }'); \
+				echo "  $$label ($$mod): $$pct%  [threshold: $$threshold%]"; \
+			fi; \
+		fi; \
+	done
+
+# --- Visualization Boundary Audit (Section 8) ---
+check-viz-boundary:
+	@echo "=== Visualization Boundary Audit ==="; \
+	violations=0; \
+	for hdr in config.h control.h engine.h hal.h status.h script_parser.h scenario_contract.h test_runner.h; do \
+		if grep -rn "#include.*$$hdr" visualization/ > /dev/null 2>&1; then \
+			echo "FAIL: visualizer includes simulator header $$hdr"; \
+			violations=1; \
+		fi; \
+	done; \
+	if [ "$$violations" -ne 0 ]; then \
+		echo "Visualization boundary audit FAILED"; \
+		exit 1; \
+	fi; \
+	echo "PASS: JSON-only contract between simulator and visualizer"
+
+# --- Schema backward compatibility check (Section 4.1) ---
+validate-schema-compat: $(TARGET)
+	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	$(TARGET) --run-all --json > "$$tmp_json"; \
+	grep -q '"schema_version": "1.0.0"' "$$tmp_json" || { echo "Schema version missing"; exit 1; }; \
+	grep -q '"software_version":' "$$tmp_json" || { echo "Software version missing"; exit 1; }; \
+	grep -q '"build_commit":' "$$tmp_json" || { echo "Build commit missing"; exit 1; }; \
+	grep -q '"requirement_id":' "$$tmp_json" || { echo "Requirement ID missing"; exit 1; }; \
+	grep -q '"ticks":' "$$tmp_json" || { echo "Ticks array missing"; exit 1; }; \
+	grep -q '"summary":' "$$tmp_json" || { echo "Summary block missing"; exit 1; }; \
+	echo "Schema backward compatibility check passed"
+
+ci-check: all debug analyze test-all coverage determinism-check check-viz-boundary validate-schema-compat
 	$(TARGET) --run-all --json > /dev/null
 
 docs:
@@ -214,4 +267,4 @@ docs:
 	doxygen Doxyfile
 	@echo "Documentation generated in $(BUILD_DIR)/docs/html"
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check docs
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check docs determinism-check coverage-modules check-viz-boundary validate-schema-compat

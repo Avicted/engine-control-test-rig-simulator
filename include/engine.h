@@ -34,12 +34,12 @@ typedef enum
 
 typedef struct
 {
-    float rpm;
-    float temperature;
-    float oil_pressure;
-    int32_t is_running;
-    EngineStateMode mode;
-    uint32_t fault_counters[ENGINE_FAULT_COUNTER_COUNT];
+    float rpm;                                           /**< Current engine RPM. */
+    float temperature;                                   /**< Current engine temperature (deg C). */
+    float oil_pressure;                                  /**< Current engine oil pressure (bar). */
+    int32_t is_running;                                  /**< Engine running flag (0 or 1). */
+    EngineStateMode mode;                                /**< Current engine mode. */
+    uint32_t fault_counters[ENGINE_FAULT_COUNTER_COUNT]; /**< Persistence counters for fault conditions. */
 } EngineState;
 
 /** @brief Default steady-state target RPM. */
@@ -74,6 +74,7 @@ typedef struct
 
 _Static_assert(sizeof(int32_t) == 4U, "int32_t must be 32-bit");
 _Static_assert(sizeof(uint32_t) == 4U, "uint32_t must be 32-bit");
+_Static_assert(sizeof(EngineState) == 32U, "EngineState ABI contract changed");
 _Static_assert(ENGINE_STATE_INIT == 0, "EngineStateMode ordinal contract changed");
 _Static_assert(ENGINE_STATE_SHUTDOWN == 4, "EngineStateMode ordinal contract changed");
 _Static_assert(ENGINE_FAULT_COUNTER_COUNT == 3, "Unexpected fault counter count");

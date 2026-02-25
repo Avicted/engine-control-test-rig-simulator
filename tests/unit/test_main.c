@@ -84,6 +84,16 @@ int main(void)
         return 1;
     }
 
+    if (register_config_tests(&group_tests, &group_count) == 0)
+    {
+        return 1;
+    }
+    total_count += group_count;
+    if (run_group(group_tests, group_count, &pass_count) == 0)
+    {
+        return 1;
+    }
+
     (void)printf("Summary: %u/%u tests passed\n", pass_count, total_count);
     return (pass_count == total_count) ? 0 : 1;
 }
