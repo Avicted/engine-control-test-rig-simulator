@@ -18,6 +18,7 @@
 #define MAX_SCENARIOS 32U
 
 #define EXPECTED_SCHEMA_VERSION "1.0"
+#define EXPECTED_SCHEMA_VERSION_V2 "1.0.0"
 
 #define MAX_RPM 10000.0f
 #define MIN_TEMP -50.0f
@@ -613,7 +614,8 @@ static int parse_scenarios_json(const char *json_text,
         return 0;
     }
 
-    if (strcmp(schema_version, EXPECTED_SCHEMA_VERSION) != 0)
+    if ((strcmp(schema_version, EXPECTED_SCHEMA_VERSION) != 0) &&
+        (strcmp(schema_version, EXPECTED_SCHEMA_VERSION_V2) != 0))
     {
         return 0;
     }

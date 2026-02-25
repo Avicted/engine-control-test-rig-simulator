@@ -1,13 +1,14 @@
 CC = clang
 CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
-CPPFLAGS = -I./include -I./src
+BUILD_COMMIT = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
 BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
 UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
 VISUALIZER_SRC = visualization/visualizer.c
 UNIT_TEST_SRC = tests/unit/test_engine_control.c
-UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c $(SRC_DIR)/domain/control.c $(SRC_DIR)/platform/hal.c
+UNIT_TEST_DEPS = $(SRC_DIR)/domain/engine.c $(SRC_DIR)/domain/control.c $(SRC_DIR)/platform/hal.c $(SRC_DIR)/scenario/script_parser.c
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 SRC_DIR = src
 SRCS = $(SRC_DIR)/app/main.c \
@@ -106,13 +107,27 @@ test-unit: $(UNIT_TEST_TARGET)
 validate-json-contract: $(TARGET)
 	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
-	grep -q '"schema_version": "1.0"' "$$tmp_json"; \
+	grep -q '"schema_version": "1.0.0"' "$$tmp_json"; \
 	grep -q '"software_version":' "$$tmp_json"; \
+	grep -q '"build_commit":' "$$tmp_json"; \
 	grep -q '"requirement_id":' "$$tmp_json"; \
 	grep -q '"ticks":' "$$tmp_json"; \
 	grep -q '"summary": {"passed":' "$$tmp_json"
 
-ci-check: all debug analyze-cppcheck analyze-clang-tidy analyze-layering test-unit validate-json-contract
+validate-json: $(TARGET)
+	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	$(TARGET) --run-all --json > "$$tmp_json"; \
+	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
+
+analyze-sanitizers: debug
+	ASAN_OPTIONS=detect_leaks=0 $(TARGET) --run-all --json > /dev/null
+
+analyze: analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers
+
+test-all: test-unit $(TARGET) validate-json-contract validate-json
 	$(TARGET) --run-all --json > /dev/null
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-layering test-unit validate-json-contract ci-check
+ci-check: all debug analyze test-all
+	$(TARGET) --run-all --json > /dev/null
+
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers analyze test-unit test-all validate-json validate-json-contract ci-check

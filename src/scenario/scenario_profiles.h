@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "engine.h"
+#include "hal.h"
 
 typedef struct
 {
@@ -16,6 +17,23 @@ typedef struct
     float control;
     EngineStateMode mode;
 } TickReport;
+
+/*
+ * @requirement REQ-ENG-SCRIPT-002
+ * @pre engine != NULL, sensor_frames != NULL, tick_count in validated bounds
+ * @post profile executes using deterministic HAL framing/decode path only
+ * @deterministic yes
+ */
+int32_t execute_profile_frames(EngineState *engine,
+                               const uint32_t *tick_values,
+                               const HAL_Frame *sensor_frames,
+                               uint32_t tick_count,
+                               int32_t show_sim,
+                               int32_t show_control,
+                               int32_t show_state,
+                               TickReport *tick_reports,
+                               uint32_t tick_report_capacity,
+                               uint32_t *tick_report_count);
 
 int32_t execute_profile(EngineState *engine,
                         const uint32_t *tick_values,
@@ -38,6 +56,7 @@ int32_t scenario_normal_operation(EngineState *engine,
                                   void *tick_reports,
                                   uint32_t tick_report_capacity,
                                   uint32_t *tick_report_count);
+
 int32_t scenario_overheat_short_duration(EngineState *engine,
                                          int32_t show_sim,
                                          int32_t show_control,
@@ -45,6 +64,7 @@ int32_t scenario_overheat_short_duration(EngineState *engine,
                                          void *tick_reports,
                                          uint32_t tick_report_capacity,
                                          uint32_t *tick_report_count);
+
 int32_t scenario_overheat_persistent(EngineState *engine,
                                      int32_t show_sim,
                                      int32_t show_control,
@@ -52,6 +72,7 @@ int32_t scenario_overheat_persistent(EngineState *engine,
                                      void *tick_reports,
                                      uint32_t tick_report_capacity,
                                      uint32_t *tick_report_count);
+
 int32_t scenario_oil_pressure_persistent(EngineState *engine,
                                          int32_t show_sim,
                                          int32_t show_control,
@@ -59,6 +80,7 @@ int32_t scenario_oil_pressure_persistent(EngineState *engine,
                                          void *tick_reports,
                                          uint32_t tick_report_capacity,
                                          uint32_t *tick_report_count);
+
 int32_t scenario_combined_warning_persistent(EngineState *engine,
                                              int32_t show_sim,
                                              int32_t show_control,
@@ -66,6 +88,7 @@ int32_t scenario_combined_warning_persistent(EngineState *engine,
                                              void *tick_reports,
                                              uint32_t tick_report_capacity,
                                              uint32_t *tick_report_count);
+
 int32_t scenario_cold_start_warmup_and_ramp(EngineState *engine,
                                             int32_t show_sim,
                                             int32_t show_control,
@@ -73,6 +96,7 @@ int32_t scenario_cold_start_warmup_and_ramp(EngineState *engine,
                                             void *tick_reports,
                                             uint32_t tick_report_capacity,
                                             uint32_t *tick_report_count);
+
 int32_t scenario_high_load_warning_then_recovery(EngineState *engine,
                                                  int32_t show_sim,
                                                  int32_t show_control,
@@ -80,6 +104,7 @@ int32_t scenario_high_load_warning_then_recovery(EngineState *engine,
                                                  void *tick_reports,
                                                  uint32_t tick_report_capacity,
                                                  uint32_t *tick_report_count);
+
 int32_t scenario_oil_pressure_gradual_drain(EngineState *engine,
                                             int32_t show_sim,
                                             int32_t show_control,
@@ -87,6 +112,7 @@ int32_t scenario_oil_pressure_gradual_drain(EngineState *engine,
                                             void *tick_reports,
                                             uint32_t tick_report_capacity,
                                             uint32_t *tick_report_count);
+
 int32_t scenario_thermal_runaway_with_load_surge(EngineState *engine,
                                                  int32_t show_sim,
                                                  int32_t show_control,
@@ -94,6 +120,7 @@ int32_t scenario_thermal_runaway_with_load_surge(EngineState *engine,
                                                  void *tick_reports,
                                                  uint32_t tick_report_capacity,
                                                  uint32_t *tick_report_count);
+
 int32_t scenario_intermittent_oil_then_combined_fault(EngineState *engine,
                                                       int32_t show_sim,
                                                       int32_t show_control,

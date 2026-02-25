@@ -6,48 +6,67 @@
 #include "scenario_contract.h"
 #include "status.h"
 
-/* Executes full requirement-mapped scenario registry and returns STATUS_OK only on full pass. */
+/*
+ * @requirement REQ-ENG-TEST-001
+ * @pre none
+ * @post executes full requirement-mapped scenario registry and returns STATUS_OK only on full pass
+ * @deterministic yes
+ */
 StatusCode run_all_tests(void);
 
 /*
- * PRE: name != NULL and references a supported named scenario token.
- * POST: scenario executes once.
+ * @requirement REQ-ENG-TEST-002
+ * @pre name != NULL and references a supported named scenario token
+ * @post scenario executes once
+ * @deterministic yes
  */
 StatusCode run_named_scenario(const char *name);
 
 /*
- * PRE: show_sim is 0/1.
- * POST: complete registry executed with optional tick simulation display.
+ * @requirement REQ-ENG-TEST-001
+ * @pre show_sim is 0/1
+ * @post complete registry executed with optional tick simulation display
+ * @deterministic yes
  */
 StatusCode run_all_tests_with_output(int32_t show_sim);
 
 /*
- * PRE: name valid, show_sim is 0/1.
- * POST: selected scenario executed with optional simulation display.
+ * @requirement REQ-ENG-TEST-002
+ * @pre name valid, show_sim is 0/1
+ * @post selected scenario executed with optional simulation display
+ * @deterministic yes
  */
 StatusCode run_named_scenario_with_output(const char *name, int32_t show_sim);
 
 /*
- * PRE: show_sim/use_color are 0/1.
- * POST: full registry executed with requested display options.
+ * @requirement REQ-ENG-TEST-001
+ * @pre show_sim/use_color are 0/1
+ * @post full registry executed with requested display options
+ * @deterministic yes
  */
 StatusCode run_all_tests_with_options(int32_t show_sim, int32_t use_color);
 
 /*
- * PRE: name valid, show_sim/use_color are 0/1.
- * POST: selected scenario executed with requested options.
+ * @requirement REQ-ENG-TEST-002
+ * @pre name valid, show_sim/use_color are 0/1
+ * @post selected scenario executed with requested options
+ * @deterministic yes
  */
 StatusCode run_named_scenario_with_options(const char *name, int32_t show_sim, int32_t use_color);
 
 /*
- * PRE: option flags are 0/1.
- * POST: full registry executed and deterministic summary returned.
+ * @requirement REQ-ENG-TEST-001
+ * @pre option flags are 0/1
+ * @post full registry executed and deterministic summary returned
+ * @deterministic yes
  */
 StatusCode run_all_tests_with_full_options(int32_t show_sim, int32_t use_color, int32_t show_control, int32_t show_state);
 
 /*
- * PRE: name valid, option flags are 0/1.
- * POST: selected scenario executed and logged deterministically.
+ * @requirement REQ-ENG-TEST-002
+ * @pre name valid, option flags are 0/1
+ * @post selected scenario executed and logged deterministically
+ * @deterministic yes
  */
 StatusCode run_named_scenario_with_full_options(const char *name,
                                                 int32_t show_sim,
@@ -56,8 +75,10 @@ StatusCode run_named_scenario_with_full_options(const char *name,
                                                 int32_t show_state);
 
 /*
- * PRE: option flags are 0/1.
- * POST: JSON includes schema_version, software_version, requirement_id, and summary.
+ * @requirement REQ-ENG-JSON-001
+ * @pre option flags are 0/1
+ * @post JSON includes schema_version, software_version, build_commit, requirement_id, and summary
+ * @deterministic yes
  */
 StatusCode run_all_tests_with_json(int32_t show_sim,
                                    int32_t use_color,
@@ -66,8 +87,10 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
                                    int32_t json_output);
 
 /*
- * PRE: name valid, option flags are 0/1.
- * POST: single-scenario JSON output includes mapped requirement_id.
+ * @requirement REQ-ENG-JSON-001
+ * @pre name valid, option flags are 0/1
+ * @post single-scenario JSON output includes mapped requirement_id
+ * @deterministic yes
  */
 StatusCode run_named_scenario_with_json(const char *name,
                                         int32_t show_sim,
@@ -77,8 +100,10 @@ StatusCode run_named_scenario_with_json(const char *name,
                                         int32_t json_output);
 
 /*
- * PRE: script_path valid and parseable; option flags are 0/1.
- * POST: parsed scripted scenario executes deterministically.
+ * @requirement REQ-ENG-SCRIPT-001
+ * @pre script_path valid and parseable; option flags are 0/1
+ * @post parsed scripted scenario executes deterministically
+ * @deterministic yes
  */
 StatusCode run_scripted_scenario_with_json(const char *script_path,
                                            int32_t show_sim,

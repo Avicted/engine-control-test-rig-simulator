@@ -341,15 +341,56 @@ StatusCode scenario_report_print_json_header(void)
         return STATUS_IO_ERROR;
     }
 
+    written = snprintf(line, sizeof(line), "  \"build_commit\": \"%s\",\n", SIM_BUILD_COMMIT);
+    if ((written < 0) || (written >= (int)sizeof(line)))
+    {
+        return STATUS_BUFFER_OVERFLOW;
+    }
+    if (output_write_line(line) != ENGINE_OK)
+    {
+        return STATUS_IO_ERROR;
+    }
+
     return (output_write_line("  \"scenarios\": [\n") == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
 }
 
-StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total)
+StatusCode scenario_report_print_json_error(const ErrorInfo *error_info)
+{
+    char line[TEST_LINE_BUFFER_SIZE];
+    int written;
+
+    if ((error_info == (const ErrorInfo *)0) || (error_info->code == STATUS_OK))
+    {
+        return STATUS_OK;
+    }
+
+    written = snprintf(line,
+                       sizeof(line),
+                       "  \"error\": {\"code\": \"%s\", \"module\": \"%s\", \"function\": \"%s\", \"tick\": %u, \"severity\": \"%s\"},\n",
+                       status_code_to_string(error_info->code),
+                       (error_info->module == (const char *)0) ? "unknown" : error_info->module,
+                       (error_info->function == (const char *)0) ? "unknown" : error_info->function,
+                       error_info->tick,
+                       severity_to_string(error_info->severity));
+    if ((written < 0) || (written >= (int)sizeof(line)))
+    {
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    return (output_write_line(line) == ENGINE_OK) ? STATUS_OK : STATUS_IO_ERROR;
+}
+
+StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, const ErrorInfo *error_info)
 {
     char line[TEST_LINE_BUFFER_SIZE];
     int written;
 
     if (output_write_line("\n  ],\n") != ENGINE_OK)
+    {
+        return STATUS_IO_ERROR;
+    }
+
+    if (scenario_report_print_json_error(error_info) != STATUS_OK)
     {
         return STATUS_IO_ERROR;
     }

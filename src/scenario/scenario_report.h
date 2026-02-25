@@ -18,8 +18,29 @@ int32_t scenario_report_print_tick_details(uint32_t tick,
                                            int32_t show_control,
                                            int32_t show_state);
 
+/*
+ * @requirement REQ-ENG-JSON-001
+ * @pre none
+ * @post writes deterministic top-level JSON metadata and opens scenarios array
+ * @deterministic yes
+ */
 StatusCode scenario_report_print_json_header(void);
-StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total);
+
+/*
+ * @requirement REQ-ENG-DIAG-002
+ * @pre error_info may be NULL
+ * @post writes structured JSON error object when error_info->code != STATUS_OK
+ * @deterministic yes
+ */
+StatusCode scenario_report_print_json_error(const ErrorInfo *error_info);
+
+/*
+ * @requirement REQ-ENG-JSON-002
+ * @pre passed >= 0, total >= 0
+ * @post closes scenarios array and writes optional error + summary
+ * @deterministic yes
+ */
+StatusCode scenario_report_print_json_footer(int32_t passed, int32_t total, const ErrorInfo *error_info);
 StatusCode scenario_report_print_json_scenario_object(const char *scenario_name,
                                                       const char *requirement_id,
                                                       const TickReport *tick_reports,
