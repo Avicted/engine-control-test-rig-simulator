@@ -21,6 +21,12 @@
       "minimum": 1,
       "maximum": 1000
     },
+    "combined_warning_persistence_ticks": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "description": "Override combined RPM+temperature warning persistence (defaults to persistence_ticks when omitted)"
+    },
     "physics": {
       "type": "object",
       "description": "Engine plant-model physics parameters (optional; defaults used when omitted)",

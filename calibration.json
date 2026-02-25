@@ -2,6 +2,7 @@
   "temperature_limit": 95.0,
   "oil_pressure_limit": 2.5,
   "persistence_ticks": 3,
+  "combined_warning_persistence_ticks": 2,
   "physics": {
     "target_rpm": 3000.0,
     "target_temperature": 90.0,
