@@ -23,7 +23,7 @@ static int32_t parse_strict_uint(const char *token, uint32_t *value)
     unsigned long parsed;
     char *endptr;
 
-    if ((token == (const char *)0) || (value == (uint32_t *)0))
+    if ((token == NULL) || (value == NULL))
     {
         return 0;
     }
@@ -49,7 +49,7 @@ static int32_t parse_strict_float(const char *token, float *value)
     float parsed;
     char *endptr;
 
-    if ((token == (const char *)0) || (value == (float *)0) || (*token == '\0'))
+    if ((token == NULL) || (value == NULL) || (*token == '\0'))
     {
         return 0;
     }
@@ -89,8 +89,8 @@ static StatusCode parse_script_line(const char *line,
     float oil_value;
     int32_t run_value;
 
-    if ((line == (const char *)0) || (tick == (uint32_t *)0) || (rpm == (float *)0) || (temp == (float *)0) ||
-        (oil == (float *)0) || (run == (int32_t *)0))
+    if ((line == NULL) || (tick == NULL) || (rpm == NULL) || (temp == NULL) ||
+        (oil == NULL) || (run == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -163,7 +163,7 @@ static StatusCode parse_corrupt_frame_line(const char *line, uint32_t *tick)
     int32_t parsed;
     uint32_t tick_value;
 
-    if ((line == (const char *)0) || (tick == (uint32_t *)0))
+    if ((line == NULL) || (tick == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -193,7 +193,7 @@ static int32_t line_is_whitespace_only(const char *line)
 {
     const unsigned char *cursor;
 
-    if (line == (const char *)0)
+    if (line == NULL)
     {
         return 1;
     }
@@ -216,7 +216,7 @@ static int32_t line_is_comment(const char *line)
 {
     const unsigned char *cursor;
 
-    if (line == (const char *)0)
+    if (line == NULL)
     {
         return 0;
     }
@@ -248,7 +248,7 @@ StatusCode script_parser_parse_file(const char *script_path,
     HAL_SensorFrame last_sensor;
     int32_t has_last_sensor = 0;
 
-    if ((script_path == (const char *)0) || (scenario_data == (ScriptScenarioData *)0) || (error_message == (char *)0) ||
+    if ((script_path == NULL) || (scenario_data == NULL) || (error_message == NULL) ||
         (error_message_size == 0U))
     {
         return STATUS_INVALID_ARGUMENT;
@@ -259,13 +259,13 @@ StatusCode script_parser_parse_file(const char *script_path,
     error_message[0] = '\0';
 
     script_file = fopen(script_path, "r");
-    if (script_file == (FILE *)0)
+    if (script_file == NULL)
     {
         (void)snprintf(error_message, error_message_size, "Unable to open script file: %s", script_path);
         return STATUS_IO_ERROR;
     }
 
-    while (fgets(line_buffer, sizeof(line_buffer), script_file) != (char *)0)
+    while (fgets(line_buffer, sizeof(line_buffer), script_file) != NULL)
     {
         size_t line_len;
 
@@ -275,9 +275,10 @@ StatusCode script_parser_parse_file(const char *script_path,
         if ((line_len > 0U) && (line_buffer[line_len - 1U] != '\n') && !feof(script_file))
         {
             int ch;
-            while (((ch = fgetc(script_file)) != '\n') && (ch != EOF))
+            ch = fgetc(script_file);
+            while ((ch != '\n') && (ch != EOF))
             {
-                ;
+                ch = fgetc(script_file);
             }
             (void)snprintf(error_message,
                            error_message_size,

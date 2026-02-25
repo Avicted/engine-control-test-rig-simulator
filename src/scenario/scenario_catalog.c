@@ -50,9 +50,9 @@ const TestCase *scenario_catalog_find_named(const char *name)
     uint32_t index;
     uint32_t alias_count;
 
-    if (name == (const char *)0)
+    if (name == NULL)
     {
-        return (const TestCase *)0;
+        return NULL;
     }
 
     alias_count = (uint32_t)(sizeof(NAMED_SCENARIO_ALIASES) / sizeof(NAMED_SCENARIO_ALIASES[0]));
@@ -64,5 +64,5 @@ const TestCase *scenario_catalog_find_named(const char *name)
         }
     }
 
-    return (const TestCase *)0;
+    return NULL;
 }

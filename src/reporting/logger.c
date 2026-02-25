@@ -56,7 +56,7 @@ static int32_t should_emit_level(LogLevel level)
 
 static int32_t safe_level_equal(const char *lhs, const char *rhs)
 {
-    if ((lhs == (const char *)0) || (rhs == (const char *)0))
+    if ((lhs == NULL) || (rhs == NULL))
     {
         return 0;
     }
@@ -97,7 +97,7 @@ StatusCode logger_set_level(LogLevel level)
     }
 
     ci_env = getenv("CI");
-    if ((ci_env != (const char *)0) && (level == LOG_LEVEL_DEBUG))
+    if ((ci_env != NULL) && (level == LOG_LEVEL_DEBUG))
     {
         g_min_log_level = LOG_LEVEL_INFO;
         return STATUS_OK;
@@ -109,7 +109,7 @@ StatusCode logger_set_level(LogLevel level)
 
 StatusCode logger_set_level_from_string(const char *level_name)
 {
-    if (level_name == (const char *)0)
+    if (level_name == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -147,7 +147,7 @@ StatusCode log_event_with_options(const char *level, const char *message, int32_
     int32_t written;
     int32_t print_result;
 
-    if ((level == (const char *)0) || (message == (const char *)0))
+    if ((level == NULL) || (message == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -182,7 +182,7 @@ StatusCode logger_log_tick(const char *module, LogLevel level, uint32_t tick, co
     int32_t written;
     int32_t print_result;
 
-    if ((module == (const char *)0) || (message == (const char *)0))
+    if ((module == NULL) || (message == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }

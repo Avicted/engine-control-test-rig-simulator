@@ -1,6 +1,113 @@
 #include "engine.h"
 
+#include <math.h>   /* isfinite */
+#include <stddef.h> /* NULL */
+
 static const char *const engine_mode_str[] = {"INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN"};
+
+/* --- Engine physics configuration (plant model) --- */
+/*
+ * NOTE: All module-level state assumes single-threaded execution.
+ * If threaded scenarios are introduced (see MISRA Dir 5.1/5.2),
+ * add volatile or _Atomic qualifiers and appropriate synchronisation.
+ */
+static EnginePhysicsConfig g_physics = {
+    ENGINE_DEFAULT_TARGET_RPM,
+    ENGINE_DEFAULT_TARGET_TEMP,
+    ENGINE_DEFAULT_TARGET_OIL,
+    ENGINE_DEFAULT_RPM_RAMP_RATE,
+    ENGINE_DEFAULT_TEMP_RAMP_RATE,
+    ENGINE_DEFAULT_OIL_DECAY_RATE};
+static int32_t g_physics_configured = 0;
+
+static int32_t physics_valid(const EnginePhysicsConfig *config)
+{
+    if (config == NULL)
+    {
+        return 0;
+    }
+    if (!isfinite(config->target_rpm) || (config->target_rpm <= 0.0f))
+    {
+        return 0;
+    }
+    if (!isfinite(config->target_temperature) || (config->target_temperature <= 0.0f))
+    {
+        return 0;
+    }
+    if (!isfinite(config->target_oil_pressure) || (config->target_oil_pressure <= 0.0f))
+    {
+        return 0;
+    }
+    if (!isfinite(config->rpm_ramp_rate) || (config->rpm_ramp_rate <= 0.0f))
+    {
+        return 0;
+    }
+    if (!isfinite(config->temp_ramp_rate) || (config->temp_ramp_rate <= 0.0f))
+    {
+        return 0;
+    }
+    if (!isfinite(config->oil_decay_rate) || (config->oil_decay_rate <= 0.0f))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+StatusCode engine_get_default_physics(EnginePhysicsConfig *config_out)
+{
+    if (config_out == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+    config_out->target_rpm = ENGINE_DEFAULT_TARGET_RPM;
+    config_out->target_temperature = ENGINE_DEFAULT_TARGET_TEMP;
+    config_out->target_oil_pressure = ENGINE_DEFAULT_TARGET_OIL;
+    config_out->rpm_ramp_rate = ENGINE_DEFAULT_RPM_RAMP_RATE;
+    config_out->temp_ramp_rate = ENGINE_DEFAULT_TEMP_RAMP_RATE;
+    config_out->oil_decay_rate = ENGINE_DEFAULT_OIL_DECAY_RATE;
+    return STATUS_OK;
+}
+
+StatusCode engine_get_active_physics(EnginePhysicsConfig *config_out)
+{
+    if (config_out == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+    *config_out = g_physics;
+    return STATUS_OK;
+}
+
+StatusCode engine_configure_physics(const EnginePhysicsConfig *config)
+{
+    if (config == NULL)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+    if (g_physics_configured != 0)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+    if (physics_valid(config) == 0)
+    {
+        return STATUS_INVALID_ARGUMENT;
+    }
+    g_physics = *config;
+    g_physics_configured = 1;
+    return STATUS_OK;
+}
+
+StatusCode engine_reset_physics(void)
+{
+    g_physics.target_rpm = ENGINE_DEFAULT_TARGET_RPM;
+    g_physics.target_temperature = ENGINE_DEFAULT_TARGET_TEMP;
+    g_physics.target_oil_pressure = ENGINE_DEFAULT_TARGET_OIL;
+    g_physics.rpm_ramp_rate = ENGINE_DEFAULT_RPM_RAMP_RATE;
+    g_physics.temp_ramp_rate = ENGINE_DEFAULT_TEMP_RAMP_RATE;
+    g_physics.oil_decay_rate = ENGINE_DEFAULT_OIL_DECAY_RATE;
+    g_physics_configured = 0;
+    return STATUS_OK;
+}
 
 static int32_t is_legal_transition(EngineStateMode from_mode, EngineStateMode to_mode)
 {
@@ -14,9 +121,9 @@ static int32_t is_legal_transition(EngineStateMode from_mode, EngineStateMode to
     case ENGINE_STATE_INIT:
         return to_mode == ENGINE_STATE_STARTING;
     case ENGINE_STATE_STARTING:
-        return to_mode == ENGINE_STATE_RUNNING;
+        return (to_mode == ENGINE_STATE_RUNNING) || (to_mode == ENGINE_STATE_SHUTDOWN);
     case ENGINE_STATE_RUNNING:
-        return to_mode == ENGINE_STATE_WARNING;
+        return (to_mode == ENGINE_STATE_WARNING) || (to_mode == ENGINE_STATE_SHUTDOWN);
     case ENGINE_STATE_WARNING:
         return to_mode == ENGINE_STATE_SHUTDOWN;
     case ENGINE_STATE_SHUTDOWN:
@@ -28,7 +135,7 @@ static int32_t is_legal_transition(EngineStateMode from_mode, EngineStateMode to
 
 StatusCode engine_transition_mode(EngineState *engine, EngineStateMode target_mode)
 {
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -46,7 +153,7 @@ StatusCode engine_get_mode_string(const EngineState *engine, const char **mode_s
 {
     uint32_t mode_index;
 
-    if ((engine == (const EngineState *)0) || (mode_string == (const char **)0))
+    if ((engine == NULL) || (mode_string == NULL))
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -66,7 +173,7 @@ StatusCode engine_init(EngineState *engine)
 {
     int32_t index;
 
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -94,7 +201,7 @@ StatusCode engine_start(EngineState *engine)
 {
     StatusCode transition_status;
 
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -116,7 +223,7 @@ StatusCode engine_start(EngineState *engine)
 
 StatusCode engine_update(EngineState *engine)
 {
-    if (engine == (EngineState *)0)
+    if (engine == NULL)
     {
         return STATUS_INVALID_ARGUMENT;
     }
@@ -144,30 +251,30 @@ StatusCode engine_update(EngineState *engine)
         return STATUS_OK;
     }
 
-    if (engine->rpm < 3000.0f)
+    if (engine->rpm < g_physics.target_rpm)
     {
-        engine->rpm += 150.0f;
-        if (engine->rpm > 3000.0f)
+        engine->rpm += g_physics.rpm_ramp_rate;
+        if (engine->rpm > g_physics.target_rpm)
         {
-            engine->rpm = 3000.0f;
+            engine->rpm = g_physics.target_rpm;
         }
     }
 
-    if (engine->temperature < 90.0f)
+    if (engine->temperature < g_physics.target_temperature)
     {
-        engine->temperature += 0.6f;
-        if (engine->temperature > 90.0f)
+        engine->temperature += g_physics.temp_ramp_rate;
+        if (engine->temperature > g_physics.target_temperature)
         {
-            engine->temperature = 90.0f;
+            engine->temperature = g_physics.target_temperature;
         }
     }
 
-    if (engine->oil_pressure > 3.4f)
+    if (engine->oil_pressure > g_physics.target_oil_pressure)
     {
-        engine->oil_pressure -= 0.01f;
-        if (engine->oil_pressure < 3.4f)
+        engine->oil_pressure -= g_physics.oil_decay_rate;
+        if (engine->oil_pressure < g_physics.target_oil_pressure)
         {
-            engine->oil_pressure = 3.4f;
+            engine->oil_pressure = g_physics.target_oil_pressure;
         }
     }
 

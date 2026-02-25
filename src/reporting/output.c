@@ -3,20 +3,20 @@
 #include "engine.h"
 #include "output.h"
 
-int32_t output_write_line(const char *line)
+StatusCode output_write_line(const char *line)
 {
     int32_t write_result;
 
-    if (line == (const char *)0)
+    if (line == NULL)
     {
-        return ENGINE_ERROR;
+        return STATUS_INVALID_ARGUMENT;
     }
 
     write_result = fputs(line, stdout);
     if (write_result < 0)
     {
-        return ENGINE_ERROR;
+        return STATUS_IO_ERROR;
     }
 
-    return ENGINE_OK;
+    return STATUS_OK;
 }

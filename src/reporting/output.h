@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
-int32_t output_write_line(const char *line);
+#include "status.h"
+
+StatusCode output_write_line(const char *line);
 
 #endif

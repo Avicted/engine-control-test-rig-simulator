@@ -16,7 +16,7 @@
 #define TEST_LINE_BUFFER_SIZE 256
 #define MAX_PROFILE_TICKS 26U
 
-static int32_t print_test_separator(void)
+static StatusCode print_test_separator(void)
 {
     return output_write_line("------------------------------------------------------------\n");
 }
@@ -38,9 +38,9 @@ static int32_t run_test_case(const TestCase *test_case,
     int32_t local_show_control;
     int32_t local_show_state;
 
-    if ((test_case == (const TestCase *)0) || (test_case->test_name == (const char *)0) ||
-        (test_case->requirement_id == (const char *)0) ||
-        (test_case->scenario_func == (int32_t (*)(EngineState *, int32_t, int32_t, int32_t, void *, uint32_t, uint32_t *))0))
+    if ((test_case == NULL) || (test_case->test_name == NULL) ||
+        (test_case->requirement_id == NULL) ||
+        (test_case->scenario_func == NULL))
     {
         return 0;
     }
@@ -53,7 +53,7 @@ static int32_t run_test_case(const TestCase *test_case,
 
     if (json_output == 0)
     {
-        if (print_test_separator() != ENGINE_OK)
+        if (print_test_separator() != STATUS_OK)
         {
             return 0;
         }
@@ -79,7 +79,7 @@ static int32_t run_test_case(const TestCase *test_case,
     {
         if (json_prefix_comma != 0)
         {
-            if (output_write_line(",\n") != ENGINE_OK)
+            if (output_write_line(",\n") != STATUS_OK)
             {
                 return 0;
             }
@@ -113,7 +113,7 @@ static int32_t run_test_case(const TestCase *test_case,
         {
             return 0;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             return 0;
         }
@@ -126,7 +126,7 @@ static int32_t valid_scenario_name(const char *name)
 {
     size_t name_len;
 
-    if (name == (const char *)0)
+    if (name == NULL)
     {
         return 0;
     }
@@ -142,7 +142,7 @@ static int32_t valid_scenario_name(const char *name)
 
 static int32_t validate_hal_negative_cases(void)
 {
-    if (hal_read_sensors(0U, (HAL_SensorFrame *)0) != STATUS_INVALID_ARGUMENT)
+    if (hal_read_sensors(0U, NULL) != STATUS_INVALID_ARGUMENT)
     {
         return ENGINE_ERROR;
     }
@@ -160,8 +160,6 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     const int32_t total = (int32_t)scenario_catalog_count();
     int32_t passed = 0;
     int32_t index;
-    char line[TEST_LINE_BUFFER_SIZE];
-    int32_t written;
 
     if (hal_init() != STATUS_OK)
     {
@@ -206,7 +204,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
 
     if (json_output != 0)
     {
-        if (scenario_report_print_json_footer(passed, total, (const ErrorInfo *)0) != STATUS_OK)
+        if (scenario_report_print_json_footer(passed, total, NULL) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -214,7 +212,10 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
     }
     else
     {
-        if (print_test_separator() != ENGINE_OK)
+        char line[TEST_LINE_BUFFER_SIZE];
+        int32_t written;
+
+        if (print_test_separator() != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -226,7 +227,7 @@ StatusCode run_all_tests_with_json(int32_t show_sim,
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
         }
-        if (output_write_line(line) != ENGINE_OK)
+        if (output_write_line(line) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -317,7 +318,7 @@ StatusCode run_named_scenario_with_json(const char *name,
     }
 
     selected_test = scenario_catalog_find_named(name);
-    if (selected_test == (const TestCase *)0)
+    if (selected_test == NULL)
     {
         (void)hal_shutdown();
         return STATUS_INVALID_ARGUMENT;
@@ -367,7 +368,7 @@ StatusCode run_named_scenario_with_json(const char *name,
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
         }
-        if (scenario_report_print_json_footer((result == expected_result) ? 1 : 0, 1, (const ErrorInfo *)0) != STATUS_OK)
+        if (scenario_report_print_json_footer((result == expected_result) ? 1 : 0, 1, NULL) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -407,7 +408,7 @@ StatusCode run_named_scenario_with_json(const char *name,
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
     }
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;
@@ -581,7 +582,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
             return STATUS_INTERNAL_ERROR;
         }
 
-        if (scenario_report_print_json_footer(1, 1, (const ErrorInfo *)0) != STATUS_OK)
+        if (scenario_report_print_json_footer(1, 1, NULL) != STATUS_OK)
         {
             (void)hal_shutdown();
             return STATUS_INTERNAL_ERROR;
@@ -629,7 +630,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
         return STATUS_INTERNAL_ERROR;
     }
 
-    if (output_write_line(line) != ENGINE_OK)
+    if (output_write_line(line) != STATUS_OK)
     {
         (void)hal_shutdown();
         return STATUS_INTERNAL_ERROR;

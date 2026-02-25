@@ -1,3 +1,8 @@
+/**
+ * @file control.h
+ * @brief Safety evaluation and calibration management for engine fault detection.
+ */
+
 #ifndef CONTROL_H
 #define CONTROL_H
 
@@ -13,6 +18,16 @@
 #define CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS 3U
 #define CONTROL_DEFAULT_COMBINED_WARNING_PERSISTENCE_TICKS 2U
 
+/** @name Control-law coefficients for compute_control_output(). */
+/** @{ */
+#define CONTROL_OUTPUT_BASE_BIAS 20.0f        /**< Baseline output percentage. */
+#define CONTROL_OUTPUT_RPM_DIVISOR 100.0f     /**< RPM-to-output scaling divisor. */
+#define CONTROL_OUTPUT_TEMP_REFERENCE 25.0f   /**< Temperature reference point (deg C). */
+#define CONTROL_OUTPUT_TEMP_COEFFICIENT 0.25f /**< Output reduction per deg C above reference. */
+#define CONTROL_OUTPUT_OIL_REFERENCE 3.0f     /**< Oil-pressure reference point (bar). */
+#define CONTROL_OUTPUT_OIL_COEFFICIENT 10.0f  /**< Output reduction per bar below reference. */
+/** @} */
+
 typedef struct
 {
     float temperature_limit;
@@ -24,24 +39,80 @@ typedef struct
     uint32_t combined_warning_persistence_ticks;
 } ControlCalibration;
 
-/*
+/**
+ * @brief Evaluate engine state against calibrated fault thresholds.
+ *
+ * Increments persistence counters for temperature, oil pressure, and
+ * combined RPM+temperature faults. Triggers state transitions (WARNING,
+ * SHUTDOWN) when persistence windows are met.
+ *
  * @requirement REQ-ENG-001
  * @pre engine != NULL, evaluation_result != NULL
  * @post fault persistence counters and mode are deterministically updated
  * @deterministic yes
+ *
+ * @param[in,out] engine         Engine state with fault counters to update.
+ * @param[out]    evaluation_result  Receives ENGINE_OK, ENGINE_WARNING, or ENGINE_SHUTDOWN.
+ * @retval STATUS_OK              Evaluation completed successfully.
+ * @retval STATUS_INVALID_ARGUMENT NULL pointer argument.
+ * @retval STATUS_INTERNAL_ERROR   Illegal state transition detected.
  */
 StatusCode evaluate_engine(EngineState *engine, int32_t *evaluation_result);
 
-/*
+/**
+ * @brief Compute control output percentage from engine state.
+ *
+ * Output is clamped to [0.0, 100.0] based on RPM, temperature, and oil pressure.
+ *
  * @requirement REQ-ENG-003
  * @pre engine != NULL, control_output != NULL
  * @post *control_output is clamped to [0, 100]
  * @deterministic yes
+ *
+ * @param[in]  engine          Current engine state.
+ * @param[out] control_output  Receives clamped control output percentage.
+ * @retval STATUS_OK              Computation completed successfully.
+ * @retval STATUS_INVALID_ARGUMENT NULL pointer argument.
  */
 StatusCode compute_control_output(const EngineState *engine, float *control_output);
 
+/**
+ * @brief Retrieve factory-default calibration values.
+ * @param[out] calibration_out  Receives default calibration.
+ * @retval STATUS_OK              Success.
+ * @retval STATUS_INVALID_ARGUMENT NULL pointer.
+ */
 StatusCode control_get_default_calibration(ControlCalibration *calibration_out);
+
+/**
+ * @brief Retrieve the currently active calibration.
+ * @param[out] calibration_out  Receives active calibration snapshot.
+ * @retval STATUS_OK              Success.
+ * @retval STATUS_INVALID_ARGUMENT NULL pointer.
+ */
 StatusCode control_get_active_calibration(ControlCalibration *calibration_out);
+
+/**
+ * @brief Apply a validated calibration. May only be called once before reset.
+ * @param[in] calibration  Calibration to apply (validated by calibration_valid()).
+ * @retval STATUS_OK              Success.
+ * @retval STATUS_INVALID_ARGUMENT Invalid calibration or already configured.
+ */
 StatusCode control_configure_calibration(const ControlCalibration *calibration);
+
+/**
+ * @brief Reset calibration state to factory defaults.
+ *
+ * Clears the configured flag, allowing a new call to
+ * control_configure_calibration().
+ *
+ * @requirement REQ-ENG-CAL-001
+ * @pre none
+ * @post calibration state is reset to defaults, allowing reconfiguration
+ * @deterministic yes
+ *
+ * @retval STATUS_OK Always succeeds.
+ */
+StatusCode control_reset_calibration(void);
 
 #endif

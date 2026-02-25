@@ -73,16 +73,15 @@ run-script: $(TARGET)
 		exit 1; \
 	fi
 	$(TARGET) --script "$(SCRIPT)"
-			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
 run-script-json: $(TARGET)
 	@if [ -z "$(SCRIPT)" ]; then \
-			$(CC) $(CPPFLAGS) $(DEBUG_CFLAGS) -o $(TARGET) $(SRCS)
+		echo "Usage: make run-script-json SCRIPT=scenarios/normal_operation.txt"; \
 		exit 1; \
 	fi
-			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^ $(RAYLIB_LIBS)
+	$(TARGET) --script "$(SCRIPT)" --json
 
 run-scenarios: $(TARGET)
-			$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
 	files=$$(find scenarios -maxdepth 1 -type f -name '*.txt' | sort); \
 	if [ -z "$$files" ]; then \
 		echo "No scenario scripts found in scenarios/"; \
@@ -110,10 +109,36 @@ analyze-cppcheck:
 		--suppress=checkersReport \
 		--suppress=unusedFunction \
 		--suppress=staticFunction \
+		--suppress=unmatchedSuppression \
 		src/
 
 analyze-clang-tidy:
 	clang-tidy $(TIDY_SRCS) -checks='-*,clang-analyzer-*,-clang-analyzer-security.*,-clang-analyzer-alpha.*' -warnings-as-errors='*' -- -std=c11 -I./include -I./src
+
+analyze-misra:
+	cppcheck --std=c11 --enable=all --error-exitcode=1 \
+		-Iinclude -Isrc \
+		--suppress=missingIncludeSystem \
+		--suppress=normalCheckLevelMaxBranches \
+		--suppress=checkersReport \
+		--suppress=unusedFunction \
+		--suppress=staticFunction \
+		--suppress=misra-c2012-15.5 \
+		--suppress=misra-c2012-21.6 \
+		--suppress=misra-c2012-8.7 \
+		--suppress=misra-c2012-10.4 \
+		--suppress=misra-c2012-18.4 \
+		--suppress=misra-c2012-11.5 \
+		--suppress=misra-c2012-4.1 \
+		--suppress=misra-c2012-10.8 \
+		--suppress=misra-c2012-8.9 \
+		--suppress=misra-c2012-2.5 \
+		--suppress=misra-c2012-2.3 \
+		--suppress=misra-c2012-2.4 \
+		--suppress=misra-c2012-21.8 \
+		--addon=tools/misra.json \
+		src/ 2>&1 | tee build/misra-report.txt; \
+	echo "MISRA report written to build/misra-report.txt"
 
 analyze-layering:
 	sh tools/check_layering.sh
@@ -128,8 +153,30 @@ coverage: $(BUILD_DIR)
 	$(BUILD_DIR)/unit_tests_cov
 	$(GCOV) -b -c $(BUILD_DIR)/unit_tests_cov-*.gcno > $(COVERAGE_DIR)/coverage.txt
 	@mv -f ./*.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
-	@covered=$$(grep 'Lines executed:' $(COVERAGE_DIR)/coverage.txt | tail -n 1 | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/'); \
-	echo "Coverage: $$covered%"; \
+	@total_lines=0; covered_lines=0; \
+	while IFS= read -r fline; do \
+		case "$$fline" in \
+		"File 'src/"*) current_src=1 ;; \
+		"File 'tests/"*) current_src=0 ;; \
+		"File "*) current_src=0 ;; \
+		esac; \
+		if [ "$$current_src" = "1" ]; then \
+			case "$$fline" in \
+			"Lines executed:"*) \
+				pct=$$(echo "$$fline" | sed -E 's/.*Lines executed:([0-9.]+)% of ([0-9]+).*/\1/'); \
+				lines=$$(echo "$$fline" | sed -E 's/.*Lines executed:([0-9.]+)% of ([0-9]+).*/\2/'); \
+				hit=$$(awk -v p="$$pct" -v l="$$lines" 'BEGIN { printf "%d", (p/100.0)*l + 0.5 }'); \
+				total_lines=$$((total_lines + lines)); \
+				covered_lines=$$((covered_lines + hit)); \
+				;; \
+			esac; \
+		fi; \
+	done < $(COVERAGE_DIR)/coverage.txt; \
+	if [ "$$total_lines" -eq 0 ]; then \
+		echo "Coverage: 0% (no source lines found)"; exit 1; \
+	fi; \
+	covered=$$(awk -v h="$$covered_lines" -v t="$$total_lines" 'BEGIN { printf "%.2f", (h/t)*100.0 }'); \
+	echo "Source-only coverage: $$covered% ($$covered_lines/$$total_lines lines)"; \
 	awk -v c="$$covered" 'BEGIN { exit (c+0 >= 80.0) ? 0 : 1 }'
 
 coverage-clean:
@@ -162,4 +209,9 @@ test-all: test-unit $(TARGET) validate-json-contract validate-json
 ci-check: all debug analyze test-all coverage
 	$(TARGET) --run-all --json > /dev/null
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check
+docs:
+	@command -v doxygen >/dev/null 2>&1 || { echo "doxygen not found, skipping docs"; exit 0; }
+	doxygen Doxyfile
+	@echo "Documentation generated in $(BUILD_DIR)/docs/html"
+
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check docs
