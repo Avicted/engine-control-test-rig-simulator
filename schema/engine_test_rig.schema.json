@@ -56,14 +56,15 @@
     },
     "error": {
       "type": "object",
-      "required": ["code", "module", "tick", "severity"],
+      "required": ["code", "module", "tick", "severity", "recoverability"],
       "additionalProperties": false,
       "properties": {
         "code": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "function": { "type": "string", "minLength": 1 },
         "tick": { "type": "integer", "minimum": 0 },
-        "severity": { "type": "string", "enum": ["INFO", "WARNING", "ERROR", "FATAL"] }
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "ERROR", "FATAL"] },
+        "recoverability": { "type": "string", "enum": ["RECOVERABLE", "NON_RECOVERABLE"] }
       }
     },
     "summary": {

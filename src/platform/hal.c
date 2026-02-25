@@ -41,6 +41,7 @@ static void hal_set_error(StatusCode code, const char *function, uint32_t tick, 
     g_last_error.function = function;
     g_last_error.tick = tick;
     g_last_error.severity = severity;
+    g_last_error.recoverability = status_code_default_recoverability(code);
 }
 
 static void queue_reset(HAL_FrameQueue *queue)
@@ -196,6 +197,26 @@ static StatusCode decode_sensor_frame(const HAL_Frame *frame, HAL_SensorFrame *s
     return validate_sensor_frame(sensor_frame);
 }
 
+static int32_t is_supported_sensor_transport_frame(const HAL_Frame *frame)
+{
+    if (frame == (const HAL_Frame *)0)
+    {
+        return 0;
+    }
+
+    if ((frame->id == HAL_SENSOR_FRAME_ID) && (frame->dlc == 8U))
+    {
+        return 1;
+    }
+
+    if ((frame->id == HAL_SENSOR_ERROR_FRAME_ID) && (frame->dlc == 1U))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 StatusCode hal_init(void)
 {
     queue_reset(&g_sensor_rx_queue);
@@ -228,7 +249,7 @@ StatusCode hal_ingest_sensor_frame(const HAL_Frame *frame, uint32_t tick)
         return STATUS_INVALID_ARGUMENT;
     }
 
-    if ((frame->id != HAL_SENSOR_FRAME_ID) || (frame->dlc != 8U))
+    if (is_supported_sensor_transport_frame(frame) == 0)
     {
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_ingest_sensor_frame", tick, SEVERITY_ERROR);
         return STATUS_INVALID_ARGUMENT;
@@ -273,6 +294,12 @@ StatusCode hal_read_sensors(uint32_t tick, HAL_SensorFrame *frame_out)
 
         hal_set_error(STATUS_INVALID_ARGUMENT, "hal_read_sensors", tick, SEVERITY_WARNING);
         return STATUS_INVALID_ARGUMENT;
+    }
+
+    if (frame.id == HAL_SENSOR_ERROR_FRAME_ID)
+    {
+        hal_set_error(STATUS_PARSE_ERROR, "hal_read_sensors", tick, SEVERITY_ERROR);
+        return STATUS_PARSE_ERROR;
     }
 
     status = decode_sensor_frame(&frame, frame_out);

@@ -99,6 +99,23 @@ Allowed dependency directions are intentionally constrained:
 
 These rules are enforced in CI via `make analyze-layering` using `tools/check_layering.sh`.
 
+## Module API Overview
+
+Primary public interfaces are intentionally narrow and defined under `include/`:
+
+- `include/hal.h`
+    - `hal_ingest_sensor_frame()` and `hal_read_sensors()` define deterministic sensor transport/decode boundaries.
+    - `hal_receive_bus()` and `hal_transmit_bus()` expose bounded protocol-like frame ingress/egress.
+    - `hal_get_last_error()` provides structured diagnostics (`module`, `function`, `tick`, `severity`, `recoverability`).
+- `include/control.h`
+    - `evaluate_engine()` applies persistence-threshold safety rules.
+    - `compute_control_output()` computes deterministic actuator demand.
+    - `control_configure_calibration()` and calibration getters manage startup-only threshold configuration.
+- `include/script_parser.h`
+    - `script_parser_parse_file()` validates scenario scripts and emits deterministic tick/frame buffers.
+- `include/test_runner.h`
+    - Scenario orchestration and JSON/console execution entry points.
+
 
 
 
@@ -215,6 +232,18 @@ Designed for CI gating and automated validation parsing.
 Formal schema is provided at
 `schema/engine_test_rig.schema.json`.
 
+Example command and expected output shape:
+
+```bash
+./build/testrig --script scenarios/normal_operation.txt --json > build/example_report.json
+```
+
+Expected CLI behavior:
+
+- exit code `0` for a passing scenario
+- JSON envelope includes `schema_version`, `software_version`, `build_commit`, `scenarios`, and `summary`
+- on failure paths, JSON includes `error` with `code`, `module`, `function`, `tick`, `severity`, and `recoverability`
+
 
 
 
@@ -323,6 +352,11 @@ Formal requirement mapping matrix is maintained in
 Structured diagnostics are exposed through `ErrorInfo` and severity levels
 (`SEVERITY_INFO`, `SEVERITY_WARNING`, `SEVERITY_ERROR`, `SEVERITY_FATAL`).
 
+Error diagnostics include explicit recoverability classification:
+
+- `RECOVERABLE`
+- `NON_RECOVERABLE`
+
 Script parsing and logger/HAL paths use explicit status returns with no
 silent fallthrough.
 
@@ -400,7 +434,7 @@ Make targets:
 - layering gate
 - JSON schema validation gate
 - unit/integration test gate
-- coverage gate (`>= 75%`)
+- coverage gate (`>= 80%`)
 
 
 ## ABI / Floating-Point Assumptions

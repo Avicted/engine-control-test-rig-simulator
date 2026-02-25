@@ -61,12 +61,77 @@ static int32_t test_combined_warning_escalation(void)
     return 1;
 }
 
+static int32_t test_temperature_persistence_boundary_transition(void)
+{
+    EngineState engine;
+    int32_t result = ENGINE_ERROR;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = ENGINE_STATE_RUNNING;
+    engine.is_running = 1;
+    engine.oil_pressure = 3.0f;
+
+    engine.temperature = 100.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(1U, engine.fault_counters[ENGINE_FAULT_TEMP]);
+    ASSERT_EQ(ENGINE_OK, result);
+
+    engine.temperature = 100.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_TEMP_PERSISTENCE_TICKS - 1U, engine.fault_counters[ENGINE_FAULT_TEMP]);
+    ASSERT_EQ(ENGINE_OK, result);
+
+    engine.temperature = 100.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_TEMP_PERSISTENCE_TICKS, engine.fault_counters[ENGINE_FAULT_TEMP]);
+    ASSERT_EQ(ENGINE_WARNING, result);
+
+    engine.temperature = 100.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_TEMP_PERSISTENCE_TICKS + 1U, engine.fault_counters[ENGINE_FAULT_TEMP]);
+    ASSERT_EQ(ENGINE_SHUTDOWN, result);
+    return 1;
+}
+
+static int32_t test_oil_persistence_boundary_transition(void)
+{
+    EngineState engine;
+    int32_t result = ENGINE_ERROR;
+
+    ASSERT_STATUS(STATUS_OK, engine_reset(&engine));
+    engine.mode = ENGINE_STATE_RUNNING;
+    engine.is_running = 1;
+    engine.temperature = 85.0f;
+
+    engine.oil_pressure = 2.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(ENGINE_OK, result);
+
+    engine.oil_pressure = 2.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS - 1U, engine.fault_counters[ENGINE_FAULT_OIL_PRESSURE]);
+    ASSERT_EQ(ENGINE_OK, result);
+
+    engine.oil_pressure = 2.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS, engine.fault_counters[ENGINE_FAULT_OIL_PRESSURE]);
+    ASSERT_EQ(ENGINE_WARNING, result);
+
+    engine.oil_pressure = 2.0f;
+    ASSERT_STATUS(STATUS_OK, evaluate_engine(&engine, &result));
+    ASSERT_EQ(CONTROL_DEFAULT_OIL_PERSISTENCE_TICKS + 1U, engine.fault_counters[ENGINE_FAULT_OIL_PRESSURE]);
+    ASSERT_EQ(ENGINE_SHUTDOWN, result);
+    return 1;
+}
+
 int32_t register_control_tests(const UnitTestCase **tests_out, uint32_t *count_out)
 {
     static const UnitTestCase tests[] = {
         {"control_single_tick_threshold", test_single_tick_threshold_no_shutdown},
         {"control_persistence_reset", test_persistence_counter_increment_and_reset},
-        {"control_combined_warning", test_combined_warning_escalation}};
+        {"control_combined_warning", test_combined_warning_escalation},
+        {"control_temp_persistence_boundary", test_temperature_persistence_boundary_transition},
+        {"control_oil_persistence_boundary", test_oil_persistence_boundary_transition}};
 
     if ((tests_out == (const UnitTestCase **)0) || (count_out == (uint32_t *)0))
     {
