@@ -5,7 +5,7 @@
 | Component          | Version |
 | ------------------ | ------- |
 | Schema version     | 1.0.0   |
-| Software version   | 0.3.0   |
+| Software version   | 1.2.1   |
 
 ## Versioning Policy
 

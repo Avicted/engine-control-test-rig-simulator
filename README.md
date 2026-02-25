@@ -53,7 +53,7 @@ JSON machine-readable output for CI gating:
 $ ./build/testrig --script scenarios/normal_operation.txt --json
 {
   "schema_version": "1.0.0",
-  "software_version": "0.3.0",
+  "software_version": "1.2.1",
   "build_commit": "b16d190",
   "scenarios": [
     {
