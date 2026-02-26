@@ -2,13 +2,13 @@
 
 This document records intentional deviations from MISRA C:2012 rules in the
 engine-control test-rig simulator. The project enforces compliance via
-`make analyze-misra` which runs **cppcheck 2.19.1** with the MISRA C:2012 addon
+`make analyze-misra` which runs **cppcheck** with the MISRA C:2012 addon
 and `--error-exitcode=1`. Suppressed rules are listed in the Makefile; any
 violation of a non-suppressed rule **fails the build**.
 
-> **Edition note**: MISRA C:2025 is not yet supported by any open-source static
-> analyser (cppcheck, clang-tidy, gcc). This project targets MISRA C:2012 and
-> will migrate when tooling catches up.
+> **Edition note (2026-02)**: MISRA C:2025 support in common open-source static
+> analysis toolchains is not assumed here. This project targets MISRA C:2012 and
+> can migrate when the chosen toolchain supports it.
 
 ---
 
