@@ -84,7 +84,7 @@ The simulator models a simplified engine control loop with three monitored param
 CLAIM: The simulator correctly detects and responds to all identified hazards.
 │
 ├── SUBCLAIM 1: Each safety function is implemented as specified.
-│   └── EVIDENCE: Source code in src/domain/control.c with @requirement annotations
+│   └── EVIDENCE: Source code in src/domain/control.c with requirement annotations in include/control.h
 │
 ├── SUBCLAIM 2: Each safety function is tested at boundary conditions.
 │   └── EVIDENCE: Unit tests exercise exact persistence thresholds (N-1, N, N+1)
@@ -92,7 +92,7 @@ CLAIM: The simulator correctly detects and responds to all identified hazards.
 ├── SUBCLAIM 3: Fault counter reset logic prevents false shutdowns.
 │   └── EVIDENCE: Recovery tests verify counters reset to zero on parameter recovery
 │
-├── SUBCLAIM 4: The deterministic architecture guarantees reproducible behavior.
+├── SUBCLAIM 4: The deterministic architecture supports reproducible behavior.
 │   └── EVIDENCE: No threads, no real-time clock, no dynamic allocation, no randomness
 │
 ├── SUBCLAIM 5: Static analysis confirms code quality.

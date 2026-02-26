@@ -9,6 +9,8 @@ COVERAGE_HTML_DIR = ./coverage/html
 TARGET = $(BUILD_DIR)/testrig
 VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
 UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
+VALGRIND_TARGET = $(BUILD_DIR)/testrig_valgrind
+VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind
 
 VISUALIZER_SRC = visualization/visualizer.c
 UNIT_TEST_SRCS = $(shell find tests/unit -type f -name '*.c' | sort)
@@ -40,10 +42,15 @@ COMMON_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -Wunused-result
 CFLAGS = $(COMMON_CFLAGS) -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
 DEBUG_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
 COVERAGE_CFLAGS = $(COMMON_CFLAGS) -O0 --coverage
+VALGRIND_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fno-omit-frame-pointer
 
 CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
 LDFLAGS = -lm
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
+VALGRIND ?= valgrind
+VALGRIND_ARGS = --leak-check=full --show-leak-kinds=all --track-origins=yes --errors-for-leak-kinds=all --error-exitcode=1
+CI_VALGRIND ?= 0
+LCOV_RC_OPTS ?= --rc derive_function_end_line=0
 
 all: $(TARGET)
 
@@ -59,12 +66,20 @@ $(VISUALIZER_TARGET): $(BUILD_DIR) $(VISUALIZER_SRC)
 $(UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(UNIT_TEST_TARGET) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
 
+$(VALGRIND_TARGET): $(BUILD_DIR) $(SRCS)
+	$(CC) $(CPPFLAGS) $(VALGRIND_CFLAGS) -o $(VALGRIND_TARGET) $(SRCS) $(LDFLAGS)
+
+$(VALGRIND_UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS)
+	$(CC) $(CPPFLAGS) $(VALGRIND_CFLAGS) -o $(VALGRIND_UNIT_TEST_TARGET) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
+
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean:
 	rm -f $(TARGET)
 	rm -f $(UNIT_TEST_TARGET)
+	rm -f $(VALGRIND_TARGET)
+	rm -f $(VALGRIND_UNIT_TEST_TARGET)
 	rm -f $(VISUALIZER_TARGET)
 	rm -f $(BUILD_DIR)/*.gcno $(BUILD_DIR)/*.gcda $(BUILD_DIR)/*.info
 	rm -rf $(COVERAGE_DIR)
@@ -156,10 +171,12 @@ coverage: $(BUILD_DIR)
 	$(GCOV) -b -c $(BUILD_DIR)/unit_tests_cov-*.gcno > $(COVERAGE_DIR)/coverage.txt
 	@mv -f ./*.gcov $(COVERAGE_DIR)/ 2>/dev/null || true
 	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
-		--output-file $(BUILD_DIR)/coverage.info --quiet
+		--output-file $(BUILD_DIR)/coverage.info --quiet \
+		$(LCOV_RC_OPTS)
 	lcov --remove $(BUILD_DIR)/coverage.info '*/tests/*' \
 		--output-file $(BUILD_DIR)/coverage-src.info --quiet \
-		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		$(LCOV_RC_OPTS)
 	@awk '\
 		/^DA:/ { \
 			total += 1; \
@@ -197,10 +214,12 @@ coverage-main: $(BUILD_DIR)
 coverage-html-main: coverage
 	@echo "Generating main.c HTML coverage report..."
 	lcov --capture --directory $(BUILD_DIR) --gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
-		--output-file $(BUILD_DIR)/coverage-main.info --quiet
+		--output-file $(BUILD_DIR)/coverage-main.info --quiet \
+		$(LCOV_RC_OPTS)
 	lcov --extract $(BUILD_DIR)/coverage-main.info '*/src/app/main.c' \
 		--output-file $(BUILD_DIR)/coverage-main-src.info --quiet \
-		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh
+		--gcov-tool $(CURDIR)/tools/llvm-gcov.sh \
+		$(LCOV_RC_OPTS)
 	genhtml $(BUILD_DIR)/coverage-main-src.info --output-directory $(COVERAGE_DIR)/html-main \
 		--title "Engine Control Test Rig (main.c)" --legend --quiet
 	@echo "HTML main.c report: $(COVERAGE_DIR)/html-main/index.html"
@@ -217,7 +236,9 @@ validate-json-contract: $(TARGET)
 	grep -q '"build_commit":' "$$tmp_json"; \
 	grep -q '"requirement_id":' "$$tmp_json"; \
 	grep -q '"ticks":' "$$tmp_json"; \
-	grep -q '"summary": {"passed":' "$$tmp_json"
+	grep -q '"summary":' "$$tmp_json"; \
+	grep -q '"passed":' "$$tmp_json"; \
+	grep -q '"total":' "$$tmp_json"
 
 validate-json: $(TARGET)
 	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
@@ -227,7 +248,20 @@ validate-json: $(TARGET)
 analyze-sanitizers: debug
 	ASAN_OPTIONS=detect_leaks=0 $(TARGET) --run-all --json > /dev/null
 
-analyze: analyze-cppcheck analyze-clang-tidy analyze-layering analyze-sanitizers
+analyze-valgrind: $(VALGRIND_TARGET) $(VALGRIND_UNIT_TEST_TARGET)
+	@command -v $(VALGRIND) >/dev/null 2>&1 || { echo "valgrind not found"; exit 1; }
+	@$(VALGRIND) --quiet --error-exitcode=1 /bin/true >/dev/null 2>&1 || { \
+		echo "valgrind preflight failed (missing glibc debug symbols?)"; \
+		echo "Install libc6-dbg (Debian/Ubuntu) and retry."; \
+		exit 1; \
+	}
+	$(VALGRIND) $(VALGRIND_ARGS) $(VALGRIND_UNIT_TEST_TARGET) > /dev/null
+	@tmp_json="$(BUILD_DIR)/valgrind-contract-check.json"; \
+	$(VALGRIND) $(VALGRIND_ARGS) $(VALGRIND_TARGET) --run-all --json > "$$tmp_json"; \
+	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
+	$(VALGRIND) $(VALGRIND_ARGS) $(VALGRIND_TARGET) --script scenarios/normal_operation.txt --strict > /dev/null
+
+analyze: analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers
 
 test-all: test-unit $(TARGET) validate-json-contract validate-json
 	$(TARGET) --run-all --json > /dev/null
@@ -286,10 +320,13 @@ validate-schema-compat: $(TARGET)
 
 ci-check: all debug analyze test-all coverage determinism-check check-viz-boundary validate-schema-compat
 	$(TARGET) --run-all --json > /dev/null
+	@if [ "$(CI_VALGRIND)" = "1" ]; then \
+		$(MAKE) analyze-valgrind CC="$(CC)"; \
+	fi
 
 docs:
 	@command -v doxygen >/dev/null 2>&1 || { echo "doxygen not found, skipping docs"; exit 0; }
 	doxygen Doxyfile
 	@echo "Documentation generated in $(BUILD_DIR)/docs/html"
 
-.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check docs determinism-check coverage-modules check-viz-boundary validate-schema-compat
+.PHONY: all clean debug run-script run-script-json run-scenarios visualizer run-visualizer analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze-valgrind analyze test-unit test-all coverage coverage-clean validate-json validate-json-contract ci-check docs determinism-check coverage-modules check-viz-boundary validate-schema-compat

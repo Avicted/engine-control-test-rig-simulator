@@ -20,8 +20,10 @@ This matrix provides a code-level mapping between requirement IDs, scenario vali
 | REQ-ENG-IO-004 | Sensor frame encoding with checksum | `hal_encode_sensor_frame()` in `src/platform/hal.c` |
 | REQ-ENG-IO-005 | Bus receive queue management | `hal_receive_bus()` in `src/platform/hal.c` |
 | REQ-ENG-IO-006 | Bus transmit queue management | `hal_transmit_bus()` in `src/platform/hal.c` |
+| REQ-ENG-IO-007 | Frame ID registry DLC lookup | `hal_expected_dlc_for_id()` in `src/platform/hal.c` |
+| REQ-ENG-IO-008 | Frame staleness tracking and query | `hal_frame_age_record()`, `hal_frame_is_stale()` in `src/platform/hal.c` |
 | REQ-ENG-DIAG-001 | HAL error diagnostic retrieval | `hal_get_last_error()` in `src/platform/hal.c` |
-| REQ-ENG-SCRIPT-001 | Script-driven scenario ingestion and deterministic execution | `script_parser_parse_file()` in `src/scenario/script_parser.c` |
+| REQ-ENG-SCRIPT | Script-driven scenario ingestion and deterministic execution | `script_parser_parse_file()` in `src/scenario/script_parser.c` |
 
 ## Scenario-to-Requirement Mapping
 
@@ -41,7 +43,7 @@ This matrix provides a code-level mapping between requirement IDs, scenario vali
 
 ## Named Scenario Routing
 
-Named scenario routing in `run_named_scenario_with_json()` uses `requirement_for_named_scenario()` to assign `requirement_id` for JSON output.
+Named scenario routing in `run_named_scenario_with_json()` uses `scenario_catalog_find_named()` and `selected_test->requirement_id` to assign `requirement_id` for JSON output.
 
 ## Evidence Outputs
 
@@ -53,8 +55,8 @@ Named scenario routing in `run_named_scenario_with_json()` uses `requirement_for
 
 | Requirement ID | Unit Test Evidence |
 |---|---|
-| REQ-ENG-001 | `control_temp_persistence_boundary`, `control_persistence_reset`, `control_evaluate_running_temp_fault`, `control_evaluate_running_oil_fault` |
-| REQ-ENG-002 | `control_oil_persistence_boundary`, `control_evaluate_running_oil_fault` |
+| REQ-ENG-001 | `control_temp_persistence_boundary`, `control_persistence_reset`, `control_single_tick_threshold` |
+| REQ-ENG-002 | `control_oil_persistence_boundary`, `control_oil_recovery_reset` |
 | REQ-ENG-003 | `control_combined_warning`, `control_single_tick_threshold`, `control_output_clamp_*` |
 | REQ-ENG-000 | `state_illegal_transition`, `state_legal_transitions`, `state_init_starting_running`, `state_update_*`, `state_start_*`, `state_mode_str_*` |
 | REQ-ENG-CAL-001 | `control_reset_calibration`, `control_configure_*` |
@@ -67,5 +69,7 @@ Named scenario routing in `run_named_scenario_with_json()` uses `requirement_for
 | REQ-ENG-IO-004 | `hal_encode_null_sensor`, `hal_encode_null_frame`, `hal_encode_invalid_vals` |
 | REQ-ENG-IO-005 | `hal_receive_bus_valid`, `hal_receive_bus_null`, `hal_receive_bus_bad_dlc`, `hal_bus_rx_overflow` |
 | REQ-ENG-IO-006 | `hal_transmit_bus_valid`, `hal_transmit_bus_null`, `hal_transmit_bus_bad_dlc` |
+| REQ-ENG-IO-007 | `hal_fid_known_valid`, `hal_dlc_sensor`, `hal_dlc_unknown_id`, `hal_dlc_mismatch_ingest` |
+| REQ-ENG-IO-008 | `hal_age_fresh_receipt`, `hal_age_stale_boundary`, `hal_age_never_recv`, `hal_age_unknown_id` |
 | REQ-ENG-DIAG-001 | `hal_last_error_init`, `hal_last_error_null` |
-| REQ-ENG-SCRIPT-001 | `parser_missing_tokens`, `parser_non_numeric`, `parser_out_of_order`, `parser_corrupt_before_sensor` |
+| REQ-ENG-SCRIPT | `parser_missing_tokens`, `parser_non_numeric`, `parser_out_of_order`, `parser_corrupt_before_sensor` |

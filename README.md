@@ -1,260 +1,168 @@
 # Engine Control Validation & HIL Test Rig Simulator
 
-> **Status**: Feature-complete · 255 unit tests · 100% line coverage · MISRA C:2012 analysis · Static analysis clean
+Deterministic C11 engine-control validation simulator implementing tick-stepped execution, structured fault injection, requirement-tagged reporting, and CI-enforced verification.
 
-A deterministic C11 engine-control validation simulator designed with
-safety-critical principles and CI-driven hardware-in-the-loop (HIL)
-workflows in mind.
+> [!IMPORTANT]
+> This project models validation workflows and produces reviewable artifacts. It is not a production ECU.
 
-> [!NOTE]
-> Portfolio project demonstrating safety-critical embedded simulation design principles.
-> Not intended for real-world control applications.
+## Engineering signals
 
-### Why This Project?
+| Signal | Measured value | How it is verified |
+|---|---:|---|
+| Unit tests | 255 | `make test-unit` |
+| Line coverage (unit-tested modules) | 100.00% (1355/1355 measured lines) | `make coverage` |
+| Built-in validation scenarios | 10 | `./build/testrig --run-all` |
+| Scripted scenario files | 9 | `scenarios/*.txt` |
+| Determinism replay | SHA-256 match across two identical runs | `make determinism-check` |
+| Quality gate | `make ci-check` | build + analysis + tests + replay |
+| CI compilers | clang + gcc | `.github/workflows/ci.yml` matrix |
 
-Industrial engine control systems require rigorous verification before deployment.
-This simulator demonstrates the software engineering practices used in that domain -
-layered architecture, formal traceability, static analysis, and safety analysis -
-applied to a simplified but realistic engine control model.
+## Architecture (high level)
 
+```mermaid
+flowchart TD
+  S[Scenario input\n- built-in catalog\n- scripted TICK lines] --> P[Scenario layer\nprofiles + script parser]
+  P -->|Bus frames| Q[Bus frame queue\n(fixed capacity)]
+  P -->|Fault injection\nFRAME CORRUPT| Q
+  Q --> H[HAL boundary\ndecode + validate\nID/DLC/checksum\nvoting + timeout]
+  H --> E[Domain\nengine state machine\nmode + sensor state]
+  E --> C[Control evaluation\npersistence windows\nstate transitions]
+  C --> R[Reporting\nexpected vs actual\nrequirement IDs]
+  R --> J[(Deterministic JSON output)]
+  J --> V[Visualizer (Raylib)\nread-only playback]
+```
 
+## Problem
 
-## Prerequisites
+Engine control software must detect unsafe conditions and transition to a safe state without false triggers from transient noise.
 
-**Required to build and run:**
+- Faults modeled: over-temperature, low oil pressure, combined high-load warnings, corrupt/missing bus frames, and sensor disagreement.
+- Requirement shape: multi-tick persistence windows (fault must persist for $N$ consecutive ticks before escalation).
+- Determinism requirement: identical inputs must yield identical outputs so validation artifacts remain reproducible across CI runs and platforms.
+
+## Context
+
+Industrial validation commonly progresses from deterministic simulation to bench testing:
+
+- **SIL-style simulation** to stabilize control logic and corner cases before hardware is available.
+- **HIL (hardware-in-the-loop)** to validate interactions with real I/O timing and bus behavior on a test rig.
+
+Simulation is the low-cost stage where fault injection, traceability, and repeatability can be pushed hardest.
+
+## Solution
+
+### Determinism and reproducibility
+
+- Tick counter replaces wall-clock time.
+- Single-threaded execution.
+- No dynamic memory allocation (no `malloc`/`free`).
+- JSON output is treated as a stable contract (`schema_version` and a schema file under `schema/`).
+
+### Module separation
+
+Strict layering keeps the deterministic core insulated from I/O and visualization:
+
+```
+src/
+  app/        CLI orchestration
+  domain/     engine state machine + control logic
+  platform/   HAL boundary and bus/frame validation
+  scenario/   scenario catalog + script parser
+  reporting/  deterministic JSON + console reporting
+include/      public interfaces
+```
+
+Layer boundaries are enforced by `make analyze-layering`.
+
+### Simulation loop
+
+Each tick executes a fixed, reviewable sequence:
+
+1. Ingest one bus frame (or detect timeout).
+2. HAL validates/decodes the frame (ID/DLC/checksum, voting, watchdog rules).
+3. Domain updates engine state and evaluates control logic.
+4. Reporting appends deterministic JSON for the tick.
+
+### Fault injection
+
+Script directives inject bad frames through the same validation path as normal frames:
+
+```text
+TICK 5 FRAME CORRUPT
+```
+
+This exercises checksum rejection paths and “no valid sample” timeouts without special test hooks inside the domain layer.
+
+## Validation
+
+Correctness is verified as multiple independent signals:
+
+- Unit tests: `make test-unit` (255 tests).
+- Integration suite: `./build/testrig --run-all` runs 10 requirement-tagged scenarios.
+- Fault injection: `FRAME CORRUPT` and strict script validation exercise error paths.
+- Contract validation: JSON output is validated against `schema/engine_test_rig.schema.json` (`make validate-json`).
+- Deterministic replay: two identical `--run-all` runs must hash-identically (`make determinism-check`).
+- Runtime checking: ASan/UBSan runs the full scenario suite (`make analyze-sanitizers`).
+- Static analysis: `cppcheck`, `clang-tidy`, MISRA C:2012 (cppcheck addon) (`make analyze*`).
+
+## Results
+
+- Unit tests: 255/255 pass.
+- Validation scenarios: 10/10 pass with requirement IDs attached to each scenario result.
+- Coverage: 100.00% line coverage on unit-tested modules (1355/1355 measured lines). Integration/orchestration files (`test_runner`, `scenario_profiles`, `scenario_report`, `scenario_catalog`, `output`) are exercised by `make test-all` integration runs, not by the unit-test coverage gate.
+- `make ci-check` gates on: compiler warnings-as-errors, static analysis, MISRA addon analysis, layering enforcement, sanitizers, unit + integration runs, JSON contract checks, coverage, deterministic replay, schema compatibility, and a visualization boundary audit.
+
+## Lessons
+
+- Deterministic replay shifts debugging from “reproduce on my machine” to byte-for-byte diffs.
+- Persistence windows reduce false positives but require explicit boundary validation (recovery resets, off-by-one ticks).
+- Layering is easiest to maintain when CI treats boundary violations as build failures.
+- Treating JSON as a contract enables independent tooling (CI gating, visualization) without coupling to internal state.
+
+## Industrial relevance
+
+This mirrors pre-hardware validation workflows without claiming production equivalence.
+
+- Provides SIL-style repeatable inputs/outputs suitable for regression gating.
+- Requirement-tagged results are shaped to integrate with requirements tracking (linking scenario IDs to external requirement records).
+- A direct extension path to HIL is swapping the simulated bus transport with real I/O while keeping domain/control behavior unchanged.
+
+## Design constraints
+
+- Deterministic execution: no threads, no wall-clock dependencies, no randomness.
+- Explicit state transitions: all mode changes occur through the domain state machine.
+- Fixed-capacity data structures and bounded loops.
+- CI must pass before merge: correctness signals are automated and enforced.
+- Static analysis and MISRA checks treated as build-time constraints.
+
+## Build and run
+
+### Prerequisites
 
 | Tool | Purpose |
-|------|---------|
-| `clang` | C11 compiler (default in Makefile) |
-| `make` | Build system |
-| `git` | Embeds commit hash in build metadata |
-
-**Required for the full quality gate (`make ci-check`):**
-
-| Tool | Purpose |
-|------|---------|
-| `cppcheck` | Static analysis and MISRA C:2012 checking |
-| `clang-tidy` | Clang-based static analysis |
-| `llvm-cov` | Code coverage reporting (`llvm-cov gcov`) |
-| `lcov` | HTML coverage report generation (`make coverage-html`) |
-| `python3` | JSON schema contract validation |
-
-**Optional:**
-
-| Tool | Purpose |
-|------|---------|
-| `raylib` | Visualization dashboard build (`make visualizer`) |
-| `doxygen` | API documentation generation (`make docs`) |
+|---|---|
+| `clang` or `gcc` | C11 compiler |
+| `make` | build orchestration |
+| `cppcheck` | static analysis + MISRA addon |
+| `clang-tidy` | additional static analysis |
+| `llvm-cov` + `lcov` | coverage collection + HTML report |
+| `valgrind` | deep runtime memory validation |
+| `python3` | JSON schema validation |
 
 On Debian/Ubuntu:
 
 ```bash
-sudo apt install clang llvm make git cppcheck clang-tidy python3 lcov
+sudo apt install clang llvm make git cppcheck clang-tidy python3 lcov valgrind libc6-dbg
 ```
 
-On macOS (Homebrew):
+### Quick start
 
 ```bash
-brew install llvm make git cppcheck python3 lcov
+make
+make test-unit
+./build/testrig --run-all
+make ci-check
 ```
-
-
-
-## Quick Start
-
-```bash
-make                  # Build the simulator
-make test-unit        # Run 161 unit tests
-make ci-check         # Full quality gate (build + analysis + tests + coverage)
-```
-
-Run a scripted scenario:
-
-```
-$ ./build/testrig --script scenarios/normal_operation.txt
-[INFO] Scripted scenario evaluated: OK
-Script 'scenarios/normal_operation.txt' result: OK
-```
-
-Run all validation scenarios with requirement traceability:
-
-```
-$ ./build/testrig --run-all
-REQ-ENG-003 | normal_operation         | expected=OK       | actual=OK       | PASS
-REQ-ENG-001 | overheat_ge_persistence  | expected=SHUTDOWN | actual=SHUTDOWN | PASS
-REQ-ENG-002 | oil_low_ge_persistence   | expected=SHUTDOWN | actual=SHUTDOWN | PASS
-REQ-ENG-003 | combined_warning_persist | expected=WARNING  | actual=WARNING  | PASS
-...
-Summary: 10/10 tests passed
-```
-
-JSON machine-readable output for CI gating:
-
-```
-$ ./build/testrig --script scenarios/normal_operation.txt --json
-{
-  "schema_version": "1.0.0",
-  "software_version": "1.3.0",
-  "build_commit": "b16d190",
-  "scenarios": [
-    {
-      "scenario": "scripted_scenario",
-      "requirement_id": "REQ-ENG-SCRIPT",
-      "ticks": [
-        {"tick": 1, "rpm": 2200.00, "temp": 76.00, "oil": 3.20, "run": 1,
-         "result": "OK", "control": 31.25, "engine_mode": "STARTING"},
-        ...
-      ],
-      "expected": "OK",
-      "actual": "OK",
-      "pass": true
-    }
-  ],
-  "summary": {"passed": 1, "total": 1}
-}
-```
-
-
-
-## Architectural Overview
-
-```
-              +---------------------------+
-              |   testrig (CLI core)      |
-              |---------------------------|
-              | Deterministic simulation  |
-              | Safety validation logic   |
-              | JSON output               |
-              +-------------+-------------+
-                            |
-                            | JSON (read-only)
-                            v
-              +---------------------------+
-              |   visualizer (Raylib)     |
-              |---------------------------|
-              | Read-only JSON playback   |
-              | Animated dashboard        |
-              +---------------------------+
-```
-
-Strict separation ensures simulation determinism is never affected by
-visualization logic.
-
-Core data path:
-
-```
-  Scenario Input → BusFrame Queue → HAL (Decode + Validate) → Engine → Control → HAL
-```
-
-
-
-## Layered Source Structure
-
-```
-src/
-├── app/          CLI and execution orchestration
-├── domain/       Engine state machine + control safety logic
-├── platform/     HAL boundary and I/O adaptation
-├── scenario/     Scenario catalog, profiles, parser, reporting
-└── reporting/    Output formatting, logger, report metadata
-include/          Public API headers and contracts
-```
-
-### Dependency Direction Rules
-
-```
-app → domain, platform, scenario, reporting, include
-scenario → domain, platform, reporting, include
-reporting → domain, platform, include
-platform → domain, include
-domain → include only
-```
-
-These rules are enforced in CI via `make analyze-layering` using `tools/check_layering.sh`.
-
-
-
-## Safety-Oriented Design Principles
-
-**Safety & Determinism**
-- No dynamic memory allocation (zero `malloc`/`free`)
-- No recursion or `goto`
-- Bounded loops only; fixed-size buffers and registries
-- Fail-safe defaults on all error paths
-- No system time, randomness, threads, or external I/O influence
-
-**Testability & Traceability**
-- Every requirement traceable to unit tests and integration scenarios
-- Explicit pointer validation and status-code-based error handling
-- Strict compiler diagnostics (`-Wall -Wextra -Werror -pedantic`)
-
-**Analyzability**
-- MISRA C:2012 analysis with 14 formally documented deviations
-- cppcheck + clang-tidy + AddressSanitizer + UBSan quality gates
-- Layered architecture with enforced dependency direction
-
-
-
-## Determinism Guarantee
-
-For identical input scenario files:
-
-- Sensor values are processed sequentially
-- State transitions are deterministic
-- JSON output is bit-exact reproducible
-- No system time, randomness, threads, or external I/O influence results
-
-This enables reproducible CI regression validation and controlled
-HIL-style replay.
-
-
-
-## System Model
-
-### Inputs
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| RPM | `float` | Engine rotational speed |
-| Temperature | `float` | Exhaust temperature (°C) |
-| Oil Pressure | `float` | Lubrication pressure (bar) |
-| Running | `int` | Engine running state (0/1) |
-
-### Engine Modes
-
-`INIT` → `STARTING` → `RUNNING` → `WARNING` → `SHUTDOWN`
-
-### Temporal Fault Validation
-
-- Temperature persistence threshold → SHUTDOWN
-- Oil pressure persistence threshold → SHUTDOWN
-- Combined RPM + temperature warning persistence → WARNING
-
-Fault escalation requires deterministic multi-tick persistence,
-mirroring industrial safety logic.
-
-
-
-## Scripted Scenario Support
-
-Deterministic scenarios can be defined without modifying source code:
-
-```text
-TICK 1 RPM 2200 TEMP 76 OIL 3.2 RUN 1
-TICK 2 RPM 2600 TEMP 80 OIL 3.1 RUN 1
-TICK 3 RPM 3000 TEMP 83 OIL 3.0 RUN 1
-TICK 4 RPM 3200 TEMP 84.5 OIL 2.9 RUN 1
-TICK 5 FRAME CORRUPT
-```
-
-Run:
-
-```bash
-./build/testrig --script scenario.txt --json
-```
-
-Corrupt frame directives are accepted and routed through HAL checksum validation.
-See `scenarios/README.md` for the full catalog of included scenarios.
 
 
 
@@ -324,7 +232,7 @@ HAL interfaces are defined in `include/hal.h` and implemented in `src/platform/h
 
 ## Requirement Traceability
 
-Requirement IDs are defined in `src/scenario/requirements.h` and attached to test
+Scenario `requirement_id` values emitted in JSON are defined in `src/scenario/requirements.h` and attached to test
 registry entries.
 
 Console output includes requirement linkage per test:
@@ -382,12 +290,17 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 | Compiler | `make all` | Zero warnings (`-Werror`) |
 | cppcheck | `make analyze-cppcheck` | Zero findings |
 | clang-tidy | `make analyze-clang-tidy` | Zero findings |
+| MISRA C:2012 | `make analyze-misra` | Only pre-approved suppressions |
 | Layering | `make analyze-layering` | No dependency violations |
 | Sanitizers | `make analyze-sanitizers` | No ASan/UBSan findings |
+| Valgrind (local deep check) | `make analyze-valgrind` | No leaks or invalid memory accesses |
 | Unit tests | `make test-unit` | 255/255 pass |
 | Integration | `make test-all` | All scenarios pass |
 | JSON contract | `make validate-json` | Schema-valid output |
-| Coverage | `make coverage` | 100% source-only lines (1354/1354) |
+| Schema compatibility | `make validate-schema-compat` | Required fields present |
+| Determinism replay | `make determinism-check` | SHA-256 match |
+| Viz boundary audit | `make check-viz-boundary` | JSON-only boundary |
+| Coverage | `make coverage` | ≥80% line coverage on unit-tested modules (currently 100.00%, 1355/1355 measured lines) |
 | Coverage HTML | `make coverage-html` | Browsable HTML report in `coverage/html/` |
 
 
@@ -423,14 +336,19 @@ Usage:
 
 | Document | Description |
 |----------|-------------|
-| `docs/safety_case.md` | Structured safety argument with hazard identification and safety functions |
-| `docs/fmea.md` | 15-item Failure Mode and Effects Analysis with RPN ratings |
-| `docs/requirements_traceability_matrix.md` | Full requirement → scenario → unit test mapping |
-| `docs/misra_deviations.md` | 14 formally documented MISRA C:2012 deviations with rationale |
-| `docs/review_checklist.md` | Repeatable technical review procedure |
-| `docs/static_analysis_baseline_policy.md` | Zero-warning baseline policy |
+| [docs/safety_case.md](docs/safety_case.md) | Structured safety argument with hazard identification and safety functions |
+| [docs/fmea.md](docs/fmea.md) | 15-item Failure Mode and Effects Analysis with RPN ratings |
+| [docs/requirements_traceability_matrix.md](docs/requirements_traceability_matrix.md) | Scenario-facing requirement → scenario → unit test mapping |
+| [docs/misra_deviations.md](docs/misra_deviations.md) | 14 formally documented MISRA C:2012 deviations with rationale |
+| [docs/review_checklist.md](docs/review_checklist.md) | Repeatable technical review procedure |
+| [docs/static_analysis_baseline_policy.md](docs/static_analysis_baseline_policy.md) | Zero-warning baseline policy |
+| [docs/determinism_guarantee.md](docs/determinism_guarantee.md) | Determinism implementation and CI enforcement via SHA-256 replay check |
+| [docs/schema_evolution.md](docs/schema_evolution.md) | Semantic versioning policy for JSON output schema |
+| [docs/message_map.md](docs/message_map.md) | BusFrame ID registry documentation with payload layouts |
+| [docs/error_severity_model.md](docs/error_severity_model.md) | Structured severity/recoverability classification reference |
+| [docs/MISRA_C:2012_Supported_Rules.md](docs/MISRA_C:2012_Supported_Rules.md) | List of supported MISRA C:2012 rules |
 | `docs/adr/` | Architecture Decision Records (ADR-001 through ADR-004) |
-| `CHANGELOG.md` | Version history following Keep a Changelog conventions |
+| [CHANGELOG.md](CHANGELOG.md) | Version history following Keep a Changelog conventions |
 
 
 

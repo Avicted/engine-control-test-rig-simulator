@@ -2,8 +2,9 @@
 
 ## Objective
 
-Every simulation run must produce **byte-identical output** given the
-same inputs, regardless of when or where the run executes.
+Simulation runs are expected to produce **byte-identical output** for the
+same inputs when executed in a controlled environment (same compiler/toolchain,
+locale, and simulator revision).
 
 ## How Determinism Is Achieved
 
@@ -11,10 +12,10 @@ same inputs, regardless of when or where the run executes.
 | ------------------------------------- | -------------------------------------------- |
 | No dynamic allocation                 | All arrays are statically sized               |
 | No recursion                          | Deterministic call depth                      |
-| No floating-point non-determinism     | IEEE 754, same compiler flags, no `rand()`    |
+| Floating-point variance bounded       | IEEE 754, pinned compiler flags, no `rand()`   |
 | No time-of-day or wall-clock usage    | Tick counter is the sole time source          |
 | No I/O-dependent ordering             | FIFO queues with bounded capacity             |
-| Zero-initialized structs              | `_Static_assert` enforces layout contracts    |
+| Stable data layout contracts          | `_Static_assert` enforces ABI/layout contracts |
 | Single-threaded execution only        | No concurrency or shared mutable state        |
 
 ## CI Enforcement

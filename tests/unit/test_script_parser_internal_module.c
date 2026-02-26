@@ -7,6 +7,7 @@
 static int32_t g_sp_encode_call_count = 0;
 static int32_t g_sp_fail_on_encode_call = -1;
 static int32_t g_sp_fail_fclose = 0;
+static int (*g_sp_real_fclose)(FILE *) = fclose;
 
 static StatusCode script_parser_ut_hal_encode_sensor_frame(const HAL_SensorFrame *sensor_frame, HAL_Frame *frame_out)
 {
@@ -34,10 +35,11 @@ static int script_parser_ut_fclose(FILE *file)
     if (g_sp_fail_fclose != 0)
     {
         g_sp_fail_fclose = 0;
+        (void)g_sp_real_fclose(file);
         return EOF;
     }
 
-    return fclose(file);
+    return g_sp_real_fclose(file);
 }
 
 #define hal_encode_sensor_frame script_parser_ut_hal_encode_sensor_frame
