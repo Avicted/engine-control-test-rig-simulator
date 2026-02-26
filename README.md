@@ -10,7 +10,7 @@ Deterministic C11 engine-control validation simulator implementing tick-stepped 
 | Signal | Measured value | How it is verified |
 |---|---:|---|
 | Unit tests | 255 | `make test-unit` |
-| Line coverage (unit-tested modules) | 100.00% (1355/1355 measured lines) | `make coverage` |
+| Line coverage (unit-tested modules) | 100% (1355/1355 measured lines) | `make coverage` |
 | Built-in validation scenarios | 10 | `./build/testrig --run-all` |
 | Scripted scenario files | 9 | `scenarios/*.txt` |
 | Determinism replay | SHA-256 match across two identical runs | `make determinism-check` |
@@ -109,7 +109,7 @@ Correctness is verified as multiple independent signals:
 
 - Unit tests: 255/255 pass.
 - Validation scenarios: 10/10 pass with requirement IDs attached to each scenario result.
-- Coverage: 100.00% line coverage on unit-tested modules (1355/1355 measured lines). Integration/orchestration files (`test_runner`, `scenario_profiles`, `scenario_report`, `scenario_catalog`, `output`) are exercised by `make test-all` integration runs, not by the unit-test coverage gate.
+- Coverage: 100% line coverage on unit-tested modules (1355/1355 measured lines). Integration/orchestration files (`test_runner`, `scenario_profiles`, `scenario_report`, `scenario_catalog`, `output`) are exercised by `make test-all` integration runs, not by the unit-test coverage gate.
 - `make ci-check` gates on: compiler warnings-as-errors, static analysis, MISRA addon analysis, layering enforcement, sanitizers, unit + integration runs, JSON contract checks, coverage, deterministic replay, schema compatibility, and a visualization boundary audit.
 
 ## Lessons
@@ -300,7 +300,7 @@ and cannot be mutated during runtime. If `--config` is omitted, deterministic de
 | Schema compatibility | `make validate-schema-compat` | Required fields present |
 | Determinism replay | `make determinism-check` | SHA-256 match |
 | Viz boundary audit | `make check-viz-boundary` | JSON-only boundary |
-| Coverage | `make coverage` | ≥80% line coverage on unit-tested modules (currently 100.00%, 1355/1355 measured lines) |
+| Coverage | `make coverage` | ≥80% line coverage on unit-tested modules (currently 100%, 1355/1355 measured lines) |
 | Coverage HTML | `make coverage-html` | Browsable HTML report in `coverage/html/` |
 
 
