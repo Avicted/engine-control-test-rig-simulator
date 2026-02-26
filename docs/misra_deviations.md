@@ -65,8 +65,7 @@ the lowest indentation level and makes error handling explicit at the call site.
 Converting 383 early returns into a single-exit structure would require deeply
 nested if/else or goto-cleanup patterns that are harder to review.
 
-**Mitigation**: Every early-return path is unit-tested (131 tests, 87%+
-source-only line coverage). Functions that return error codes are documented with
+**Mitigation**: Every early-return path is unit-tested (255 tests, 100% line coverage on unit-tested modules). Functions that return error codes are documented with
 `@return` Doxygen annotations.
 
 ---

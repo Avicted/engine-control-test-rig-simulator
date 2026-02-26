@@ -96,6 +96,9 @@ static const char *find_json_key(const char *buffer, const char *key)
             {
                 in_string = 0;
             }
+            else
+            {
+            }
             continue;
         }
 

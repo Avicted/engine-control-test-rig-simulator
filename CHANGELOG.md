@@ -3,11 +3,16 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.3.1] - 2026-02-26
+
+### Fixed
+- Documentation consistency and accuracy updates across project docs.
+
 ## [1.3.0] - 2026-02-25
 
 ### Changed
 - **255 unit tests total** (was 161): Full coverage of all unit-testable source modules including config internals, control internals, engine internals, HAL internals, logger internals, script parser internals, state machine, status, and app main entry points.
-- **100% source-only line coverage** (1354/1354 lines): All reachable branches in `src/` fully exercised by unit tests.
+- **100% line coverage on unit-tested modules** (1355/1355 measured lines): All lines in domain, HAL, parser, config, logger, and main modules fully exercised by unit tests. Integration/orchestration files (`test_runner`, `scenario_profiles`, `scenario_report`, `scenario_catalog`, `output`) are covered by integration tests (`make test-all`), not the unit-test coverage gate. Branch coverage is not captured in the `coverage-src.info` gate.
 - **Coverage gate updated in README**: Reflects 100% achieved coverage and 255 test count.
 
 ## [1.2.1] - 2026-02-25

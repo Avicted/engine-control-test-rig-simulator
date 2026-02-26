@@ -2,7 +2,8 @@
 
 ## Overview
 
-All errors in the system carry structured metadata:
+HAL diagnostics carry structured metadata (`ErrorInfo`), while other modules
+primarily signal failure via `StatusCode` returns:
 
 ```c
 typedef struct {
@@ -44,8 +45,8 @@ deterministic engine shutdown:
 
 ## Free-Form Error Policy
 
-**No free-form `printf` error messages are permitted.**
-Every error path must call `hal_set_error()` or return a `StatusCode`.
+**No free-form `printf` error messages are permitted in HAL diagnostics.**
+HAL error paths call `hal_set_error()`, and module APIs return a `StatusCode`.
 CI enforces `-Werror` and `-Wunused-result` to prevent silent errors.
 
 ## Queue Overflow Policy
