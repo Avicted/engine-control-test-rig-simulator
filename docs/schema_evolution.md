@@ -36,7 +36,7 @@ JSON output schema:
 ### 1.0.0 (initial)
 
 - `schema_version`, `software_version`, `build_commit` in header.
-- `scenario_name`, `requirement_id`, `expected_result` per scenario.
-- `ticks[]` array with `tick`, `rpm`, `temperature`, `oil_pressure`,
-  `is_running`, `mode`, `control_output`, `evaluation_result`.
-- `summary` block with `passed`, `failed`, `total`.
+- `scenarios[]` array of strict objects with metadata (`scenario`, `requirement_id`, `expected`, `actual`, `pass`) and tick samples (`ticks[]` with `tick`, `rpm`, `temp`, `oil`, `run`, `result`, `control`, `engine_mode`).
+- `summary` block with `passed` and `total`.
+
+**Note:** `error` is an optional top-level object used for structured failure reporting in strict mode.

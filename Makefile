@@ -229,7 +229,7 @@ coverage-clean:
 	rm -rf $(COVERAGE_DIR)
 
 validate-json-contract: $(TARGET)
-	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	@tmp_json="$(BUILD_DIR)/contract-check.contract.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
 	grep -q '"schema_version": "1.0.0"' "$$tmp_json"; \
 	grep -q '"software_version":' "$$tmp_json"; \
@@ -241,7 +241,7 @@ validate-json-contract: $(TARGET)
 	grep -q '"total":' "$$tmp_json"
 
 validate-json: $(TARGET)
-	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	@tmp_json="$(BUILD_DIR)/contract-check.schema.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
 	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
 
@@ -308,7 +308,7 @@ check-viz-boundary:
 
 # --- Schema backward compatibility check (Section 4.1) ---
 validate-schema-compat: $(TARGET)
-	@tmp_json="$(BUILD_DIR)/contract-check.json"; \
+	@tmp_json="$(BUILD_DIR)/contract-check.compat.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
 	grep -q '"schema_version": "1.0.0"' "$$tmp_json" || { echo "Schema version missing"; exit 1; }; \
 	grep -q '"software_version":' "$$tmp_json" || { echo "Software version missing"; exit 1; }; \

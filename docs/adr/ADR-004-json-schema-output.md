@@ -33,8 +33,8 @@ The JSON envelope includes:
     {
       "scenario": "...",
       "requirement_id": "REQ-ENG-001",
-      "expected": "ENGINE_SHUTDOWN",
-      "actual": "ENGINE_SHUTDOWN",
+      "expected": "SHUTDOWN",
+      "actual": "SHUTDOWN",
       "pass": true,
       "ticks": [...]
     }
@@ -46,7 +46,7 @@ The JSON envelope includes:
 ## Consequences
 
 **Positive:**
-- **Machine-parseable**: CI can `jq .summary.failed` to gate builds
+- **Machine-parseable**: CI can gate on `summary.passed` / `summary.total` (failures are `total - passed`)
 - **Schema-validated**: structural regressions detected before tests run
 - **Version-stamped**: `schema_version` + `build_commit` enable reproducibility audits
 - **Requirement-linked**: each scenario carries its `requirement_id` for traceability
