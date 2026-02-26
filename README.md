@@ -21,15 +21,15 @@ Deterministic C11 engine-control validation simulator implementing tick-stepped 
 
 ```mermaid
 flowchart TD
-  S[Scenario input\n- built-in catalog\n- scripted TICK lines] --> P[Scenario layer\nprofiles + script parser]
-  P -->|Bus frames| Q[Bus frame queue\n(fixed capacity)]
-  P -->|Fault injection\nFRAME CORRUPT| Q
-  Q --> H[HAL boundary\ndecode + validate\nID/DLC/checksum\nvoting + timeout]
-  H --> E[Domain\nengine state machine\nmode + sensor state]
-  E --> C[Control evaluation\npersistence windows\nstate transitions]
-  C --> R[Reporting\nexpected vs actual\nrequirement IDs]
-  R --> J[(Deterministic JSON output)]
-  J --> V[Visualizer (Raylib)\nread-only playback]
+  S["Scenario input<br/>- built-in catalog<br/>- scripted TICK lines"] --> P["Scenario layer<br/>profiles + script parser"]
+  P -->|Bus frames| Q["Bus frame queue<br/>(fixed capacity)"]
+  P -->|Fault injection<br/>FRAME CORRUPT| Q
+  Q --> H["HAL boundary<br/>decode + validate<br/>ID/DLC/checksum<br/>voting + timeout"]
+  H --> E["Domain<br/>engine state machine<br/>mode + sensor state"]
+  E --> C["Control evaluation<br/>persistence windows<br/>state transitions"]
+  C --> R["Reporting<br/>expected vs actual<br/>requirement IDs"]
+  R --> J[("Deterministic JSON output")]
+  J --> V["Visualizer (Raylib)<br/>read-only playback"]
 ```
 
 ## Problem
