@@ -15,6 +15,8 @@
 #define MAX_TICKS 512U
 #define MAX_SCENARIO_NAME 64U
 #define MAX_MODE_NAME 16U
+#define MAX_REQUIREMENT_ID 32U
+#define MAX_EXPECTED_VALUE 16U
 #define MAX_SCENARIOS 32U
 
 #define EXPECTED_SCHEMA_VERSION "1.0"
@@ -159,6 +161,8 @@ typedef struct
 typedef struct
 {
     char scenario[MAX_SCENARIO_NAME];
+    char requirement_id[MAX_REQUIREMENT_ID];
+    char expected[MAX_EXPECTED_VALUE];
     TickData ticks[MAX_TICKS];
     unsigned int tick_count;
 } ScenarioData;
@@ -685,7 +689,18 @@ static int parse_scenarios_json(const char *json_text,
             return 0;
         }
 
-        if (find_key(scenario_object_start, "\"requirement_id\"") == NULL)
+        if (parse_quoted_value(scenario_object_start,
+                               "\"requirement_id\"",
+                               scenarios[scenario_count].requirement_id,
+                               sizeof(scenarios[scenario_count].requirement_id)) == 0)
+        {
+            return 0;
+        }
+
+        if (parse_quoted_value(scenario_object_start,
+                               "\"expected\"",
+                               scenarios[scenario_count].expected,
+                               sizeof(scenarios[scenario_count].expected)) == 0)
         {
             return 0;
         }
@@ -1482,12 +1497,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
                            ? SHORT_SCENARIO_TICKS_PER_SECOND
                            : DEFAULT_TICKS_PER_SECOND;
 
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Engine Control Scenario Visualizer");
     SetTargetFPS(60);
     SetExitKey(KEY_NULL);
 
-    ui_font = LoadFontEx(FONT_PATH, 28, NULL, 0);
+    ui_font = LoadFontEx(FONT_PATH, 64, NULL, 0);
     if ((ui_font.texture.id > 0U) && (ui_font.glyphCount > 0))
     {
         SetTextureFilter(ui_font.texture, TEXTURE_FILTER_POINT);
@@ -1520,12 +1535,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
         float status_x = gauges_x + gauges_w + col_gap;
         float gc_x = gauges_x + 14.0f * scale;
         float gc_w = gauges_w - 28.0f * scale;
-        float bar_col_w = gc_w * 0.68f;
-        float val_col_w = gc_w - bar_col_w - 10.0f * scale;
-        float val_col_x = gc_x + bar_col_w + 10.0f * scale;
+        float bar_col_w = gc_w * 0.85f;
+        float val_col_w = gc_w - bar_col_w - 6.0f * scale;
+        float val_col_x = gc_x + bar_col_w + 6.0f * scale;
         float bar_h = LAYOUT_BAR_H * scale;
         float row_step = LAYOUT_ROW_STEP * scale;
-        float m_row0_y = content_y + 44.0f * scale;
+        float m_row0_y = content_y + 60.0f * scale;
         float m_row1_y = m_row0_y + row_step;
         float m_row2_y = m_row1_y + row_step;
         Rectangle gauges_panel = {gauges_x, content_y, gauges_w, main_h};
@@ -1612,7 +1627,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
             }
             if (IsKeyPressed(KEY_RIGHT))
             {
-                playhead += 1.0f;
+                playhead = ceilf(playhead + 0.0001f);
                 if (playhead > (float)(scenario->tick_count - 1U))
                 {
                     playhead = (float)(scenario->tick_count - 1U);
@@ -1621,7 +1636,7 @@ static void run_visualizer(ScenarioSet *scenario_set)
             }
             if (IsKeyPressed(KEY_LEFT))
             {
-                playhead -= 1.0f;
+                playhead = floorf(playhead - 0.0001f);
                 if (playhead < 0.0f)
                 {
                     playhead = 0.0f;
@@ -1704,8 +1719,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
         DrawLine(0, (int)hdr_h - 1, screen_w, (int)hdr_h - 1, COL_HDR_BORDER);
         {
             char scen_label[48];
+            char meta_text[96];
             char tick_str[48];
             Vector2 tick_sz;
+            Vector2 scen_sz;
+            float meta_x;
+            float meta_y;
             float badge_w;
             float badge_x;
             float badge_y;
@@ -1715,14 +1734,24 @@ static void run_visualizer(ScenarioSet *scenario_set)
                            "SCENARIO  %u / %u",
                            scenario_set->active_index + 1U, scenario_set->count);
             draw_text_font(&ui_font, scen_label, pad, 7.0f * scale, FS_TINY * scale, COL_SCEN_COUNTER);
-            draw_text_font(&ui_font, scenario->scenario, pad, 21.0f * scale, FS_SCEN_NAME * scale, RAYWHITE);
-
             (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
                            tick->tick, scenario->tick_count);
             tick_sz = MeasureTextEx(ui_font, tick_str, FS_BADGE * scale, 1.0f);
             badge_w = tick_sz.x + 20.0f * scale;
             badge_x = (float)screen_w - badge_w - pad;
             badge_y = (hdr_h - badge_h) * 0.5f;
+
+            draw_text_font(&ui_font, scenario->scenario, pad, 21.0f * scale, FS_SCEN_NAME * scale, RAYWHITE);
+            scen_sz = MeasureTextEx(ui_font, scenario->scenario, FS_SCEN_NAME * scale, 1.0f);
+            (void)snprintf(meta_text, sizeof(meta_text), "%s   EXPECTED: %s",
+                           scenario->requirement_id, scenario->expected);
+            meta_x = pad + scen_sz.x + 32.0f * scale;
+            meta_y = 18.0f * scale + (FS_SCEN_NAME - FS_KEY_HINT) * 0.5f * scale;
+            if (meta_x < (badge_x - 220.0f * scale))
+            {
+                draw_text_font(&ui_font, meta_text, meta_x, meta_y, FS_SCEN_NAME * scale, COL_SCEN_COUNTER);
+            }
+
             DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BG);
             DrawRectangleLines((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BORDER);
             draw_text_font(&ui_font, tick_str,
@@ -1780,12 +1809,16 @@ static void run_visualizer(ScenarioSet *scenario_set)
         /* Mode (left) + Result/Run (right), same horizontal band */
         {
             float lx = metrics_area.x + 14.0f * scale;
-            float rx = metrics_area.x + metrics_area.width * 0.54f;
+            float right_cols_x0 = metrics_area.x + metrics_area.width * 0.45f;
+            float right_cols_x1 = metrics_area.x + metrics_area.width - 8.0f * scale;
+            float right_col_w = (right_cols_x1 - right_cols_x0) * 0.8f;
+            float rx = right_cols_x0;
+            float run_col_x = right_cols_x0 + right_col_w;
             float cap_y = metrics_area.y + 38.0f * scale;
             float cap_fs = FS_TINY * scale;
-            float val_fs = FS_KEY_HINT * scale;
             float mode_fs = FS_MODE * scale;
-            char run_val[16];
+            char run_text[16];
+            float result_y;
             Color result_c;
 
             result_c = (strcmp(tick->result, "OK") == 0)
@@ -1799,15 +1832,14 @@ static void run_visualizer(ScenarioSet *scenario_set)
             draw_text_font(&ui_font, tick->engine_mode, lx, cap_y + cap_fs + 4.0f * scale,
                            mode_fs, animated_mode_color);
 
-            /* Right: RESULT caption + value, then RUN caption + value */
+            /* Right: RESULT and RUN columns with aligned values */
             draw_text_font(&ui_font, "RESULT", rx, cap_y, cap_fs, COL_CAPTION);
-            draw_text_font(&ui_font, tick->result, rx, cap_y + cap_fs + 4.0f * scale, val_fs, result_c);
-            draw_text_font(&ui_font, "RUN", rx, cap_y + cap_fs + 4.0f * scale + val_fs + 10.0f * scale,
-                           cap_fs, COL_CAPTION);
-            (void)snprintf(run_val, sizeof(run_val), "%d", tick->run);
-            draw_text_font(&ui_font, run_val,
-                           rx, cap_y + cap_fs * 2.0f + val_fs + 8.0f * scale + 10.0f * scale,
-                           val_fs, RAYWHITE);
+            draw_text_font(&ui_font, "RUN", run_col_x, cap_y, cap_fs, COL_CAPTION);
+            result_y = cap_y + cap_fs + 4.0f * scale;
+            draw_text_font(&ui_font, tick->result, rx, result_y, mode_fs, result_c);
+
+            (void)snprintf(run_text, sizeof(run_text), "%d", tick->run);
+            draw_text_font(&ui_font, run_text, run_col_x, result_y, mode_fs, result_c);
         }
 
         /* Divider */
