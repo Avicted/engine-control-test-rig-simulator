@@ -1497,12 +1497,12 @@ static void run_visualizer(ScenarioSet *scenario_set)
                            ? SHORT_SCENARIO_TICKS_PER_SECOND
                            : DEFAULT_TICKS_PER_SECOND;
 
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Engine Control Scenario Visualizer");
     SetTargetFPS(60);
     SetExitKey(KEY_NULL);
 
-    ui_font = LoadFontEx(FONT_PATH, 28, NULL, 0);
+    ui_font = LoadFontEx(FONT_PATH, 64, NULL, 0);
     if ((ui_font.texture.id > 0U) && (ui_font.glyphCount > 0))
     {
         SetTextureFilter(ui_font.texture, TEXTURE_FILTER_POINT);
@@ -1745,11 +1745,11 @@ static void run_visualizer(ScenarioSet *scenario_set)
             scen_sz = MeasureTextEx(ui_font, scenario->scenario, FS_SCEN_NAME * scale, 1.0f);
             (void)snprintf(meta_text, sizeof(meta_text), "%s   EXPECTED: %s",
                            scenario->requirement_id, scenario->expected);
-            meta_x = pad + scen_sz.x + 16.0f * scale;
-            meta_y = 23.0f * scale + (FS_SCEN_NAME - FS_KEY_HINT) * 0.5f * scale;
+            meta_x = pad + scen_sz.x + 32.0f * scale;
+            meta_y = 18.0f * scale + (FS_SCEN_NAME - FS_KEY_HINT) * 0.5f * scale;
             if (meta_x < (badge_x - 220.0f * scale))
             {
-                draw_text_font(&ui_font, meta_text, meta_x, meta_y, FS_KEY_HINT * scale, COL_SCEN_COUNTER);
+                draw_text_font(&ui_font, meta_text, meta_x, meta_y, FS_SCEN_NAME * scale, COL_SCEN_COUNTER);
             }
 
             DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BG);
