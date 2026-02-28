@@ -364,4 +364,4 @@ The following are natural extensions intentionally left out of scope:
 
 ## License
 
-MIT License.
+GPL-3.0 License. See [LICENSE](LICENSE) for details.
