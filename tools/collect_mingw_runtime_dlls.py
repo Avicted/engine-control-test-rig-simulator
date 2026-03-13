@@ -31,6 +31,7 @@ def is_windows_system_dll(dll_name: str) -> bool:
         "COMDLG32.DLL",
         "GDI32.DLL",
         "KERNEL32.DLL",
+        "MSVCRT.DLL",
         "OLE32.DLL",
         "SHELL32.DLL",
         "USER32.DLL",
