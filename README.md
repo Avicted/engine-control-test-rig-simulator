@@ -195,6 +195,25 @@ Expected CLI behavior:
 
 The visualization program reads JSON output only - it cannot call simulator internals or modify simulation state.
 
+The default visualizer input file, `visualization/scenario.json`, is generated from the scripted scenario files under `scenarios/`.
+
+Generate and run it with:
+
+```bash
+make generate-visualization-json
+make visualizer
+make run-visualizer JSON=visualization/scenario.json
+```
+
+Generation flow:
+
+- `make generate-visualization-json` runs `tools/generate_visualization_scenario_json.py`
+- The helper script executes `./build/testrig --script <scenario.txt> --json` once for each scripted scenario file
+- It combines those per-scenario JSON payloads into a single visualization bundle
+- The combined output is written to `visualization/scenario.json` by default
+
+The generator script also accepts `--testrig`, `--scenarios-dir`, and `--output` to override the executable path, scenario source directory, and output location.
+
 Features:
 
 - Animated dashboard playback with timeline graphs
