@@ -17,7 +17,31 @@ jobs:
       - name: Install Linux release dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc make python3 libraylib-dev
+          sudo apt-get install -y \
+            gcc \
+            make \
+            python3 \
+            cmake \
+            git \
+            pkg-config \
+            libasound2-dev \
+            libgl1-mesa-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxrandr-dev
+
+      - name: Build and install Raylib
+        run: |
+          mkdir -p ./.cache
+          git clone --depth 1 https://github.com/raysan5/raylib.git ./.cache/raylib-linux-src
+          cmake -S ./.cache/raylib-linux-src -B ./.cache/raylib-linux-build \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_GAMES=OFF
+          cmake --build ./.cache/raylib-linux-build -j2
+          sudo cmake --install ./.cache/raylib-linux-build
+          sudo ldconfig
 
       - name: Build Linux release bundle
         run: |
