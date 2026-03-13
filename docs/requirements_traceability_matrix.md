@@ -104,7 +104,7 @@ Named scenario routing in `run_named_scenario_with_json()` uses `scenario_catalo
 | REQ-ENG-002 | `control_oil_persistence_boundary`, `control_oil_recovery_reset` |
 | REQ-ENG-003 | `control_combined_warning`, `control_single_tick_threshold`, `control_output_clamp_*` |
 | REQ-ENG-000 | `state_illegal_transition`, `state_legal_transitions`, `state_init_starting_running`, `state_update_*`, `state_start_*`, `state_mode_str_*` |
-| REQ-ENG-CAL-001 | `control_reset_calibration`, `control_configure_*` |
+| REQ-ENG-CAL-001 | `control_reset_reconfigure`, `control_configure_*` |
 | REQ-ENG-PHY-001 | `physics_default`, `physics_configure`, `physics_configure_twice`, `physics_configure_invalid`, `physics_reset`, `physics_active`, `physics_affects_update` |
 | REQ-ENG-WD-001 | `hal_wd_disabled_default`, `hal_wd_configure_kick`, `hal_wd_expires`, `hal_wd_too_large`, `hal_wd_disable_after` |
 | REQ-ENG-VOTE-001 | `hal_vote_single`, `hal_vote_dual_agree`, `hal_vote_dual_disagree`, `hal_vote_null_out`, `hal_vote_clears` |

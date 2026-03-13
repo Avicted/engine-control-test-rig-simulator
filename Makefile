@@ -54,7 +54,6 @@ LDFLAGS = -lm
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 VALGRIND ?= valgrind
 VALGRIND_ARGS = --leak-check=full --show-leak-kinds=all --track-origins=yes --errors-for-leak-kinds=all --error-exitcode=1
-CI_VALGRIND ?= 0
 LCOV_RC_OPTS ?= --rc derive_function_end_line=0
 
 all: $(TARGET)
@@ -298,7 +297,7 @@ analyze-valgrind: $(VALGRIND_TARGET) $(VALGRIND_UNIT_TEST_TARGET)
 	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
 	$(VALGRIND) $(VALGRIND_ARGS) $(VALGRIND_TARGET) --script scenarios/normal_operation.txt --strict > /dev/null
 
-analyze: analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers
+analyze: analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers analyze-valgrind
 
 test-all: validate-requirements test-unit $(TARGET) validate-json-contract validate-json validate-scripted-scenarios validate-runtime-config validate-json-error-contract
 	$(TARGET) --run-all --json > /dev/null
@@ -357,9 +356,6 @@ validate-schema-compat: $(TARGET)
 
 ci-check: all debug analyze test-all coverage determinism-check check-viz-boundary validate-schema-compat
 	$(TARGET) --run-all --json > /dev/null
-	@if [ "$(CI_VALGRIND)" = "1" ]; then \
-		$(MAKE) analyze-valgrind CC="$(CC)"; \
-	fi
 
 docs:
 	@command -v doxygen >/dev/null 2>&1 || { echo "doxygen not found, skipping docs"; exit 0; }

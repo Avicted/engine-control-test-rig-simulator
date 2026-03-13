@@ -3,6 +3,15 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.3.2] - 2026-03-13
+
+### Changed
+- CI workflow simplified into a clang quality gate and focused gcc validation job, with redundant duplicate checks removed.
+- `make analyze` now includes every `analyze-*` target, including valgrind.
+
+### Fixed
+- GitHub Actions no longer reruns CI on merge commits pushed to `main` after a pull request has already been validated.
+
 ## [1.3.1] - 2026-02-26
 
 ### Fixed
