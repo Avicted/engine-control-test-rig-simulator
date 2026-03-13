@@ -187,15 +187,44 @@ Expected CLI behavior:
 
 ## Raylib Visualization (Read-Only)
 
-![Raylib Visualizer Screenshot](visualization/visualizer_example.png)
+![Theme default](visualization/visualizer_example_theme_default.png)
+![Theme dos](visualization/visualizer_example_theme_dos.png)
+![Theme onyx](visualization/visualizer_example_theme_onyx.png)
+![Theme gruvbox](visualization/visualizer_example_theme_gruvbox.png)
+![Theme light](visualization/visualizer_example_theme_light.png)
 
 The visualization program reads JSON output only - it cannot call simulator internals or modify simulation state.
+
+The default visualizer input file, `visualization/scenario.json`, is generated from the scripted scenario files under `scenarios/`.
+
+Generate and run it with:
+
+```bash
+make generate-visualization-json
+make visualizer
+make run-visualizer JSON=visualization/scenario.json
+```
+
+Generation flow:
+
+- `make generate-visualization-json` runs `tools/generate_visualization_scenario_json.py`
+- The helper script executes `./build/testrig --script <scenario.txt> --json` once for each scripted scenario file
+- It combines those per-scenario JSON payloads into a single visualization bundle
+- The combined output is written to `visualization/scenario.json` by default
+
+The generator script also accepts `--testrig`, `--scenarios-dir`, and `--output` to override the executable path, scenario source directory, and output location.
 
 Features:
 
 - Animated dashboard playback with timeline graphs
 - Threshold overlays and scrubbable tick slider
 - Multi-scenario switching with cumulative statistics
+- Switchable visual themes: default, DOS, onyx, gruvbox, light
+
+Theme selection:
+
+- Start with `--theme default`, `--theme dos`, `--theme onyx`, `--theme gruvbox`, or `--theme light`
+- Press `T` while the visualizer is running to cycle between themes
 
 
 

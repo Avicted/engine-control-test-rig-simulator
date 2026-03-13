@@ -1,59 +1,412 @@
 {
   "schema_version": "1.0.0",
   "software_version": "1.3.1",
-  "build_commit": "2ee439a",
+  "build_commit": "7a571c3",
   "scenarios": [
     {
-      "scenario": "normal_operation",
-      "requirement_id": "REQ-ENG-003",
+      "scenario": "cold_start_warmup_and_ramp_high_temp_shutdown",
+      "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2200.00, "temp": 76.00, "oil": 3.20, "run": 1, "result": "OK", "control": 31.25, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2600.00, "temp": 80.00, "oil": 3.10, "run": 1, "result": "OK", "control": 33.25, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 3000.00, "temp": 83.00, "oil": 3.00, "run": 1, "result": "OK", "control": 35.50, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 3200.00, "temp": 84.50, "oil": 2.90, "run": 1, "result": "OK", "control": 36.12, "engine_mode": "RUNNING"}
-      ],
-      "expected": "OK",
-      "actual": "OK",
-      "pass": true
-    },
-    {
-      "scenario": "overheat_lt_persistence",
-      "requirement_id": "REQ-ENG-001",
-      "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2400.00, "temp": 96.00, "oil": 3.10, "run": 1, "result": "OK", "control": 27.25, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2400.00, "temp": 97.00, "oil": 3.10, "run": 1, "result": "OK", "control": 27.00, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2400.00, "temp": 90.00, "oil": 3.10, "run": 1, "result": "OK", "control": 28.75, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 2400.00, "temp": 89.00, "oil": 3.10, "run": 1, "result": "OK", "control": 29.00, "engine_mode": "RUNNING"}
-      ],
-      "expected": "OK",
-      "actual": "OK",
-      "pass": true
-    },
-    {
-      "scenario": "overheat_ge_persistence",
-      "requirement_id": "REQ-ENG-001",
-      "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2500.00, "temp": 96.00, "oil": 3.00, "run": 1, "result": "OK", "control": 27.25, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2500.00, "temp": 97.00, "oil": 3.00, "run": 1, "result": "OK", "control": 27.00, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2500.00, "temp": 98.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 26.75, "engine_mode": "WARNING"},
-        {"tick": 4, "rpm": 2500.00, "temp": 99.00, "oil": 3.00, "run": 1, "result": "SHUTDOWN", "control": 26.50, "engine_mode": "SHUTDOWN"}
-      ],
-      "expected": "SHUTDOWN",
-      "actual": "SHUTDOWN",
-      "pass": true
-    },
-    {
-      "scenario": "oil_low_ge_persistence",
-      "requirement_id": "REQ-ENG-002",
-      "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2600.00, "temp": 82.00, "oil": 2.40, "run": 1, "result": "OK", "control": 25.75, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2600.00, "temp": 82.00, "oil": 2.30, "run": 1, "result": "OK", "control": 24.75, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2600.00, "temp": 82.00, "oil": 2.20, "run": 1, "result": "WARNING", "control": 23.75, "engine_mode": "WARNING"},
-        {"tick": 4, "rpm": 2600.00, "temp": 82.00, "oil": 2.10, "run": 1, "result": "SHUTDOWN", "control": 22.75, "engine_mode": "SHUTDOWN"}
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 800.0,
+          "temp": 44.0,
+          "oil": 3.8,
+          "run": 1,
+          "result": "OK",
+          "control": 31.25,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 1100.0,
+          "temp": 49.0,
+          "oil": 3.7,
+          "run": 1,
+          "result": "OK",
+          "control": 32.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 1400.0,
+          "temp": 54.0,
+          "oil": 3.7,
+          "run": 1,
+          "result": "OK",
+          "control": 33.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 1700.0,
+          "temp": 58.5,
+          "oil": 3.6,
+          "run": 1,
+          "result": "OK",
+          "control": 34.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 5,
+          "rpm": 2000.0,
+          "temp": 62.0,
+          "oil": 3.5,
+          "run": 1,
+          "result": "OK",
+          "control": 35.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 6,
+          "rpm": 2200.0,
+          "temp": 65.5,
+          "oil": 3.4,
+          "run": 1,
+          "result": "OK",
+          "control": 35.88,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 7,
+          "rpm": 2400.0,
+          "temp": 68.0,
+          "oil": 3.4,
+          "run": 1,
+          "result": "OK",
+          "control": 37.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 8,
+          "rpm": 2600.0,
+          "temp": 70.5,
+          "oil": 3.3,
+          "run": 1,
+          "result": "OK",
+          "control": 37.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 9,
+          "rpm": 2800.0,
+          "temp": 73.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 38.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 10,
+          "rpm": 3000.0,
+          "temp": 75.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 39.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 11,
+          "rpm": 3100.0,
+          "temp": 77.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 39.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 12,
+          "rpm": 3200.0,
+          "temp": 78.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 39.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 13,
+          "rpm": 3300.0,
+          "temp": 80.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 39.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 14,
+          "rpm": 3400.0,
+          "temp": 90.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 37.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 15,
+          "rpm": 3400.0,
+          "temp": 92.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 37.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 16,
+          "rpm": 3400.0,
+          "temp": 92.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 37.12,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 17,
+          "rpm": 3400.0,
+          "temp": 97.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 18,
+          "rpm": 3300.0,
+          "temp": 98.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 34.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 19,
+          "rpm": 3100.0,
+          "temp": 96.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 33.25,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 20,
+          "rpm": 2900.0,
+          "temp": 96.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 32.12,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 21,
+          "rpm": 2700.0,
+          "temp": 95.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 30.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 22,
+          "rpm": 2400.0,
+          "temp": 94.5,
+          "oil": 3.2,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 28.62,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 23,
+          "rpm": 2100.0,
+          "temp": 90.0,
+          "oil": 3.3,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 27.75,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 24,
+          "rpm": 1700.0,
+          "temp": 90.5,
+          "oil": 3.4,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 24.62,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 25,
+          "rpm": 1300.0,
+          "temp": 90.0,
+          "oil": 3.5,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 21.75,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 26,
+          "rpm": 1250.0,
+          "temp": 90.0,
+          "oil": 3.4,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 20.25,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 27,
+          "rpm": 1200.0,
+          "temp": 90.0,
+          "oil": 3.4,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 19.75,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 28,
+          "rpm": 1100.0,
+          "temp": 58.0,
+          "oil": 3.5,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 27.75,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 29,
+          "rpm": 1000.0,
+          "temp": 55.0,
+          "oil": 3.6,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 28.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 30,
+          "rpm": 900.0,
+          "temp": 52.0,
+          "oil": 3.7,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.25,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 31,
+          "rpm": 800.0,
+          "temp": 50.0,
+          "oil": 3.7,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 28.75,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 32,
+          "rpm": 700.0,
+          "temp": 48.0,
+          "oil": 3.8,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.25,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 33,
+          "rpm": 600.0,
+          "temp": 45.0,
+          "oil": 3.8,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.0,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 34,
+          "rpm": 500.0,
+          "temp": 43.0,
+          "oil": 3.9,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 35,
+          "rpm": 400.0,
+          "temp": 41.0,
+          "oil": 3.9,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.0,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 36,
+          "rpm": 300.0,
+          "temp": 39.0,
+          "oil": 4.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 37,
+          "rpm": 200.0,
+          "temp": 37.0,
+          "oil": 4.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.0,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 38,
+          "rpm": 100.0,
+          "temp": 35.0,
+          "oil": 4.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 39,
+          "rpm": 0.0,
+          "temp": 33.0,
+          "oil": 4.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 29.0,
+          "engine_mode": "SHUTDOWN"
+        }
       ],
       "expected": "SHUTDOWN",
       "actual": "SHUTDOWN",
@@ -61,157 +414,959 @@
     },
     {
       "scenario": "combined_warning_persistence",
-      "requirement_id": "REQ-ENG-003",
+      "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 3600.00, "temp": 86.00, "oil": 3.00, "run": 1, "result": "OK", "control": 40.75, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 3600.00, "temp": 87.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 40.50, "engine_mode": "WARNING"},
-        {"tick": 3, "rpm": 3300.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 39.25, "engine_mode": "WARNING"}
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 3600.0,
+          "temp": 86.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 40.75,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 3600.0,
+          "temp": 87.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 40.5,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 3300.0,
+          "temp": 80.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 39.25,
+          "engine_mode": "WARNING"
+        }
       ],
       "expected": "WARNING",
       "actual": "WARNING",
       "pass": true
     },
     {
-      "scenario": "cold_start",
-      "requirement_id": "REQ-ENG-003",
+      "scenario": "high_load_warning_then_recovery",
+      "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 800.00, "temp": 44.00, "oil": 3.80, "run": 1, "result": "OK", "control": 31.25, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 1100.00, "temp": 49.00, "oil": 3.70, "run": 1, "result": "OK", "control": 32.00, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 1400.00, "temp": 54.00, "oil": 3.70, "run": 1, "result": "OK", "control": 33.75, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 1700.00, "temp": 58.50, "oil": 3.60, "run": 1, "result": "OK", "control": 34.62, "engine_mode": "RUNNING"},
-        {"tick": 5, "rpm": 2000.00, "temp": 62.00, "oil": 3.50, "run": 1, "result": "OK", "control": 35.75, "engine_mode": "RUNNING"},
-        {"tick": 6, "rpm": 2200.00, "temp": 65.50, "oil": 3.40, "run": 1, "result": "OK", "control": 35.88, "engine_mode": "RUNNING"},
-        {"tick": 7, "rpm": 2400.00, "temp": 68.00, "oil": 3.40, "run": 1, "result": "OK", "control": 37.25, "engine_mode": "RUNNING"},
-        {"tick": 8, "rpm": 2600.00, "temp": 70.50, "oil": 3.30, "run": 1, "result": "OK", "control": 37.62, "engine_mode": "RUNNING"},
-        {"tick": 9, "rpm": 2800.00, "temp": 73.00, "oil": 3.20, "run": 1, "result": "OK", "control": 38.00, "engine_mode": "RUNNING"},
-        {"tick": 10, "rpm": 3000.00, "temp": 75.00, "oil": 3.20, "run": 1, "result": "OK", "control": 39.50, "engine_mode": "RUNNING"},
-        {"tick": 11, "rpm": 3100.00, "temp": 77.00, "oil": 3.10, "run": 1, "result": "OK", "control": 39.00, "engine_mode": "RUNNING"},
-        {"tick": 12, "rpm": 3200.00, "temp": 78.50, "oil": 3.10, "run": 1, "result": "OK", "control": 39.62, "engine_mode": "RUNNING"},
-        {"tick": 13, "rpm": 3300.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "OK", "control": 39.25, "engine_mode": "RUNNING"},
-        {"tick": 14, "rpm": 3400.00, "temp": 81.00, "oil": 3.00, "run": 1, "result": "OK", "control": 40.00, "engine_mode": "RUNNING"},
-        {"tick": 15, "rpm": 3400.00, "temp": 82.00, "oil": 3.00, "run": 1, "result": "OK", "control": 39.75, "engine_mode": "RUNNING"},
-        {"tick": 16, "rpm": 3400.00, "temp": 82.50, "oil": 3.00, "run": 1, "result": "OK", "control": 39.62, "engine_mode": "RUNNING"},
-        {"tick": 17, "rpm": 3400.00, "temp": 82.00, "oil": 3.00, "run": 1, "result": "OK", "control": 39.75, "engine_mode": "RUNNING"},
-        {"tick": 18, "rpm": 3300.00, "temp": 81.00, "oil": 3.00, "run": 1, "result": "OK", "control": 39.00, "engine_mode": "RUNNING"},
-        {"tick": 19, "rpm": 3100.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "OK", "control": 37.25, "engine_mode": "RUNNING"},
-        {"tick": 20, "rpm": 2900.00, "temp": 78.50, "oil": 3.10, "run": 1, "result": "OK", "control": 36.62, "engine_mode": "RUNNING"},
-        {"tick": 21, "rpm": 2700.00, "temp": 77.00, "oil": 3.10, "run": 1, "result": "OK", "control": 35.00, "engine_mode": "RUNNING"},
-        {"tick": 22, "rpm": 2400.00, "temp": 74.50, "oil": 3.20, "run": 1, "result": "OK", "control": 33.62, "engine_mode": "RUNNING"},
-        {"tick": 23, "rpm": 2100.00, "temp": 71.00, "oil": 3.30, "run": 1, "result": "OK", "control": 32.50, "engine_mode": "RUNNING"},
-        {"tick": 24, "rpm": 1700.00, "temp": 67.50, "oil": 3.40, "run": 1, "result": "OK", "control": 30.38, "engine_mode": "RUNNING"},
-        {"tick": 25, "rpm": 1300.00, "temp": 63.00, "oil": 3.50, "run": 1, "result": "OK", "control": 28.50, "engine_mode": "RUNNING"}
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2000.0,
+          "temp": 70.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 30.75,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2400.0,
+          "temp": 73.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 34.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2700.0,
+          "temp": 75.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 35.38,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 3000.0,
+          "temp": 78.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 37.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 5,
+          "rpm": 3200.0,
+          "temp": 80.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 38.12,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 6,
+          "rpm": 3400.0,
+          "temp": 82.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 39.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 7,
+          "rpm": 3500.0,
+          "temp": 85.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 40.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 8,
+          "rpm": 3600.0,
+          "temp": 87.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 40.5,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 9,
+          "rpm": 3700.0,
+          "temp": 88.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 41.25,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 10,
+          "rpm": 3500.0,
+          "temp": 87.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 39.5,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 11,
+          "rpm": 3300.0,
+          "temp": 86.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 37.75,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 12,
+          "rpm": 3100.0,
+          "temp": 84.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "WARNING",
+          "control": 37.12,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 13,
+          "rpm": 2900.0,
+          "temp": 82.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "WARNING",
+          "control": 35.75,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 14,
+          "rpm": 2700.0,
+          "temp": 79.5,
+          "oil": 3.2,
+          "run": 1,
+          "result": "WARNING",
+          "control": 35.38,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 15,
+          "rpm": 2500.0,
+          "temp": 77.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "WARNING",
+          "control": 34.0,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 16,
+          "rpm": 2300.0,
+          "temp": 74.5,
+          "oil": 3.2,
+          "run": 1,
+          "result": "WARNING",
+          "control": 32.62,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 17,
+          "rpm": 2100.0,
+          "temp": 72.0,
+          "oil": 3.3,
+          "run": 1,
+          "result": "WARNING",
+          "control": 32.25,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 18,
+          "rpm": 2000.0,
+          "temp": 70.0,
+          "oil": 3.3,
+          "run": 1,
+          "result": "WARNING",
+          "control": 31.75,
+          "engine_mode": "WARNING"
+        }
+      ],
+      "expected": "WARNING",
+      "actual": "WARNING",
+      "pass": true
+    },
+    {
+      "scenario": "intermittent_oil_then_combined_fault",
+      "requirement_id": "REQ-ENG-SCRIPT",
+      "ticks": [
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2000.0,
+          "temp": 70.0,
+          "oil": 3.4,
+          "run": 1,
+          "result": "OK",
+          "control": 32.75,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2200.0,
+          "temp": 72.0,
+          "oil": 3.3,
+          "run": 1,
+          "result": "OK",
+          "control": 33.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2400.0,
+          "temp": 74.0,
+          "oil": 2.4,
+          "run": 1,
+          "result": "OK",
+          "control": 25.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 2500.0,
+          "temp": 76.0,
+          "oil": 2.3,
+          "run": 1,
+          "result": "OK",
+          "control": 25.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 5,
+          "rpm": 2500.0,
+          "temp": 76.0,
+          "oil": 2.6,
+          "run": 1,
+          "result": "OK",
+          "control": 28.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 6,
+          "rpm": 2700.0,
+          "temp": 78.0,
+          "oil": 2.8,
+          "run": 1,
+          "result": "OK",
+          "control": 31.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 7,
+          "rpm": 2900.0,
+          "temp": 80.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 35.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 8,
+          "rpm": 3100.0,
+          "temp": 82.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 9,
+          "rpm": 3300.0,
+          "temp": 83.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 38.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 10,
+          "rpm": 3500.0,
+          "temp": 85.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 40.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 11,
+          "rpm": 3600.0,
+          "temp": 86.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 40.75,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 12,
+          "rpm": 3500.0,
+          "temp": 87.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 39.5,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 13,
+          "rpm": 3200.0,
+          "temp": 85.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 37.0,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 14,
+          "rpm": 3000.0,
+          "temp": 83.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 35.5,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 15,
+          "rpm": 2800.0,
+          "temp": 80.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 34.25,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 16,
+          "rpm": 2600.0,
+          "temp": 77.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "WARNING",
+          "control": 34.0,
+          "engine_mode": "WARNING"
+        }
+      ],
+      "expected": "WARNING",
+      "actual": "WARNING",
+      "pass": true
+    },
+    {
+      "scenario": "normal_operation",
+      "requirement_id": "REQ-ENG-SCRIPT",
+      "ticks": [
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2200.0,
+          "temp": 76.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 31.25,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2600.0,
+          "temp": 80.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 33.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 3000.0,
+          "temp": 83.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 35.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 3200.0,
+          "temp": 84.5,
+          "oil": 2.9,
+          "run": 1,
+          "result": "OK",
+          "control": 36.12,
+          "engine_mode": "RUNNING"
+        }
       ],
       "expected": "OK",
       "actual": "OK",
       "pass": true
     },
     {
-      "scenario": "high_load",
-      "requirement_id": "REQ-ENG-003",
+      "scenario": "oil_low_persistent_shutdown",
+      "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2000.00, "temp": 70.00, "oil": 3.20, "run": 1, "result": "OK", "control": 30.75, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2400.00, "temp": 73.00, "oil": 3.20, "run": 1, "result": "OK", "control": 34.00, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2700.00, "temp": 75.50, "oil": 3.10, "run": 1, "result": "OK", "control": 35.38, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 3000.00, "temp": 78.00, "oil": 3.10, "run": 1, "result": "OK", "control": 37.75, "engine_mode": "RUNNING"},
-        {"tick": 5, "rpm": 3200.00, "temp": 80.50, "oil": 3.00, "run": 1, "result": "OK", "control": 38.12, "engine_mode": "RUNNING"},
-        {"tick": 6, "rpm": 3400.00, "temp": 82.50, "oil": 3.00, "run": 1, "result": "OK", "control": 39.62, "engine_mode": "RUNNING"},
-        {"tick": 7, "rpm": 3500.00, "temp": 85.00, "oil": 3.00, "run": 1, "result": "OK", "control": 40.00, "engine_mode": "RUNNING"},
-        {"tick": 8, "rpm": 3600.00, "temp": 87.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 40.50, "engine_mode": "WARNING"},
-        {"tick": 9, "rpm": 3700.00, "temp": 88.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 41.25, "engine_mode": "WARNING"},
-        {"tick": 10, "rpm": 3500.00, "temp": 87.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 39.50, "engine_mode": "WARNING"},
-        {"tick": 11, "rpm": 3300.00, "temp": 86.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 37.75, "engine_mode": "WARNING"},
-        {"tick": 12, "rpm": 3100.00, "temp": 84.50, "oil": 3.10, "run": 1, "result": "WARNING", "control": 37.12, "engine_mode": "WARNING"},
-        {"tick": 13, "rpm": 2900.00, "temp": 82.00, "oil": 3.10, "run": 1, "result": "WARNING", "control": 35.75, "engine_mode": "WARNING"},
-        {"tick": 14, "rpm": 2700.00, "temp": 79.50, "oil": 3.20, "run": 1, "result": "WARNING", "control": 35.38, "engine_mode": "WARNING"},
-        {"tick": 15, "rpm": 2500.00, "temp": 77.00, "oil": 3.20, "run": 1, "result": "WARNING", "control": 34.00, "engine_mode": "WARNING"},
-        {"tick": 16, "rpm": 2300.00, "temp": 74.50, "oil": 3.20, "run": 1, "result": "WARNING", "control": 32.62, "engine_mode": "WARNING"},
-        {"tick": 17, "rpm": 2100.00, "temp": 72.00, "oil": 3.30, "run": 1, "result": "WARNING", "control": 32.25, "engine_mode": "WARNING"},
-        {"tick": 18, "rpm": 2000.00, "temp": 70.00, "oil": 3.30, "run": 1, "result": "WARNING", "control": 31.75, "engine_mode": "WARNING"}
-      ],
-      "expected": "WARNING",
-      "actual": "WARNING",
-      "pass": true
-    },
-    {
-      "scenario": "oil_drain",
-      "requirement_id": "REQ-ENG-002",
-      "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2500.00, "temp": 74.00, "oil": 3.50, "run": 1, "result": "OK", "control": 37.75, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2700.00, "temp": 76.00, "oil": 3.40, "run": 1, "result": "OK", "control": 38.25, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2900.00, "temp": 77.50, "oil": 3.30, "run": 1, "result": "OK", "control": 38.88, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 3000.00, "temp": 78.50, "oil": 3.20, "run": 1, "result": "OK", "control": 38.62, "engine_mode": "RUNNING"},
-        {"tick": 5, "rpm": 3000.00, "temp": 79.50, "oil": 3.10, "run": 1, "result": "OK", "control": 37.38, "engine_mode": "RUNNING"},
-        {"tick": 6, "rpm": 3000.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "OK", "control": 36.25, "engine_mode": "RUNNING"},
-        {"tick": 7, "rpm": 3000.00, "temp": 80.00, "oil": 2.90, "run": 1, "result": "OK", "control": 35.25, "engine_mode": "RUNNING"},
-        {"tick": 8, "rpm": 3000.00, "temp": 80.50, "oil": 2.80, "run": 1, "result": "OK", "control": 34.12, "engine_mode": "RUNNING"},
-        {"tick": 9, "rpm": 2900.00, "temp": 80.00, "oil": 2.70, "run": 1, "result": "OK", "control": 32.25, "engine_mode": "RUNNING"},
-        {"tick": 10, "rpm": 2800.00, "temp": 79.50, "oil": 2.60, "run": 1, "result": "OK", "control": 30.38, "engine_mode": "RUNNING"},
-        {"tick": 11, "rpm": 2700.00, "temp": 79.00, "oil": 2.50, "run": 1, "result": "OK", "control": 28.50, "engine_mode": "RUNNING"},
-        {"tick": 12, "rpm": 2600.00, "temp": 78.50, "oil": 2.40, "run": 1, "result": "OK", "control": 26.62, "engine_mode": "RUNNING"},
-        {"tick": 13, "rpm": 2500.00, "temp": 77.50, "oil": 2.30, "run": 1, "result": "OK", "control": 24.88, "engine_mode": "RUNNING"},
-        {"tick": 14, "rpm": 2500.00, "temp": 77.00, "oil": 2.20, "run": 1, "result": "WARNING", "control": 24.00, "engine_mode": "WARNING"},
-        {"tick": 15, "rpm": 2500.00, "temp": 76.50, "oil": 2.10, "run": 1, "result": "SHUTDOWN", "control": 23.12, "engine_mode": "SHUTDOWN"},
-        {"tick": 16, "rpm": 2500.00, "temp": 76.00, "oil": 2.00, "run": 1, "result": "SHUTDOWN", "control": 22.25, "engine_mode": "SHUTDOWN"}
-      ],
-      "expected": "SHUTDOWN",
-      "actual": "SHUTDOWN",
-      "pass": true
-    },
-    {
-      "scenario": "thermal_runaway",
-      "requirement_id": "REQ-ENG-001",
-      "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2200.00, "temp": 68.00, "oil": 3.30, "run": 1, "result": "OK", "control": 34.25, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2500.00, "temp": 71.00, "oil": 3.20, "run": 1, "result": "OK", "control": 35.50, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2800.00, "temp": 74.00, "oil": 3.10, "run": 1, "result": "OK", "control": 36.75, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 3000.00, "temp": 76.50, "oil": 3.10, "run": 1, "result": "OK", "control": 38.12, "engine_mode": "RUNNING"},
-        {"tick": 5, "rpm": 3200.00, "temp": 79.00, "oil": 3.00, "run": 1, "result": "OK", "control": 38.50, "engine_mode": "RUNNING"},
-        {"tick": 6, "rpm": 3400.00, "temp": 81.50, "oil": 3.00, "run": 1, "result": "OK", "control": 39.88, "engine_mode": "RUNNING"},
-        {"tick": 7, "rpm": 3400.00, "temp": 84.00, "oil": 3.00, "run": 1, "result": "OK", "control": 39.25, "engine_mode": "RUNNING"},
-        {"tick": 8, "rpm": 3400.00, "temp": 87.50, "oil": 3.00, "run": 1, "result": "OK", "control": 38.38, "engine_mode": "RUNNING"},
-        {"tick": 9, "rpm": 3400.00, "temp": 90.50, "oil": 3.00, "run": 1, "result": "OK", "control": 37.62, "engine_mode": "RUNNING"},
-        {"tick": 10, "rpm": 3400.00, "temp": 93.00, "oil": 3.00, "run": 1, "result": "OK", "control": 37.00, "engine_mode": "RUNNING"},
-        {"tick": 11, "rpm": 3400.00, "temp": 95.50, "oil": 3.00, "run": 1, "result": "OK", "control": 36.38, "engine_mode": "RUNNING"},
-        {"tick": 12, "rpm": 3400.00, "temp": 97.00, "oil": 3.00, "run": 1, "result": "OK", "control": 36.00, "engine_mode": "RUNNING"},
-        {"tick": 13, "rpm": 3400.00, "temp": 98.50, "oil": 3.00, "run": 1, "result": "WARNING", "control": 35.62, "engine_mode": "WARNING"},
-        {"tick": 14, "rpm": 3400.00, "temp": 99.00, "oil": 3.00, "run": 1, "result": "SHUTDOWN", "control": 35.50, "engine_mode": "SHUTDOWN"},
-        {"tick": 15, "rpm": 3400.00, "temp": 99.50, "oil": 3.00, "run": 1, "result": "SHUTDOWN", "control": 35.38, "engine_mode": "SHUTDOWN"}
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2600.0,
+          "temp": 82.0,
+          "oil": 2.4,
+          "run": 1,
+          "result": "OK",
+          "control": 25.75,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2600.0,
+          "temp": 82.0,
+          "oil": 2.3,
+          "run": 1,
+          "result": "OK",
+          "control": 24.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2600.0,
+          "temp": 82.0,
+          "oil": 2.2,
+          "run": 1,
+          "result": "WARNING",
+          "control": 23.75,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 2600.0,
+          "temp": 82.0,
+          "oil": 2.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 22.75,
+          "engine_mode": "SHUTDOWN"
+        }
       ],
       "expected": "SHUTDOWN",
       "actual": "SHUTDOWN",
       "pass": true
     },
     {
-      "scenario": "intermittent_oil",
-      "requirement_id": "REQ-ENG-002",
+      "scenario": "oil_pressure_gradual_drain",
+      "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
-        {"tick": 0, "rpm": 0.00, "temp": 25.00, "oil": 3.00, "run": 0, "result": "OK", "control": 0.00, "engine_mode": "INIT"},
-        {"tick": 1, "rpm": 2000.00, "temp": 70.00, "oil": 3.40, "run": 1, "result": "OK", "control": 32.75, "engine_mode": "STARTING"},
-        {"tick": 2, "rpm": 2200.00, "temp": 72.00, "oil": 3.30, "run": 1, "result": "OK", "control": 33.25, "engine_mode": "RUNNING"},
-        {"tick": 3, "rpm": 2400.00, "temp": 74.00, "oil": 2.40, "run": 1, "result": "OK", "control": 25.75, "engine_mode": "RUNNING"},
-        {"tick": 4, "rpm": 2500.00, "temp": 76.00, "oil": 2.30, "run": 1, "result": "OK", "control": 25.25, "engine_mode": "RUNNING"},
-        {"tick": 5, "rpm": 2500.00, "temp": 76.00, "oil": 2.60, "run": 1, "result": "OK", "control": 28.25, "engine_mode": "RUNNING"},
-        {"tick": 6, "rpm": 2700.00, "temp": 78.00, "oil": 2.80, "run": 1, "result": "OK", "control": 31.75, "engine_mode": "RUNNING"},
-        {"tick": 7, "rpm": 2900.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "OK", "control": 35.25, "engine_mode": "RUNNING"},
-        {"tick": 8, "rpm": 3100.00, "temp": 82.00, "oil": 3.00, "run": 1, "result": "OK", "control": 36.75, "engine_mode": "RUNNING"},
-        {"tick": 9, "rpm": 3300.00, "temp": 83.00, "oil": 3.00, "run": 1, "result": "OK", "control": 38.50, "engine_mode": "RUNNING"},
-        {"tick": 10, "rpm": 3500.00, "temp": 85.00, "oil": 3.00, "run": 1, "result": "OK", "control": 40.00, "engine_mode": "RUNNING"},
-        {"tick": 11, "rpm": 3600.00, "temp": 86.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 40.75, "engine_mode": "WARNING"},
-        {"tick": 12, "rpm": 3500.00, "temp": 87.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 39.50, "engine_mode": "WARNING"},
-        {"tick": 13, "rpm": 3200.00, "temp": 85.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 37.00, "engine_mode": "WARNING"},
-        {"tick": 14, "rpm": 3000.00, "temp": 83.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 35.50, "engine_mode": "WARNING"},
-        {"tick": 15, "rpm": 2800.00, "temp": 80.00, "oil": 3.00, "run": 1, "result": "WARNING", "control": 34.25, "engine_mode": "WARNING"},
-        {"tick": 16, "rpm": 2600.00, "temp": 77.00, "oil": 3.10, "run": 1, "result": "WARNING", "control": 34.00, "engine_mode": "WARNING"}
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2500.0,
+          "temp": 74.0,
+          "oil": 3.5,
+          "run": 1,
+          "result": "OK",
+          "control": 37.75,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2700.0,
+          "temp": 76.0,
+          "oil": 3.4,
+          "run": 1,
+          "result": "OK",
+          "control": 38.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2900.0,
+          "temp": 77.5,
+          "oil": 3.3,
+          "run": 1,
+          "result": "OK",
+          "control": 38.88,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 3000.0,
+          "temp": 78.5,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 38.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 5,
+          "rpm": 3000.0,
+          "temp": 79.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 37.38,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 6,
+          "rpm": 3000.0,
+          "temp": 80.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 7,
+          "rpm": 3000.0,
+          "temp": 80.0,
+          "oil": 2.9,
+          "run": 1,
+          "result": "OK",
+          "control": 35.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 8,
+          "rpm": 3000.0,
+          "temp": 80.5,
+          "oil": 2.8,
+          "run": 1,
+          "result": "OK",
+          "control": 34.12,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 9,
+          "rpm": 2900.0,
+          "temp": 80.0,
+          "oil": 2.7,
+          "run": 1,
+          "result": "OK",
+          "control": 32.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 10,
+          "rpm": 2800.0,
+          "temp": 79.5,
+          "oil": 2.6,
+          "run": 1,
+          "result": "OK",
+          "control": 30.38,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 11,
+          "rpm": 2700.0,
+          "temp": 79.0,
+          "oil": 2.5,
+          "run": 1,
+          "result": "OK",
+          "control": 28.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 12,
+          "rpm": 2600.0,
+          "temp": 78.5,
+          "oil": 2.4,
+          "run": 1,
+          "result": "OK",
+          "control": 26.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 13,
+          "rpm": 2500.0,
+          "temp": 77.5,
+          "oil": 2.3,
+          "run": 1,
+          "result": "OK",
+          "control": 24.88,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 14,
+          "rpm": 2500.0,
+          "temp": 77.0,
+          "oil": 2.2,
+          "run": 1,
+          "result": "WARNING",
+          "control": 24.0,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 15,
+          "rpm": 2500.0,
+          "temp": 76.5,
+          "oil": 2.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 23.12,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 16,
+          "rpm": 2500.0,
+          "temp": 76.0,
+          "oil": 2.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 22.25,
+          "engine_mode": "SHUTDOWN"
+        }
       ],
-      "expected": "WARNING",
-      "actual": "WARNING",
+      "expected": "SHUTDOWN",
+      "actual": "SHUTDOWN",
+      "pass": true
+    },
+    {
+      "scenario": "overheat_persistent_shutdown",
+      "requirement_id": "REQ-ENG-SCRIPT",
+      "ticks": [
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2500.0,
+          "temp": 96.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 27.25,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2500.0,
+          "temp": 97.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 27.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2500.0,
+          "temp": 98.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 26.75,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 2500.0,
+          "temp": 99.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 26.5,
+          "engine_mode": "SHUTDOWN"
+        }
+      ],
+      "expected": "SHUTDOWN",
+      "actual": "SHUTDOWN",
+      "pass": true
+    },
+    {
+      "scenario": "thermal_runaway_with_load_surge",
+      "requirement_id": "REQ-ENG-SCRIPT",
+      "ticks": [
+        {
+          "tick": 0,
+          "rpm": 0.0,
+          "temp": 25.0,
+          "oil": 3.0,
+          "run": 0,
+          "result": "OK",
+          "control": 0.0,
+          "engine_mode": "INIT"
+        },
+        {
+          "tick": 1,
+          "rpm": 2200.0,
+          "temp": 68.0,
+          "oil": 3.3,
+          "run": 1,
+          "result": "OK",
+          "control": 34.25,
+          "engine_mode": "STARTING"
+        },
+        {
+          "tick": 2,
+          "rpm": 2500.0,
+          "temp": 71.0,
+          "oil": 3.2,
+          "run": 1,
+          "result": "OK",
+          "control": 35.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 3,
+          "rpm": 2800.0,
+          "temp": 74.0,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 36.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 4,
+          "rpm": 3000.0,
+          "temp": 76.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "OK",
+          "control": 38.12,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 5,
+          "rpm": 3200.0,
+          "temp": 79.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 38.5,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 6,
+          "rpm": 3400.0,
+          "temp": 81.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 39.88,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 7,
+          "rpm": 3400.0,
+          "temp": 84.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 39.25,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 8,
+          "rpm": 3400.0,
+          "temp": 87.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 38.38,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 9,
+          "rpm": 3400.0,
+          "temp": 90.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 37.62,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 10,
+          "rpm": 3400.0,
+          "temp": 93.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 37.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 11,
+          "rpm": 3400.0,
+          "temp": 95.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.38,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 12,
+          "rpm": 3400.0,
+          "temp": 97.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 13,
+          "rpm": 3400.0,
+          "temp": 98.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 35.62,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 14,
+          "rpm": 3400.0,
+          "temp": 99.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 35.5,
+          "engine_mode": "SHUTDOWN"
+        },
+        {
+          "tick": 15,
+          "rpm": 3400.0,
+          "temp": 99.5,
+          "oil": 3.0,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 35.38,
+          "engine_mode": "SHUTDOWN"
+        }
+      ],
+      "expected": "SHUTDOWN",
+      "actual": "SHUTDOWN",
       "pass": true
     }
   ],
-  "summary": {"passed": 10, "total": 10}
+  "summary": {
+    "passed": 9,
+    "total": 9
+  }
 }

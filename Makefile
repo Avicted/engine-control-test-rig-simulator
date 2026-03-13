@@ -12,7 +12,11 @@ UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
 VALGRIND_TARGET = $(BUILD_DIR)/testrig_valgrind
 VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind
 
-VISUALIZER_SRC = visualization/visualizer.c
+VISUALIZER_SRC = visualization/main.c \
+	visualization/visualizer_app.c \
+	visualization/visualizer_loader.c \
+	visualization/visualizer_playback.c \
+	visualization/visualizer_ui.c
 UNIT_TEST_SRCS = $(shell find tests/unit -type f -name '*.c' | sort)
 TIDY_SRCS = $(shell find src -type f -name '*.c' | sort)
 
@@ -117,6 +121,9 @@ run-visualizer: $(VISUALIZER_TARGET)
 		exit 1; \
 	fi
 	$(VISUALIZER_TARGET) "$(JSON)"
+
+generate-visualization-json: $(TARGET)
+	python3 tools/generate_visualization_scenario_json.py
 
 analyze-cppcheck:
 	cppcheck --enable=all --std=c11 --error-exitcode=1 \
