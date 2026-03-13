@@ -7,14 +7,14 @@
 int main(int argc, char **argv)
 {
     ScenarioSet scenario_set;
-    VisualizerThemeId initial_theme = VISUALIZER_THEME_MIDNIGHT;
+    VisualizerThemeId initial_theme = VISUALIZER_THEME_DEFAULT;
     int arg_index;
     int scenario_argc = 1;
 
     if ((argc < 2) || (argv == NULL))
     {
         (void)fprintf(stderr,
-                      "Usage: %s [--theme default|midnight|dos|dos-blue|onyx|light] <scenario.json> [more_scenarios.json ...]\n",
+                      "Usage: %s [--theme default|dos|dos-blue|onyx|gruvbox|light] <scenario.json> [more_scenarios.json ...]\n",
                       (argc > 0) ? argv[0] : "visualizer");
         return 1;
     }
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
             if (visualizer_parse_theme_id(argv[arg_index + 1], &initial_theme) == 0)
             {
                 (void)fprintf(stderr,
-                              "Unknown theme '%s'. Supported themes: default, midnight, dos, dos-blue, onyx, light.\n",
+                              "Unknown theme '%s'. Supported themes: default, dos, dos-blue, onyx, gruvbox, light.\n",
                               argv[arg_index + 1]);
                 return 1;
             }
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     if (scenario_argc < 2)
     {
         (void)fprintf(stderr,
-                      "Usage: %s [--theme default|midnight|dos|dos-blue|onyx|light] <scenario.json> [more_scenarios.json ...]\n",
+                      "Usage: %s [--theme default|dos|dos-blue|onyx|gruvbox|light] <scenario.json> [more_scenarios.json ...]\n",
                       (argc > 0) ? argv[0] : "visualizer");
         return 1;
     }

@@ -69,8 +69,8 @@ typedef struct
 } VisualizerTheme;
 
 static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
-    [VISUALIZER_THEME_MIDNIGHT] = {
-        .label = "MIDNIGHT",
+    [VISUALIZER_THEME_DEFAULT] = {
+        .label = "DEFAULT",
         .window_bg = (Color){9, 11, 18, 255},
         .grad_top = (Color){11, 14, 22, 255},
         .grad_bot = (Color){7, 9, 16, 255},
@@ -252,6 +252,67 @@ static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
         .slider_ring = (Color){118, 214, 202, 180},
         .replay_hint = (Color){154, 162, 182, 255},
     },
+    [VISUALIZER_THEME_GRUVBOX_DARK] = {
+        .label = "GRUVBOX",
+        .window_bg = (Color){29, 32, 33, 255},
+        .grad_top = (Color){40, 40, 40, 255},
+        .grad_bot = (Color){24, 26, 27, 255},
+        .panel_bg = (Color){40, 40, 40, 255},
+        .nav_bg = (Color){50, 48, 47, 255},
+        .timeline_bg = (Color){50, 48, 47, 255},
+        .bar_bg = (Color){60, 56, 54, 255},
+        .badge_bg = (Color){80, 73, 69, 255},
+        .slider_track_bg = (Color){60, 56, 54, 255},
+        .knob_shadow = (Color){0, 0, 0, 150},
+        .hdr_border = (Color){102, 92, 84, 255},
+        .panel_border = (Color){102, 92, 84, 255},
+        .timeline_border = (Color){124, 111, 100, 255},
+        .section_div = (Color){80, 73, 69, 255},
+        .timeline_subdiv = (Color){102, 92, 84, 255},
+        .fault_bar_bor = (Color){102, 92, 84, 255},
+        .bar_border = (Color){124, 111, 100, 255},
+        .slider_track_bor = (Color){124, 111, 100, 255},
+        .badge_border = (Color){146, 131, 116, 255},
+        .grid_line = (Color){124, 111, 100, 120},
+        .grid_bright = (Color){168, 153, 132, 190},
+        .grid_vert = (Color){102, 92, 84, 110},
+        .caption = (Color){168, 153, 132, 255},
+        .timeline_title = (Color){235, 219, 178, 255},
+        .speed_running = (Color){142, 192, 124, 255},
+        .scen_counter = (Color){213, 196, 161, 255},
+        .sublabel = (Color){189, 174, 147, 255},
+        .key = (Color){131, 165, 152, 255},
+        .key_desc = (Color){168, 153, 132, 255},
+        .meter_label = (Color){213, 196, 161, 255},
+        .tick_counter = (Color){251, 241, 199, 255},
+        .badge_text = (Color){235, 219, 178, 255},
+        .axis_label = (Color){213, 196, 161, 255},
+        .fault_pct_text = (Color){251, 241, 199, 255},
+        .primary_text = (Color){251, 241, 199, 255},
+        .knob_fill = (Color){251, 241, 199, 255},
+        .mode_default = (Color){213, 196, 161, 255},
+        .brak = (Color){146, 131, 116, 255},
+        .ok = (Color){184, 187, 38, 255},
+        .warning = (Color){250, 189, 47, 255},
+        .shutdown = (Color){251, 73, 52, 255},
+        .warning_fill = (Color){250, 189, 47, 190},
+        .shutdown_fill = (Color){251, 73, 52, 205},
+        .warning_dash = (Color){250, 189, 47, 160},
+        .shutdown_dash = (Color){251, 73, 52, 170},
+        .oil_shut_dash = (Color){254, 128, 25, 145},
+        .warning_tint = (Color){250, 189, 47, 24},
+        .shutdown_tint = (Color){251, 73, 52, 28},
+        .speed_paused = (Color){250, 189, 47, 220},
+        .end_notice = (Color){254, 128, 25, 255},
+        .playhead = (Color){251, 241, 199, 220},
+        .rpm = (Color){131, 165, 152, 255},
+        .temp = (Color){211, 134, 155, 255},
+        .oil = (Color){142, 192, 124, 255},
+        .ctrl = (Color){254, 128, 25, 255},
+        .slider_fill = (Color){131, 165, 152, 255},
+        .slider_ring = (Color){131, 165, 152, 190},
+        .replay_hint = (Color){189, 174, 147, 255},
+    },
     [VISUALIZER_THEME_LIGHT] = {
         .label = "LIGHT",
         .window_bg = (Color){244, 247, 250, 255},
@@ -315,7 +376,7 @@ static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
     },
 };
 
-static VisualizerThemeId g_visualizer_theme = VISUALIZER_THEME_MIDNIGHT;
+static VisualizerThemeId g_visualizer_theme = VISUALIZER_THEME_DEFAULT;
 
 static const VisualizerTheme *visualizer_active_theme(void)
 {
@@ -457,25 +518,31 @@ int visualizer_parse_theme_id(const char *name, VisualizerThemeId *theme_id)
         return 0;
     }
 
-    if ((strcmp(name, "default") == 0) || (strcmp(name, "midnight") == 0))
+    if ((strcmp(name, "default") == 0))
     {
-        *theme_id = VISUALIZER_THEME_MIDNIGHT;
+        *theme_id = VISUALIZER_THEME_DEFAULT;
         return 1;
     }
 
-    if ((strcmp(name, "dos") == 0) || (strcmp(name, "dos-blue") == 0) || (strcmp(name, "dos_blue") == 0))
+    if ((strcmp(name, "dos") == 0))
     {
         *theme_id = VISUALIZER_THEME_DOS_BLUE;
         return 1;
     }
 
-    if ((strcmp(name, "onyx") == 0) || (strcmp(name, "modern") == 0) || (strcmp(name, "premium") == 0))
+    if ((strcmp(name, "onyx")))
     {
         *theme_id = VISUALIZER_THEME_ONYX;
         return 1;
     }
 
-    if ((strcmp(name, "light") == 0) || (strcmp(name, "light-mode") == 0) || (strcmp(name, "day") == 0))
+    if ((strcmp(name, "gruvbox")))
+    {
+        *theme_id = VISUALIZER_THEME_GRUVBOX_DARK;
+        return 1;
+    }
+
+    if ((strcmp(name, "light")))
     {
         *theme_id = VISUALIZER_THEME_LIGHT;
         return 1;
@@ -488,7 +555,7 @@ const char *visualizer_theme_label(VisualizerThemeId theme_id)
 {
     if ((theme_id < 0) || (theme_id >= VISUALIZER_THEME_COUNT))
     {
-        return k_visualizer_themes[VISUALIZER_THEME_MIDNIGHT].label;
+        return k_visualizer_themes[VISUALIZER_THEME_DEFAULT].label;
     }
 
     return k_visualizer_themes[theme_id].label;
@@ -509,7 +576,7 @@ void visualizer_theme_set(VisualizerThemeId theme_id)
 {
     if ((theme_id < 0) || (theme_id >= VISUALIZER_THEME_COUNT))
     {
-        g_visualizer_theme = VISUALIZER_THEME_MIDNIGHT;
+        g_visualizer_theme = VISUALIZER_THEME_DEFAULT;
         return;
     }
 

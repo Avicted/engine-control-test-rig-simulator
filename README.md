@@ -187,7 +187,11 @@ Expected CLI behavior:
 
 ## Raylib Visualization (Read-Only)
 
-![Raylib Visualizer Screenshot](visualization/visualizer_example.png)
+![Theme default](visualization/visualizer_example_theme_default.png)
+![Theme dos](visualization/visualizer_example_theme_dos.png)
+![Theme onyx](visualization/visualizer_example_theme_onyx.png)
+![Theme gruvbox](visualization/visualizer_example_theme_gruvbox.png)
+![Theme light](visualization/visualizer_example_theme_light.png)
 
 The visualization program reads JSON output only - it cannot call simulator internals or modify simulation state.
 
@@ -196,11 +200,11 @@ Features:
 - Animated dashboard playback with timeline graphs
 - Threshold overlays and scrubbable tick slider
 - Multi-scenario switching with cumulative statistics
-- Switchable visual themes: the existing dark "Midnight" palette, a DOS blue shell-inspired palette, the premium charcoal "Onyx" palette, and a high-contrast "Light" palette
+- Switchable visual themes: default, DOS, onyx, gruvbox, light
 
 Theme selection:
 
-- Start with `--theme default`, `--theme midnight`, `--theme dos`, `--theme dos-blue`, `--theme onyx`, or `--theme light`
+- Start with `--theme default`, `--theme dos`, `--theme onyx`, `--theme gruvbox`, or `--theme light`
 - Press `T` while the visualizer is running to cycle between themes
 
 

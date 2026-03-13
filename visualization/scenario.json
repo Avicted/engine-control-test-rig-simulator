@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
   "software_version": "1.3.1",
-  "build_commit": "2d00404",
+  "build_commit": "7a571c3",
   "scenarios": [
     {
-      "scenario": "cold_start_warmup_and_ramp",
+      "scenario": "cold_start_warmup_and_ramp_high_temp_shutdown",
       "requirement_id": "REQ-ENG-SCRIPT",
       "ticks": [
         {
@@ -150,57 +150,17 @@
         {
           "tick": 14,
           "rpm": 3400.0,
-          "temp": 81.0,
+          "temp": 90.0,
           "oil": 3.0,
           "run": 1,
           "result": "OK",
-          "control": 40.0,
+          "control": 37.75,
           "engine_mode": "RUNNING"
         },
         {
           "tick": 15,
           "rpm": 3400.0,
-          "temp": 82.0,
-          "oil": 3.0,
-          "run": 1,
-          "result": "OK",
-          "control": 39.75,
-          "engine_mode": "RUNNING"
-        },
-        {
-          "tick": 16,
-          "rpm": 3400.0,
-          "temp": 82.5,
-          "oil": 3.0,
-          "run": 1,
-          "result": "OK",
-          "control": 39.62,
-          "engine_mode": "RUNNING"
-        },
-        {
-          "tick": 17,
-          "rpm": 3400.0,
-          "temp": 82.0,
-          "oil": 3.0,
-          "run": 1,
-          "result": "OK",
-          "control": 39.75,
-          "engine_mode": "RUNNING"
-        },
-        {
-          "tick": 18,
-          "rpm": 3300.0,
-          "temp": 81.0,
-          "oil": 3.0,
-          "run": 1,
-          "result": "OK",
-          "control": 39.0,
-          "engine_mode": "RUNNING"
-        },
-        {
-          "tick": 19,
-          "rpm": 3100.0,
-          "temp": 80.0,
+          "temp": 92.0,
           "oil": 3.0,
           "run": 1,
           "result": "OK",
@@ -208,84 +168,124 @@
           "engine_mode": "RUNNING"
         },
         {
-          "tick": 20,
-          "rpm": 2900.0,
-          "temp": 78.5,
-          "oil": 3.1,
+          "tick": 16,
+          "rpm": 3400.0,
+          "temp": 92.5,
+          "oil": 3.0,
           "run": 1,
           "result": "OK",
-          "control": 36.62,
+          "control": 37.12,
           "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 17,
+          "rpm": 3400.0,
+          "temp": 97.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 36.0,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 18,
+          "rpm": 3300.0,
+          "temp": 98.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "OK",
+          "control": 34.75,
+          "engine_mode": "RUNNING"
+        },
+        {
+          "tick": 19,
+          "rpm": 3100.0,
+          "temp": 96.0,
+          "oil": 3.0,
+          "run": 1,
+          "result": "WARNING",
+          "control": 33.25,
+          "engine_mode": "WARNING"
+        },
+        {
+          "tick": 20,
+          "rpm": 2900.0,
+          "temp": 96.5,
+          "oil": 3.1,
+          "run": 1,
+          "result": "SHUTDOWN",
+          "control": 32.12,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 21,
           "rpm": 2700.0,
-          "temp": 77.0,
+          "temp": 95.0,
           "oil": 3.1,
           "run": 1,
-          "result": "OK",
-          "control": 35.0,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 30.5,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 22,
           "rpm": 2400.0,
-          "temp": 74.5,
+          "temp": 94.5,
           "oil": 3.2,
           "run": 1,
-          "result": "OK",
-          "control": 33.62,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 28.62,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 23,
           "rpm": 2100.0,
-          "temp": 71.0,
+          "temp": 90.0,
           "oil": 3.3,
           "run": 1,
-          "result": "OK",
-          "control": 32.5,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 27.75,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 24,
           "rpm": 1700.0,
-          "temp": 67.5,
+          "temp": 90.5,
           "oil": 3.4,
           "run": 1,
-          "result": "OK",
-          "control": 30.38,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 24.62,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 25,
           "rpm": 1300.0,
-          "temp": 63.0,
+          "temp": 90.0,
           "oil": 3.5,
           "run": 1,
-          "result": "OK",
-          "control": 28.5,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 21.75,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 26,
           "rpm": 1250.0,
-          "temp": 62.0,
+          "temp": 90.0,
           "oil": 3.4,
           "run": 1,
-          "result": "OK",
-          "control": 27.25,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 20.25,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 27,
           "rpm": 1200.0,
-          "temp": 60.0,
+          "temp": 90.0,
           "oil": 3.4,
           "run": 1,
-          "result": "OK",
-          "control": 27.25,
-          "engine_mode": "RUNNING"
+          "result": "SHUTDOWN",
+          "control": 19.75,
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 28,
@@ -293,9 +293,9 @@
           "temp": 58.0,
           "oil": 3.5,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 27.75,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 29,
@@ -303,9 +303,9 @@
           "temp": 55.0,
           "oil": 3.6,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 28.5,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 30,
@@ -313,9 +313,9 @@
           "temp": 52.0,
           "oil": 3.7,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.25,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 31,
@@ -323,9 +323,9 @@
           "temp": 50.0,
           "oil": 3.7,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 28.75,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 32,
@@ -333,9 +333,9 @@
           "temp": 48.0,
           "oil": 3.8,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.25,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 33,
@@ -343,9 +343,9 @@
           "temp": 45.0,
           "oil": 3.8,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.0,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 34,
@@ -353,9 +353,9 @@
           "temp": 43.0,
           "oil": 3.9,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.5,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 35,
@@ -363,9 +363,9 @@
           "temp": 41.0,
           "oil": 3.9,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.0,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 36,
@@ -373,9 +373,9 @@
           "temp": 39.0,
           "oil": 4.0,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.5,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 37,
@@ -383,9 +383,9 @@
           "temp": 37.0,
           "oil": 4.0,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.0,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 38,
@@ -393,9 +393,9 @@
           "temp": 35.0,
           "oil": 4.1,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.5,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         },
         {
           "tick": 39,
@@ -403,13 +403,13 @@
           "temp": 33.0,
           "oil": 4.1,
           "run": 1,
-          "result": "OK",
+          "result": "SHUTDOWN",
           "control": 29.0,
-          "engine_mode": "RUNNING"
+          "engine_mode": "SHUTDOWN"
         }
       ],
-      "expected": "OK",
-      "actual": "OK",
+      "expected": "SHUTDOWN",
+      "actual": "SHUTDOWN",
       "pass": true
     },
     {
