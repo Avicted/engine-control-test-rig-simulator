@@ -114,6 +114,9 @@ run-scenarios: $(TARGET)
 		$(TARGET) --script "$$file"; \
 	done
 
+run-all-short: $(TARGET)
+	$(TARGET) --run-all
+
 visualizer: $(VISUALIZER_TARGET)
 
 run-visualizer: $(VISUALIZER_TARGET)

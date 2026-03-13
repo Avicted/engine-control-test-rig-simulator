@@ -155,6 +155,12 @@ On Debian/Ubuntu:
 sudo apt install clang llvm make git cppcheck clang-tidy python3 lcov valgrind libc6-dbg
 ```
 
+On Arch Linux:
+
+```bash
+sudo pacman -S clang llvm make git cppcheck clang-tidy python lcov valgrind gdb glibc-debug
+```
+
 ### Quick start
 
 ```bash
@@ -162,6 +168,23 @@ make
 make test-unit
 ./build/testrig --run-all
 make ci-check
+```
+
+### Presentation demo
+
+For a short live walkthrough, run:
+
+```bash
+./demo.sh
+```
+
+The script rebuilds the simulator, shows a requirement-tagged validation sweep, runs a healthy scripted scenario, runs a shutdown scenario, and can optionally launch the Raylib visualizer if the machine has GUI support.
+
+Useful flags:
+
+```bash
+./demo.sh --auto
+./demo.sh --skip-visualizer
 ```
 
 
