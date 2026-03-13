@@ -410,7 +410,7 @@ Usage:
 | [docs/release_artifacts.md](docs/release_artifacts.md) | Release packaging, shipped audit flow, local artifact testing, and VS Code tasks |
 | [docs/message_map.md](docs/message_map.md) | BusFrame ID registry documentation with payload layouts |
 | [docs/error_severity_model.md](docs/error_severity_model.md) | Structured severity/recoverability classification reference |
-| [docs/MISRA_C:2012_Supported_Rules.md](docs/MISRA_C:2012_Supported_Rules.md) | List of supported MISRA C:2012 rules |
+| [docs/MISRA_C_2012_Supported_Rules.md](docs/MISRA_C_2012_Supported_Rules.md) | List of supported MISRA C:2012 rules |
 | `docs/adr/` | Architecture Decision Records (ADR-001 through ADR-004) |
 | [CHANGELOG.md](CHANGELOG.md) | Version history following Keep a Changelog conventions |
 
