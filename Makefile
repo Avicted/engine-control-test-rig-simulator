@@ -171,11 +171,18 @@ package-release-win64-local:
 	sh tools/build_win64_release.sh
 	rm -rf "$(WIN64_RELEASE_RUNTIME_DIR)"
 	mkdir -p "$(WIN64_RELEASE_RUNTIME_DIR)"
+	set -- --search-dir "$(WIN64_BUILD_DIR)" --search-dir /usr/x86_64-w64-mingw32/bin; \
+	search_dirs="$$(x86_64-w64-mingw32-gcc -print-search-dirs | sed -n 's/^libraries: =//p' | tr ':' '\n' | sed '/^$$/d' | sort -u)"; \
+	for search_dir in $$search_dirs; do \
+		if [ -d "$$search_dir" ]; then \
+			set -- "$$@" --search-dir "$$search_dir"; \
+		fi; \
+	done; \
 	$(PYTHON) tools/collect_mingw_runtime_dlls.py \
 		--output-dir "$(WIN64_RELEASE_RUNTIME_DIR)" \
 		--binary "$(WIN64_BUILD_DIR)/testrig.exe" \
 		--binary "$(WIN64_BUILD_DIR)/visualizer.exe" \
-		--search-dir /usr/x86_64-w64-mingw32/bin
+		"$$@"
 	$(PYTHON) tools/package_release.py \
 		--platform "$(RELEASE_PLATFORM)" \
 		--testrig "$(WIN64_BUILD_DIR)/testrig.exe" \
