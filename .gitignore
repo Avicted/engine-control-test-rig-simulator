@@ -7,3 +7,6 @@ tools/__pycache__/
 *.pyc
 .vscode/*
 !.vscode/tasks.json
+
+TODO.md
+
