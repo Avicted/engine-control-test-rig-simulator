@@ -82,8 +82,8 @@ static void handle_window_commands(void)
 
 static float current_key_scrub_speed(float hold_timer)
 {
-    float accelerated_hold_time;
-    float scrub_speed;
+    float accelerated_hold_time = 0.0f;
+    float scrub_speed = 0.0f;
 
     accelerated_hold_time = hold_timer - KEY_SCRUB_DEBOUNCE_SECONDS;
     if (accelerated_hold_time < 0.0f)
@@ -313,7 +313,7 @@ static void update_playback(const ScenarioData *scenario, VisualizerAppState *st
 
 void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
 {
-    VisualizerAppState state;
+    VisualizerAppState state = {0};
 
     if ((scenario_set == NULL) || (scenario_set->count == 0U))
     {
@@ -340,10 +340,10 @@ void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
     while (!WindowShouldClose() && (state.should_quit == 0))
     {
         ScenarioData *scenario = &scenario_set->scenarios[scenario_set->active_index];
-        TickData interpolated_tick;
+        TickData interpolated_tick = {0};
         float warning_pct = 0.0f;
         float shutdown_pct = 0.0f;
-        VisualizerLayout layout;
+        VisualizerLayout layout = {0};
 
         visualizer_compute_layout(GetScreenWidth(), GetScreenHeight(), &layout);
         handle_window_commands();

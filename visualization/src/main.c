@@ -6,9 +6,9 @@
 
 int main(int argc, char **argv)
 {
-    ScenarioSet scenario_set;
+    ScenarioSet scenario_set = {0};
     VisualizerThemeId initial_theme = VISUALIZER_THEME_DEFAULT;
-    int arg_index;
+    int arg_index = 0;
     int scenario_argc = 1;
 
     if ((argc < 2) || (argv == NULL))

@@ -585,7 +585,7 @@ void visualizer_theme_set(VisualizerThemeId theme_id)
 
 static void draw_text_font(const Font *font, const char *text, float x, float y, float size, Color color)
 {
-    float snapped_size;
+    float snapped_size = 0.0f;
 
     if ((font == NULL) || (text == NULL))
     {
@@ -613,7 +613,7 @@ static Color with_min_alpha(Color color, unsigned char min_alpha)
 
 static Vector2 measure_text_font(const Font *font, const char *text, float size)
 {
-    float snapped_size;
+    float snapped_size = 0.0f;
 
     if ((font == NULL) || (text == NULL))
     {
@@ -636,10 +636,10 @@ static float pick_header_name_font_size(const Font *font,
                                         float available_width,
                                         float scale)
 {
-    char expected_text[64];
-    Vector2 name_sz;
-    Vector2 req_sz;
-    Vector2 exp_sz;
+    char expected_text[64] = {0};
+    Vector2 name_sz = {0};
+    Vector2 req_sz = {0};
+    Vector2 exp_sz = {0};
     float preferred_fs = FS_SCEN_NAME * scale;
     float compact_fs = FS_TINY * scale;
 
@@ -677,7 +677,7 @@ static Color level_color(SeverityLevel level)
 
 static unsigned int active_tick_index(const ScenarioData *scenario, float playhead)
 {
-    unsigned int index;
+    unsigned int index = 0U;
 
     if ((scenario == NULL) || (scenario->tick_count == 0U))
     {
@@ -695,15 +695,15 @@ static unsigned int active_tick_index(const ScenarioData *scenario, float playhe
 
 static void draw_threshold_marker(Rectangle bar_area, float threshold_ratio, SeverityLevel level, float scale)
 {
-    int marker_x;
-    int border_w;
-    int rect_w;
-    int rect_h;
-    int top_y;
-    int rect_x;
-    int gap_y;
+    int marker_x = 0;
+    int border_w = 0;
+    int rect_w = 0;
+    int rect_h = 0;
+    int top_y = 0;
+    int rect_x = 0;
+    int gap_y = 0;
     Color border_color = with_min_alpha(COL_BAR_BORDER, 255U);
-    Color fill_color;
+    Color fill_color = (Color){0};
 
     if ((threshold_ratio <= 0.0f) || (threshold_ratio >= 1.0f))
     {
@@ -746,7 +746,7 @@ Color visualizer_mode_color(const char *engine_mode)
 
 Color visualizer_lerp_color(Color a, Color b, float t)
 {
-    Color out;
+    Color out = (Color){0};
     float tt = visualizer_clamp01(t);
 
     out.r = (unsigned char)roundf(((float)a.r) + ((((float)b.r) - ((float)a.r)) * tt));
@@ -772,13 +772,13 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
     float hint_fs = FS_TINY * scale;
     const char *title = "QUIT?";
     const char *hint = "[LT RT]  Select   [ENTER]  Confirm   [ESC]  Cancel";
-    Vector2 sz;
-    Color yes_bg;
-    Color yes_bor;
-    Color yes_txt;
-    Color no_bg;
-    Color no_bor;
-    Color no_txt;
+    Vector2 sz = (Vector2){0};
+    Color yes_bg = (Color){0};
+    Color yes_bor = (Color){0};
+    Color yes_txt = (Color){0};
+    Color no_bg = (Color){0};
+    Color no_bor = (Color){0};
+    Color no_txt = (Color){0};
 
     DrawRectangle(0, 0, screen_w, screen_h, (Color){0, 0, 0, 160});
     DrawRectangle((int)(box_x + 4.0f), (int)(box_y + 4.0f), (int)box_w, (int)box_h, (Color){0, 0, 0, 110});
@@ -832,7 +832,7 @@ static float draw_key_hint(const Font *font,
                            float font_size)
 {
     float cx = x;
-    float w;
+    float w = 0.0f;
 
     w = measure_text_font(font, "[", font_size).x;
     draw_text_font(font, "[", cx, y, font_size, COL_BRAK);
@@ -861,14 +861,14 @@ static void draw_meter(const Font *font,
                        float shutdown_threshold,
                        float scale)
 {
-    float ratio;
-    int fill_width;
-    char value_text[64];
+    float ratio = 0.0f;
+    int fill_width = 0;
+    char value_text[64] = {0};
     float lbl_fs = FS_KEY_HINT * scale;
     float val_fs = FS_VALUE * scale;
-    Vector2 value_size;
-    float value_x;
-    float value_y;
+    Vector2 value_size = (Vector2){0};
+    float value_x = 0.0f;
+    float value_y = 0.0f;
 
     ratio = (max_value > 0.0f) ? (value / max_value) : 0.0f;
     ratio = visualizer_clamp01(ratio);
@@ -940,12 +940,12 @@ static void draw_fault_rate_row(const Font *font,
                                 Color fill_color,
                                 float scale)
 {
-    char pct_text[20];
-    float label_y;
-    float pct_y;
+    char pct_text[20] = {0};
+    float label_y = 0.0f;
+    float pct_y = 0.0f;
     float label_fs = FS_TINY * scale;
-    Vector2 label_sz;
-    Vector2 pct_sz;
+    Vector2 label_sz = (Vector2){0};
+    Vector2 pct_sz = (Vector2){0};
     float text_x = bar_x + bar_w + 6.0f * scale;
 
     label_sz = measure_text_font(font, label, label_fs);
@@ -969,13 +969,13 @@ static void draw_timeline(const Font *font,
                           Rectangle plot_area,
                           float scale)
 {
-    int i;
-    int plot_left;
-    int plot_right;
-    int plot_top;
-    int plot_bottom;
-    int plot_w;
-    int plot_h;
+    int i = 0;
+    int plot_left = 0;
+    int plot_right = 0;
+    int plot_top = 0;
+    int plot_bottom = 0;
+    int plot_w = 0;
+    int plot_h = 0;
 
     if ((scenario == NULL) || (scenario->tick_count == 0U))
     {
@@ -998,9 +998,9 @@ static void draw_timeline(const Font *font,
 
     {
         unsigned int tick_index = active_tick_index(scenario, playhead);
-        char tick_label[48];
-        Vector2 tl_sz;
-        float tl_x;
+        char tick_label[48] = {0};
+        Vector2 tl_sz = (Vector2){0};
+        float tl_x = 0.0f;
         float title_fs = FS_TL_TITLE * scale;
         (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", tick_index + 1U,
                        scenario->tick_count);
@@ -1027,7 +1027,7 @@ static void draw_timeline(const Font *font,
         DrawLine(plot_left, gy, plot_right, gy, grid_color);
         if ((i % 2) == 0)
         {
-            char y_label[16];
+            char y_label[16] = {0};
             (void)snprintf(y_label, sizeof(y_label), "%d%%", 100 - ((i * 100) / 8));
             draw_text_font(font, y_label,
                            area.x + LAYOUT_TIMELINE_AXIS_X * scale,
@@ -1041,13 +1041,13 @@ static void draw_timeline(const Font *font,
         float axis_fs = FS_TL_AXIS * scale;
         if (scenario->tick_count > 32U)
         {
-            unsigned int tick_idx;
+            unsigned int tick_idx = 0U;
 
             for (tick_idx = 0U; tick_idx < scenario->tick_count; tick_idx += 2U)
             {
                 int gx = plot_left + (int)roundf(((float)tick_idx / (float)(scenario->tick_count - 1U)) * (float)plot_w);
-                char x_label[16];
-                Vector2 label_sz;
+                char x_label[16] = {0};
+                Vector2 label_sz = (Vector2){0};
 
                 DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
                 (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx + 1U);
@@ -1062,8 +1062,8 @@ static void draw_timeline(const Font *font,
             {
                 unsigned int tick_idx_last = scenario->tick_count - 1U;
                 int gx = plot_left + (int)roundf(((float)tick_idx_last / (float)(scenario->tick_count - 1U)) * (float)plot_w);
-                char x_label[16];
-                Vector2 label_sz;
+                char x_label[16] = {0};
+                Vector2 label_sz = (Vector2){0};
 
                 DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
                 (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx_last + 1U);
@@ -1076,12 +1076,12 @@ static void draw_timeline(const Font *font,
         }
         else
         {
-            char max_tick_label[16];
-            float min_label_spacing;
-            Vector2 max_label_sz;
-            unsigned int max_labels;
-            unsigned int x_steps;
-            unsigned int s;
+            char max_tick_label[16] = {0};
+            float min_label_spacing = 0.0f;
+            Vector2 max_label_sz = (Vector2){0};
+            unsigned int max_labels = 0U;
+            unsigned int x_steps = 0U;
+            unsigned int s = 0U;
 
             (void)snprintf(max_tick_label, sizeof(max_tick_label), "%u",
                            scenario->tick_count);
@@ -1105,8 +1105,8 @@ static void draw_timeline(const Font *font,
                 float t = (x_steps == 0U) ? 0.0f : ((float)s / (float)x_steps);
                 unsigned int tick_idx = (unsigned int)roundf(t * (float)(scenario->tick_count - 1U));
                 int gx = plot_left + (int)roundf(((float)tick_idx / (float)(scenario->tick_count - 1U)) * (float)plot_w);
-                char x_label[16];
-                Vector2 label_sz;
+                char x_label[16] = {0};
+                Vector2 label_sz = (Vector2){0};
                 DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
                 (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx + 1U);
                 label_sz = measure_text_font(font, x_label, axis_fs);
@@ -1129,7 +1129,7 @@ static void draw_timeline(const Font *font,
 
     if (scenario->tick_count > 1U)
     {
-        unsigned int idx;
+        unsigned int idx = 0U;
         for (idx = 1U; idx < scenario->tick_count; ++idx)
         {
             SeverityLevel level = visualizer_mode_to_level(scenario->ticks[idx].engine_mode, scenario->ticks[idx].result);
@@ -1193,14 +1193,14 @@ static void draw_timeline(const Font *font,
         float lfs2 = FS_TL_LEGEND * scale;
         float dot_r = LAYOUT_DOT_R * scale;
         float lx = area.x + area.width - LAYOUT_TIMELINE_LEGEND_RIGHT * scale;
-        Vector2 lsz;
+        Vector2 lsz = (Vector2){0};
         static const char *k_legend_names[] = {
             "CTRL",
             "OIL",
             "TEMP",
             "RPM",
         };
-        int li;
+        int li = 0;
 
         for (li = 0; li < 4; ++li)
         {
@@ -1235,8 +1235,8 @@ static void draw_slider(const Font *font,
                         float playhead,
                         float restart_feedback_timer)
 {
-    float knob_t;
-    int knob_x;
+    float knob_t = 0.0f;
+    int knob_x = 0;
 
     if ((scenario == NULL) || (scenario->tick_count == 0U))
     {
@@ -1272,32 +1272,32 @@ static void draw_slider(const Font *font,
 
 void visualizer_compute_layout(int screen_w, int screen_h, VisualizerLayout *layout)
 {
-    float content_y;
-    float main_h;
-    float status_panel_w;
-    float col_gap;
-    float gauges_x;
-    float gauges_w;
-    float status_x;
-    float gc_x;
-    float gc_w;
-    float bar_col_w;
-    float val_col_w;
-    float val_col_x;
-    float bar_h;
-    float row_step;
-    float m_row0_y;
-    float m_row1_y;
-    float m_row2_y;
-    float timeline_y;
-    float timeline_h_val;
-    float timeline_plot_x;
-    float timeline_plot_y;
-    float timeline_plot_w;
-    float slider_y;
-    float slider_h;
-    float slider_bottom_pad;
-    float xlabel_band;
+    float content_y = 0.0f;
+    float main_h = 0.0f;
+    float status_panel_w = 0.0f;
+    float col_gap = 0.0f;
+    float gauges_x = 0.0f;
+    float gauges_w = 0.0f;
+    float status_x = 0.0f;
+    float gc_x = 0.0f;
+    float gc_w = 0.0f;
+    float bar_col_w = 0.0f;
+    float val_col_w = 0.0f;
+    float val_col_x = 0.0f;
+    float bar_h = 0.0f;
+    float row_step = 0.0f;
+    float m_row0_y = 0.0f;
+    float m_row1_y = 0.0f;
+    float m_row2_y = 0.0f;
+    float timeline_y = 0.0f;
+    float timeline_h_val = 0.0f;
+    float timeline_plot_x = 0.0f;
+    float timeline_plot_y = 0.0f;
+    float timeline_plot_w = 0.0f;
+    float slider_y = 0.0f;
+    float slider_h = 0.0f;
+    float slider_bottom_pad = 0.0f;
+    float xlabel_band = 0.0f;
 
     if (layout == NULL)
     {
@@ -1376,8 +1376,8 @@ void visualizer_draw_frame(const Font *font,
                            int quit_modal_open,
                            int quit_modal_selection)
 {
-    int screen_w;
-    int screen_h;
+    int screen_w = 0;
+    int screen_h = 0;
 
     if ((font == NULL) || (scenario_set == NULL) || (scenario == NULL) || (tick == NULL) || (layout == NULL))
     {
@@ -1394,29 +1394,29 @@ void visualizer_draw_frame(const Font *font,
     DrawRectangle(0, 0, screen_w, (int)layout->hdr_h, COL_PANEL_BG);
     DrawLine(0, (int)layout->hdr_h - 1, screen_w, (int)layout->hdr_h - 1, COL_HDR_BORDER);
     {
-        char scen_label[48];
-        char expected_text[64];
-        char tick_str[48];
-        char theme_str[48];
-        unsigned int tick_index;
-        Vector2 req_sz;
-        Vector2 exp_sz;
-        Vector2 tick_sz;
-        Vector2 scen_sz;
-        Vector2 theme_sz;
-        float header_text_right;
-        float scen_fs;
-        float meta_fs;
-        float req_x;
-        float exp_x;
-        float main_row_y;
-        float meta_row_y;
-        float meta_x;
-        float badge_w;
-        float badge_x;
-        float badge_y;
-        float theme_badge_w;
-        float theme_badge_x;
+        char scen_label[48] = {0};
+        char expected_text[64] = {0};
+        char tick_str[48] = {0};
+        char theme_str[48] = {0};
+        unsigned int tick_index = 0U;
+        Vector2 req_sz = (Vector2){0};
+        Vector2 exp_sz = (Vector2){0};
+        Vector2 tick_sz = (Vector2){0};
+        Vector2 scen_sz = (Vector2){0};
+        Vector2 theme_sz = (Vector2){0};
+        float header_text_right = 0.0f;
+        float scen_fs = 0.0f;
+        float meta_fs = 0.0f;
+        float req_x = 0.0f;
+        float exp_x = 0.0f;
+        float main_row_y = 0.0f;
+        float meta_row_y = 0.0f;
+        float meta_x = 0.0f;
+        float badge_w = 0.0f;
+        float badge_x = 0.0f;
+        float badge_y = 0.0f;
+        float theme_badge_w = 0.0f;
+        float theme_badge_x = 0.0f;
         float badge_h = LAYOUT_BADGE_H * layout->scale;
 
         (void)snprintf(scen_label, sizeof(scen_label),
@@ -1508,8 +1508,8 @@ void visualizer_draw_frame(const Font *font,
         float ky = layout->hdr_h + (layout->nav_h - FS_KEY_HINT * layout->scale) * 0.5f;
         float kfs = FS_KEY_HINT * layout->scale;
         float gap2 = 20.0f * layout->scale;
-        char speed_str[32];
-        Vector2 sp_sz;
+        char speed_str[32] = {0};
+        Vector2 sp_sz = (Vector2){0};
 
         kx += draw_key_hint(font, "SPC", "Pause", kx, ky, kfs) + gap2;
         kx += draw_key_hint(font, "R", "Restart", kx, ky, kfs) + gap2;
@@ -1552,9 +1552,9 @@ void visualizer_draw_frame(const Font *font,
         float cap_y = layout->metrics_area.y + LAYOUT_STATUS_CAP_Y * layout->scale;
         float cap_fs = FS_TINY * layout->scale;
         float mode_fs = FS_VALUE * layout->scale;
-        char run_text[16];
-        float result_y;
-        Color result_c;
+        char run_text[16] = {0};
+        float result_y = 0.0f;
+        Color result_c = (Color){0};
 
         result_c = (strcmp(tick->result, "OK") == 0)
                        ? COL_OIL

@@ -84,9 +84,9 @@ static float lerp_float(float start_value, float end_value, float t)
 
 void visualizer_interpolate_tick(const ScenarioData *scenario, float playhead, TickData *out_tick)
 {
-    unsigned int base_index;
-    unsigned int next_index;
-    float phase;
+    unsigned int base_index = 0U;
+    unsigned int next_index = 0U;
+    float phase = 0.0f;
 
     if ((scenario == NULL) || (out_tick == NULL) || (scenario->tick_count == 0U))
     {
@@ -133,10 +133,10 @@ void visualizer_compute_cumulative_metrics(const ScenarioData *scenario,
                                            float *warning_pct,
                                            float *shutdown_pct)
 {
-    unsigned int i;
+    unsigned int i = 0U;
     unsigned int warn_count = 0U;
     unsigned int shut_count = 0U;
-    unsigned int active_count;
+    unsigned int active_count = 0U;
 
     if ((scenario == NULL) || (warning_pct == NULL) || (shutdown_pct == NULL) || (scenario->tick_count == 0U))
     {

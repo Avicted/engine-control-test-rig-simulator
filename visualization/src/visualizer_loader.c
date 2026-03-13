@@ -58,10 +58,10 @@ static const char *find_value_start(const char *key_pos)
 
 static int parse_quoted_value(const char *object_start, const char *key, char *out, size_t out_size)
 {
-    const char *key_pos;
-    const char *value_start;
-    const char *value_end;
-    size_t length;
+    const char *key_pos = NULL;
+    const char *value_start = NULL;
+    const char *value_end = NULL;
+    size_t length = 0U;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL) || (out_size < 2U))
     {
@@ -100,10 +100,10 @@ static int parse_quoted_value(const char *object_start, const char *key, char *o
 
 static int parse_uint_value(const char *object_start, const char *key, unsigned int *out)
 {
-    const char *key_pos;
-    const char *value_start;
-    char *endptr;
-    unsigned long parsed;
+    const char *key_pos = NULL;
+    const char *value_start = NULL;
+    char *endptr = NULL;
+    unsigned long parsed = 0UL;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -147,10 +147,10 @@ static int parse_uint_value(const char *object_start, const char *key, unsigned 
 
 static int parse_int_value(const char *object_start, const char *key, int *out)
 {
-    const char *key_pos;
-    const char *value_start;
-    char *endptr;
-    long parsed;
+    const char *key_pos = NULL;
+    const char *value_start = NULL;
+    char *endptr = NULL;
+    long parsed = 0L;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -188,10 +188,10 @@ static int parse_int_value(const char *object_start, const char *key, int *out)
 
 static int parse_float_value(const char *object_start, const char *key, float *out)
 {
-    const char *key_pos;
-    const char *value_start;
-    char *endptr;
-    float parsed;
+    const char *key_pos = NULL;
+    const char *value_start = NULL;
+    char *endptr = NULL;
+    float parsed = 0.0f;
 
     if ((object_start == NULL) || (key == NULL) || (out == NULL))
     {
@@ -229,8 +229,8 @@ static int parse_float_value(const char *object_start, const char *key, float *o
 
 static const char *find_matching_brace(const char *start)
 {
-    int depth;
-    const char *cursor;
+    int depth = 0;
+    const char *cursor = NULL;
 
     if ((start == NULL) || (*start != '{'))
     {
@@ -262,8 +262,8 @@ static const char *find_matching_brace(const char *start)
 
 static const char *find_matching_bracket(const char *start)
 {
-    int depth;
-    const char *cursor;
+    int depth = 0;
+    const char *cursor = NULL;
 
     if ((start == NULL) || (*start != '['))
     {
@@ -369,10 +369,10 @@ static int parse_tick_object(const char *object_start, TickData *tick)
 
 static int load_file_text(const char *path, char **buffer_out)
 {
-    FILE *file;
-    long length;
-    size_t bytes_read;
-    char *buffer;
+    FILE *file = NULL;
+    long length = 0L;
+    size_t bytes_read = 0U;
+    char *buffer = NULL;
 
     if ((path == NULL) || (buffer_out == NULL))
     {
@@ -437,13 +437,13 @@ static int parse_scenarios_json(const char *json_text,
                                 unsigned int max_scenarios,
                                 unsigned int *parsed_count)
 {
-    char schema_version[16];
-    char software_version[32];
-    const char *scenarios_key;
-    const char *array_start;
-    const char *cursor;
-    const char *array_end;
-    unsigned int scenario_count;
+    char schema_version[16] = {0};
+    char software_version[32] = {0};
+    const char *scenarios_key = NULL;
+    const char *array_start = NULL;
+    const char *cursor = NULL;
+    const char *array_end = NULL;
+    unsigned int scenario_count = 0U;
 
     if ((json_text == NULL) || (scenarios == NULL) || (parsed_count == NULL) || (max_scenarios == 0U))
     {
@@ -494,12 +494,12 @@ static int parse_scenarios_json(const char *json_text,
 
     while (cursor < array_end)
     {
-        const char *scenario_object_start;
-        const char *scenario_object_end;
-        const char *ticks_key;
-        const char *ticks_array_start;
-        const char *ticks_array_end;
-        const char *tick_cursor;
+        const char *scenario_object_start = NULL;
+        const char *scenario_object_end = NULL;
+        const char *ticks_key = NULL;
+        const char *ticks_array_start = NULL;
+        const char *ticks_array_end = NULL;
+        const char *tick_cursor = NULL;
 
         scenario_object_start = strchr(cursor, '{');
         if ((scenario_object_start == NULL) || (scenario_object_start >= array_end))
@@ -564,8 +564,8 @@ static int parse_scenarios_json(const char *json_text,
         tick_cursor = ticks_array_start;
         while (tick_cursor < ticks_array_end)
         {
-            const char *obj_start;
-            const char *obj_end;
+            const char *obj_start = NULL;
+            const char *obj_end = NULL;
 
             obj_start = strchr(tick_cursor, '{');
             if ((obj_start == NULL) || (obj_start >= ticks_array_end))
@@ -616,7 +616,7 @@ static int parse_scenarios_json(const char *json_text,
 
 int visualizer_load_scenarios_from_files(int argc, char **argv, ScenarioSet *scenario_set)
 {
-    int argi;
+    int argi = 0;
 
     if ((argc < 2) || (argv == NULL) || (scenario_set == NULL))
     {
@@ -630,7 +630,7 @@ int visualizer_load_scenarios_from_files(int argc, char **argv, ScenarioSet *sce
     {
         char *json_buffer = NULL;
         unsigned int parsed_count = 0U;
-        unsigned int remaining_capacity;
+        unsigned int remaining_capacity = 0U;
 
         if (argv[argi] == NULL)
         {
