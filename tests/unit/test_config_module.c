@@ -250,9 +250,7 @@ static int32_t test_config_allowed_keys_and_combined_override(void)
 
     ASSERT_TRUE(write_test_config(path,
                                   "{\n"
-                                  "  \"temperature_limit\" 95.0,\n"
-                                  "  \"temperature_limit\"\n"
-                                  "\t: 95.0,\n"
+                                  "  \"temperature_limit\": 95.0,\n"
                                   "  \"oil_pressure_limit\": 2.5,\n"
                                   "  \"persistence_ticks\": 3,\n"
                                   "  \"combined_warning_persistence_ticks\": 7,\n"
