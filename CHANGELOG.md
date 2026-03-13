@@ -3,6 +3,16 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.4.0] - 2026-03-13
+
+### Added
+- GitHub Release workflow that builds and publishes Linux and Win64 runnable artifacts for both the simulator and the Raylib visualizer.
+- Portable release bundle audit script and packaged verification assets so unpacked artifacts can validate simulator behavior outside the source tree.
+- Local Linux and Wine-based Win64 artifact test targets, runtime dependency collection helpers, and VS Code tasks for repeatable release dry runs.
+
+### Changed
+- Release documentation moved out of the main README into a dedicated release artifacts document to keep the top-level project overview focused on architecture and verification.
+
 ## [1.3.2] - 2026-03-13
 
 ### Changed

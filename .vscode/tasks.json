@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "release: test linux artifact",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test-release-linux",
+                "RELEASE_PLATFORM=linux-x64",
+                "RELEASE_ARCHIVE=./dist/engine-control-test-rig-simulator-linux-x64.tar.gz",
+                "CC=gcc",
+                "PYTHON=python3"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "release: test win64 artifact with wine",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test-release-win64-local",
+                "RELEASE_PLATFORM=win64",
+                "RELEASE_ARCHIVE=./dist/engine-control-test-rig-simulator-win64.zip",
+                "PYTHON=python3"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "release: package linux artifact",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "package-release-linux",
+                "RELEASE_PLATFORM=linux-x64",
+                "RELEASE_ARCHIVE=./dist/engine-control-test-rig-simulator-linux-x64.tar.gz",
+                "CC=gcc",
+                "PYTHON=python3"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "release: package win64 artifact",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "package-release-win64-local",
+                "RELEASE_PLATFORM=win64",
+                "RELEASE_ARCHIVE=./dist/engine-control-test-rig-simulator-win64.zip",
+                "PYTHON=python3"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "release: generate visualization bundle",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "generate-visualization-json",
+                "CC=gcc",
+                "PYTHON=python3"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

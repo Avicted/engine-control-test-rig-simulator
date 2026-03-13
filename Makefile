@@ -1,16 +1,32 @@
 CC = clang
 GCOV = llvm-cov gcov
+PYTHON ?= python3
 
 SRC_DIR = src
 BUILD_DIR = ./build
 COVERAGE_DIR = ./coverage
 COVERAGE_HTML_DIR = ./coverage/html
+DIST_DIR = ./dist
+LINUX_RELEASE_RUNTIME_DIR = $(DIST_DIR)/linux-runtime
+WIN64_RELEASE_RUNTIME_DIR = $(DIST_DIR)/win64-runtime
+WIN64_BUILD_DIR = ./build-win64
 
-TARGET = $(BUILD_DIR)/testrig
-VISUALIZER_TARGET = $(BUILD_DIR)/visualizer
-UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
-VALGRIND_TARGET = $(BUILD_DIR)/testrig_valgrind
-VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind
+EXEEXT =
+ifeq ($(OS),Windows_NT)
+EXEEXT = .exe
+RAYLIB_LIBS ?= -lraylib -lopengl32 -lgdi32 -lwinmm
+else
+RAYLIB_LIBS ?= -lraylib -lm -lpthread -ldl -lrt -lX11
+endif
+
+TARGET = $(BUILD_DIR)/testrig$(EXEEXT)
+VISUALIZER_TARGET = $(BUILD_DIR)/visualizer$(EXEEXT)
+UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests$(EXEEXT)
+VALGRIND_TARGET = $(BUILD_DIR)/testrig_valgrind$(EXEEXT)
+VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind$(EXEEXT)
+
+RELEASE_PLATFORM ?= unknown
+RELEASE_ARCHIVE ?= $(DIST_DIR)/engine-control-test-rig-simulator-$(RELEASE_PLATFORM).tar.gz
 
 VISUALIZER_SRC = visualization/src/main.c \
 	visualization/src/visualizer_app.c \
@@ -48,10 +64,10 @@ CFLAGS = $(COMMON_CFLAGS) -O2 -fstack-protector-strong -D_FORTIFY_SOURCE=2
 DEBUG_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer
 COVERAGE_CFLAGS = $(COMMON_CFLAGS) -O0 --coverage
 VALGRIND_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fno-omit-frame-pointer
+VISUALIZER_CFLAGS = $(filter-out -pedantic,$(CFLAGS)) -Wno-pedantic
 
 CPPFLAGS = -I./include -I./src -I./visualization/include -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
 LDFLAGS = -lm
-RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 VALGRIND ?= valgrind
 VALGRIND_ARGS = --leak-check=full --show-leak-kinds=all --track-origins=yes --errors-for-leak-kinds=all --error-exitcode=1
 LCOV_RC_OPTS ?= --rc derive_function_end_line=0
@@ -65,7 +81,7 @@ $(TARGET): $(BUILD_DIR) $(SRCS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
 
 $(VISUALIZER_TARGET): $(BUILD_DIR) $(VISUALIZER_SRC)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(VISUALIZER_TARGET) $(VISUALIZER_SRC) $(RAYLIB_LIBS)
+	$(CC) $(CPPFLAGS) $(VISUALIZER_CFLAGS) -o $(VISUALIZER_TARGET) $(VISUALIZER_SRC) $(RAYLIB_LIBS)
 
 $(UNIT_TEST_TARGET): $(BUILD_DIR) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(UNIT_TEST_TARGET) $(UNIT_TEST_SRCS) $(UNIT_TEST_DEPS) $(LDFLAGS)
@@ -87,6 +103,7 @@ clean:
 	rm -f $(VISUALIZER_TARGET)
 	rm -f $(BUILD_DIR)/*.gcno $(BUILD_DIR)/*.gcda $(BUILD_DIR)/*.info
 	rm -rf $(COVERAGE_DIR)
+	rm -rf $(DIST_DIR)
 
 run-script: $(TARGET)
 	@if [ -z "$(SCRIPT)" ]; then \
@@ -126,7 +143,59 @@ run-visualizer: $(VISUALIZER_TARGET)
 	$(VISUALIZER_TARGET) "$(JSON)"
 
 generate-visualization-json: $(TARGET)
-	python3 tools/generate_visualization_scenario_json.py
+	$(PYTHON) tools/generate_visualization_scenario_json.py --testrig "$(TARGET)"
+
+package-release: $(TARGET) $(VISUALIZER_TARGET) generate-visualization-json
+	$(PYTHON) tools/package_release.py \
+		--platform "$(RELEASE_PLATFORM)" \
+		--testrig "$(TARGET)" \
+		--visualizer "$(VISUALIZER_TARGET)" \
+		--archive "$(RELEASE_ARCHIVE)"
+
+package-release-linux: $(TARGET) $(VISUALIZER_TARGET) generate-visualization-json
+	rm -rf "$(LINUX_RELEASE_RUNTIME_DIR)"
+	mkdir -p "$(LINUX_RELEASE_RUNTIME_DIR)/lib"
+	$(PYTHON) tools/collect_linux_runtime_deps.py \
+		--output-dir "$(LINUX_RELEASE_RUNTIME_DIR)/lib" \
+		--binary "$(TARGET)" \
+		--binary "$(VISUALIZER_TARGET)"
+	$(PYTHON) tools/package_release.py \
+		--platform "$(RELEASE_PLATFORM)" \
+		--testrig "$(TARGET)" \
+		--visualizer "$(VISUALIZER_TARGET)" \
+		--archive "$(RELEASE_ARCHIVE)" \
+		--linux-launchers \
+		--extra-tree "$(LINUX_RELEASE_RUNTIME_DIR)/lib:lib"
+
+package-release-win64-local:
+	sh tools/build_win64_release.sh
+	rm -rf "$(WIN64_RELEASE_RUNTIME_DIR)"
+	mkdir -p "$(WIN64_RELEASE_RUNTIME_DIR)"
+	$(PYTHON) tools/collect_mingw_runtime_dlls.py \
+		--output-dir "$(WIN64_RELEASE_RUNTIME_DIR)" \
+		--binary "$(WIN64_BUILD_DIR)/testrig.exe" \
+		--binary "$(WIN64_BUILD_DIR)/visualizer.exe" \
+		--search-dir /usr/x86_64-w64-mingw32/bin
+	$(PYTHON) tools/package_release.py \
+		--platform "$(RELEASE_PLATFORM)" \
+		--testrig "$(WIN64_BUILD_DIR)/testrig.exe" \
+		--visualizer "$(WIN64_BUILD_DIR)/visualizer.exe" \
+		--archive "$(RELEASE_ARCHIVE)" \
+		--extra-tree "$(WIN64_RELEASE_RUNTIME_DIR):."
+
+test-release-linux: package-release-linux
+	rm -rf "$(DIST_DIR)/test-linux"
+	mkdir -p "$(DIST_DIR)/test-linux"
+	tar -xzf "$(RELEASE_ARCHIVE)" -C "$(DIST_DIR)/test-linux"
+	cd "$(DIST_DIR)/test-linux/engine-control-test-rig-simulator-$(RELEASE_PLATFORM)" && \
+		$(PYTHON) tools/release_audit.py --bundle-dir . --visualizer-timeout 3
+
+test-release-win64-local: package-release-win64-local
+	rm -rf "$(DIST_DIR)/test-win64"
+	mkdir -p "$(DIST_DIR)/test-win64"
+	$(PYTHON) -c 'import zipfile; zipfile.ZipFile("$(RELEASE_ARCHIVE)").extractall("$(DIST_DIR)/test-win64")'
+	cd "$(DIST_DIR)/test-win64/engine-control-test-rig-simulator-$(RELEASE_PLATFORM)" && \
+		$(PYTHON) tools/release_audit.py --bundle-dir . --command-prefix wine --visualizer-timeout 5 --skip-visualization-regeneration
 
 analyze-cppcheck:
 	cppcheck --enable=all --std=c11 --error-exitcode=1 \
