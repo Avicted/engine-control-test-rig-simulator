@@ -7,8 +7,8 @@
 static void print_usage(const char *program_name)
 {
     (void)fprintf(stderr,
-                  "Usage: %s [--theme default|dos|dos-blue|onyx|gruvbox|light] "
-                  "<scenario.json> [more_scenarios.json ...]\n",
+                  "Usage: %s [--theme default|dos|onyx|gruvbox|light] "
+                  "<scenarios.json> [more_scenarios.json ...]\n",
                   program_name);
 }
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
             if (visualizer_parse_theme_id(argv[arg_index + 1], &initial_theme) == 0) {
                 (void)fprintf(stderr,
                               "Unknown theme '%s'. Supported "
-                              "themes: default, dos, dos-blue, "
+                              "themes: default, dos, "
                               "onyx, gruvbox, light.\n",
                               argv[arg_index + 1]);
                 return 1;

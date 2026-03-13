@@ -267,6 +267,7 @@ void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
     state.key_scrub_direction = 0;
     state.speed_overridden = 0;
 
+    SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Engine Control Scenario Visualizer");
     SetTargetFPS(60);

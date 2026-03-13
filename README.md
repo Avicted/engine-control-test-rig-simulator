@@ -155,6 +155,12 @@ On Debian/Ubuntu:
 sudo apt install clang llvm make git cppcheck clang-tidy python3 lcov valgrind libc6-dbg
 ```
 
+On Arch Linux:
+
+```bash
+sudo pacman -S clang llvm make git cppcheck clang-tidy python lcov valgrind gdb glibc-debug
+```
+
 ### Quick start
 
 ```bash
@@ -162,6 +168,23 @@ make
 make test-unit
 ./build/testrig --run-all
 make ci-check
+```
+
+### Presentation demo
+
+For a short live walkthrough, run:
+
+```bash
+./demo.sh
+```
+
+The script rebuilds the simulator, shows a requirement-tagged validation sweep, runs a healthy scripted scenario, runs a shutdown scenario, and can optionally launch the Raylib visualizer if the machine has GUI support.
+
+Useful flags:
+
+```bash
+./demo.sh --auto
+./demo.sh --skip-visualizer
 ```
 
 
@@ -195,14 +218,14 @@ Expected CLI behavior:
 
 The visualization program reads JSON output only - it cannot call simulator internals or modify simulation state.
 
-The default visualizer input file, `visualization/scenario.json`, is generated from the scripted scenario files under `scenarios/`.
+The default visualizer input file, `visualization/scenarios.json`, is generated from the scripted scenario files under `scenarios/`.
 
 Generate and run it with:
 
 ```bash
 make generate-visualization-json
 make visualizer
-make run-visualizer JSON=visualization/scenario.json
+make run-visualizer JSON=visualization/scenarios.json
 ```
 
 Generation flow:
@@ -210,7 +233,7 @@ Generation flow:
 - `make generate-visualization-json` runs `tools/generate_visualization_scenario_json.py`
 - The helper script executes `./build/testrig --script <scenario.txt> --json` once for each scripted scenario file
 - It combines those per-scenario JSON payloads into a single visualization bundle
-- The combined output is written to `visualization/scenario.json` by default
+- The combined output is written to `visualization/scenarios.json` by default
 
 The generator script also accepts `--testrig`, `--scenarios-dir`, and `--output` to override the executable path, scenario source directory, and output location.
 
@@ -261,8 +284,9 @@ HAL interfaces are defined in `include/hal.h` and implemented in `src/platform/h
 
 ## Requirement Traceability
 
-Scenario `requirement_id` values emitted in JSON are defined in `src/scenario/requirements.h` and attached to test
-registry entries.
+Scenario `requirement_id` values emitted in JSON are defined in `include/requirements.h` and attached to test
+registry entries. The same header is the canonical registry for module-level traced `REQ-ENG-*` identifiers used in
+public API documentation and the traceability matrix.
 
 Console output includes requirement linkage per test:
 

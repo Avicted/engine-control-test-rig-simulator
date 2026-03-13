@@ -1,9 +1,6 @@
-#ifndef REQUIREMENTS_H
-#define REQUIREMENTS_H
+#ifndef SCENARIO_REQUIREMENTS_H
+#define SCENARIO_REQUIREMENTS_H
 
-#define REQ_ENG_001 "REQ-ENG-001"
-#define REQ_ENG_002 "REQ-ENG-002"
-#define REQ_ENG_003 "REQ-ENG-003"
-#define REQ_ENG_SCRIPT "REQ-ENG-SCRIPT"
+#include <requirements.h>
 
 #endif

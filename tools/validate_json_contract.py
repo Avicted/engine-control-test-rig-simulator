@@ -14,10 +14,11 @@ def validate_fallback(data_path: str) -> int:
     allowed_scenario = {"scenario", "requirement_id", "ticks", "expected", "actual", "pass"}
     allowed_tick = {"tick", "rpm", "temp", "oil", "run", "result", "control", "engine_mode"}
     allowed_summary = {"passed", "total"}
-    allowed_error = {"code", "module", "function", "tick", "severity"}
+    allowed_error = {"code", "module", "function", "tick", "severity", "recoverability"}
     result_enum = {"OK", "WARNING", "SHUTDOWN", "ERROR"}
     mode_enum = {"INIT", "STARTING", "RUNNING", "WARNING", "SHUTDOWN", "UNKNOWN"}
     severity_enum = {"INFO", "WARNING", "ERROR", "FATAL"}
+    recoverability_enum = {"RECOVERABLE", "NON_RECOVERABLE"}
 
     with open(data_path, "r", encoding="utf-8") as data_file:
         data = json.load(data_file)
@@ -99,7 +100,7 @@ def validate_fallback(data_path: str) -> int:
         error = data["error"]
         if (not isinstance(error, dict)) or (not set(error.keys()).issubset(allowed_error)):
             raise ValueError("error must be strict object")
-        for key in ("code", "module", "tick", "severity"):
+        for key in ("code", "module", "tick", "severity", "recoverability"):
             if key not in error:
                 raise ValueError(f"error missing field: {key}")
         if (not isinstance(error["code"], str)) or (len(error["code"]) == 0):
@@ -110,6 +111,8 @@ def validate_fallback(data_path: str) -> int:
             raise ValueError("error.tick must be non-negative integer")
         if error["severity"] not in severity_enum:
             raise ValueError("error.severity enum invalid")
+        if error["recoverability"] not in recoverability_enum:
+            raise ValueError("error.recoverability enum invalid")
 
     return 0
 

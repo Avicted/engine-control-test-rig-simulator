@@ -398,8 +398,7 @@ int visualizer_parse_theme_id(const char *name, VisualizerThemeId *theme_id)
 		return 1;
 	}
 
-	if (theme_name_matches(name, "dos") ||
-	    theme_name_matches(name, "dos-blue")) {
+	if (theme_name_matches(name, "dos")) {
 		*theme_id = VISUALIZER_THEME_DOS_BLUE;
 		return 1;
 	}
