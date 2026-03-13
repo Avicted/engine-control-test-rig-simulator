@@ -196,6 +196,12 @@ Features:
 - Animated dashboard playback with timeline graphs
 - Threshold overlays and scrubbable tick slider
 - Multi-scenario switching with cumulative statistics
+- Switchable visual themes: the existing dark "Midnight" palette, a DOS blue shell-inspired palette, the premium charcoal "Onyx" palette, and a high-contrast "Light" palette
+
+Theme selection:
+
+- Start with `--theme default`, `--theme midnight`, `--theme dos`, `--theme dos-blue`, `--theme onyx`, or `--theme light`
+- Press `T` while the visualizer is running to cycle between themes
 
 
 

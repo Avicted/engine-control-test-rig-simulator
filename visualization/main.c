@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "visualizer_app.h"
 #include "visualizer_loader.h"
@@ -6,19 +7,57 @@
 int main(int argc, char **argv)
 {
     ScenarioSet scenario_set;
+    VisualizerThemeId initial_theme = VISUALIZER_THEME_MIDNIGHT;
+    int arg_index;
+    int scenario_argc = 1;
 
-    if ((argc < 2) || (argv == NULL) || (argv[1] == NULL))
+    if ((argc < 2) || (argv == NULL))
     {
-        (void)fprintf(stderr, "Usage: %s <scenario.json> [more_scenarios.json ...]\n", (argc > 0) ? argv[0] : "visualizer");
+        (void)fprintf(stderr,
+                      "Usage: %s [--theme default|midnight|dos|dos-blue|onyx|light] <scenario.json> [more_scenarios.json ...]\n",
+                      (argc > 0) ? argv[0] : "visualizer");
         return 1;
     }
 
-    if (visualizer_load_scenarios_from_files(argc, argv, &scenario_set) == 0)
+    for (arg_index = 1; arg_index < argc; ++arg_index)
+    {
+        if ((strcmp(argv[arg_index], "--theme") == 0) && ((arg_index + 1) < argc))
+        {
+            if (visualizer_parse_theme_id(argv[arg_index + 1], &initial_theme) == 0)
+            {
+                (void)fprintf(stderr,
+                              "Unknown theme '%s'. Supported themes: default, midnight, dos, dos-blue, onyx, light.\n",
+                              argv[arg_index + 1]);
+                return 1;
+            }
+            ++arg_index;
+            continue;
+        }
+
+        if (strcmp(argv[arg_index], "--theme") == 0)
+        {
+            (void)fprintf(stderr, "Missing value after --theme.\n");
+            return 1;
+        }
+
+        argv[scenario_argc] = argv[arg_index];
+        ++scenario_argc;
+    }
+
+    if (scenario_argc < 2)
+    {
+        (void)fprintf(stderr,
+                      "Usage: %s [--theme default|midnight|dos|dos-blue|onyx|light] <scenario.json> [more_scenarios.json ...]\n",
+                      (argc > 0) ? argv[0] : "visualizer");
+        return 1;
+    }
+
+    if (visualizer_load_scenarios_from_files(scenario_argc, argv, &scenario_set) == 0)
     {
         (void)fprintf(stderr, "Failed to load scenario JSON file(s).\n");
         return 1;
     }
 
-    visualizer_run(&scenario_set);
+    visualizer_run(&scenario_set, initial_theme);
     return 0;
 }

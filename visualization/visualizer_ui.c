@@ -5,69 +5,387 @@
 #include "visualizer_playback.h"
 #include "visualizer_ui.h"
 
+typedef struct
+{
+    const char *label;
+    Color window_bg;
+    Color grad_top;
+    Color grad_bot;
+    Color panel_bg;
+    Color nav_bg;
+    Color timeline_bg;
+    Color bar_bg;
+    Color badge_bg;
+    Color slider_track_bg;
+    Color knob_shadow;
+    Color hdr_border;
+    Color panel_border;
+    Color timeline_border;
+    Color section_div;
+    Color timeline_subdiv;
+    Color fault_bar_bor;
+    Color bar_border;
+    Color slider_track_bor;
+    Color badge_border;
+    Color grid_line;
+    Color grid_bright;
+    Color grid_vert;
+    Color caption;
+    Color timeline_title;
+    Color speed_running;
+    Color scen_counter;
+    Color sublabel;
+    Color key;
+    Color key_desc;
+    Color meter_label;
+    Color tick_counter;
+    Color badge_text;
+    Color axis_label;
+    Color fault_pct_text;
+    Color primary_text;
+    Color knob_fill;
+    Color mode_default;
+    Color brak;
+    Color ok;
+    Color warning;
+    Color shutdown;
+    Color warning_fill;
+    Color shutdown_fill;
+    Color warning_dash;
+    Color shutdown_dash;
+    Color oil_shut_dash;
+    Color warning_tint;
+    Color shutdown_tint;
+    Color speed_paused;
+    Color end_notice;
+    Color playhead;
+    Color rpm;
+    Color temp;
+    Color oil;
+    Color ctrl;
+    Color slider_fill;
+    Color slider_ring;
+    Color replay_hint;
+} VisualizerTheme;
+
+static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
+    [VISUALIZER_THEME_MIDNIGHT] = {
+        .label = "MIDNIGHT",
+        .window_bg = (Color){9, 11, 18, 255},
+        .grad_top = (Color){11, 14, 22, 255},
+        .grad_bot = (Color){7, 9, 16, 255},
+        .panel_bg = (Color){13, 16, 26, 255},
+        .nav_bg = (Color){10, 12, 20, 255},
+        .timeline_bg = (Color){12, 15, 24, 255},
+        .bar_bg = (Color){18, 22, 34, 255},
+        .badge_bg = (Color){20, 25, 40, 255},
+        .slider_track_bg = (Color){22, 27, 44, 255},
+        .knob_shadow = (Color){8, 10, 18, 180},
+        .hdr_border = (Color){30, 36, 58, 255},
+        .panel_border = (Color){30, 36, 56, 255},
+        .timeline_border = (Color){32, 38, 58, 255},
+        .section_div = (Color){24, 29, 48, 255},
+        .timeline_subdiv = (Color){26, 31, 50, 255},
+        .fault_bar_bor = (Color){38, 44, 64, 255},
+        .bar_border = (Color){40, 46, 66, 255},
+        .slider_track_bor = (Color){44, 52, 76, 255},
+        .badge_border = (Color){44, 54, 84, 255},
+        .grid_line = (Color){44, 49, 63, 180},
+        .grid_bright = (Color){96, 104, 122, 220},
+        .grid_vert = (Color){38, 43, 58, 170},
+        .caption = (Color){68, 82, 118, 255},
+        .timeline_title = (Color){72, 85, 120, 255},
+        .speed_running = (Color){72, 86, 120, 255},
+        .scen_counter = (Color){78, 94, 136, 255},
+        .sublabel = (Color){90, 106, 148, 255},
+        .key = (Color){90, 170, 255, 255},
+        .key_desc = (Color){110, 124, 155, 255},
+        .meter_label = (Color){120, 134, 165, 255},
+        .tick_counter = (Color){140, 155, 186, 255},
+        .badge_text = (Color){148, 165, 205, 255},
+        .axis_label = (Color){160, 168, 184, 255},
+        .fault_pct_text = (Color){170, 182, 212, 255},
+        .primary_text = (Color){245, 248, 255, 255},
+        .knob_fill = (Color){220, 228, 245, 255},
+        .mode_default = (Color){180, 186, 200, 255},
+        .brak = (Color){50, 62, 94, 255},
+        .ok = (Color){40, 167, 69, 255},
+        .warning = (Color){255, 193, 7, 255},
+        .shutdown = (Color){220, 53, 69, 255},
+        .warning_fill = (Color){255, 193, 7, 200},
+        .shutdown_fill = (Color){220, 53, 69, 210},
+        .warning_dash = (Color){255, 193, 7, 160},
+        .shutdown_dash = (Color){220, 53, 69, 170},
+        .oil_shut_dash = (Color){220, 53, 69, 120},
+        .warning_tint = (Color){255, 193, 7, 26},
+        .shutdown_tint = (Color){220, 53, 69, 34},
+        .speed_paused = (Color){255, 193, 7, 220},
+        .end_notice = (Color){255, 220, 100, 255},
+        .playhead = (Color){255, 255, 255, 210},
+        .rpm = (Color){52, 152, 219, 255},
+        .temp = (Color){255, 99, 132, 255},
+        .oil = (Color){46, 204, 113, 255},
+        .ctrl = (Color){176, 132, 255, 255},
+        .slider_fill = (Color){48, 128, 220, 255},
+        .slider_ring = (Color){48, 128, 220, 200},
+        .replay_hint = (Color){160, 174, 210, 255},
+    },
+    [VISUALIZER_THEME_DOS_BLUE] = {
+        .label = "DOS BLUE",
+        .window_bg = (Color){0, 0, 170, 255},
+        .grad_top = (Color){0, 0, 184, 255},
+        .grad_bot = (Color){0, 0, 136, 255},
+        .panel_bg = (Color){0, 0, 164, 255},
+        .nav_bg = (Color){0, 0, 144, 255},
+        .timeline_bg = (Color){0, 0, 152, 255},
+        .bar_bg = (Color){0, 0, 112, 255},
+        .badge_bg = (Color){0, 0, 136, 255},
+        .slider_track_bg = (Color){0, 0, 104, 255},
+        .knob_shadow = (Color){0, 0, 0, 120},
+        .hdr_border = (Color){60, 120, 220, 255},
+        .panel_border = (Color){60, 120, 220, 255},
+        .timeline_border = (Color){60, 120, 220, 255},
+        .section_div = (Color){50, 100, 200, 255},
+        .timeline_subdiv = (Color){70, 140, 220, 255},
+        .fault_bar_bor = (Color){60, 100, 180, 255},
+        .bar_border = (Color){60, 100, 180, 255},
+        .slider_track_bor = (Color){90, 170, 220, 255},
+        .badge_border = (Color){90, 170, 220, 255},
+        .grid_line = (Color){70, 100, 180, 70},
+        .grid_bright = (Color){150, 200, 255, 120},
+        .grid_vert = (Color){60, 110, 200, 70},
+        .caption = (Color){150, 220, 255, 255},
+        .timeline_title = (Color){180, 230, 255, 255},
+        .speed_running = (Color){180, 230, 255, 255},
+        .scen_counter = (Color){160, 200, 240, 255},
+        .sublabel = (Color){145, 185, 225, 255},
+        .key = (Color){255, 255, 255, 255},
+        .key_desc = (Color){170, 205, 240, 255},
+        .meter_label = (Color){170, 220, 255, 255},
+        .tick_counter = (Color){255, 255, 255, 255},
+        .badge_text = (Color){140, 180, 220, 255},
+        .axis_label = (Color){235, 235, 255, 255},
+        .fault_pct_text = (Color){255, 255, 255, 255},
+        .primary_text = (Color){220, 230, 255, 255},
+        .knob_fill = (Color){255, 255, 255, 255},
+        .mode_default = (Color){90, 170, 220, 255},
+        .brak = (Color){85, 255, 85, 255},
+        .ok = (Color){255, 255, 85, 255},
+        .warning = (Color){255, 85, 85, 255},
+        .shutdown = (Color){255, 255, 85, 160},
+        .warning_fill = (Color){255, 85, 85, 170},
+        .shutdown_fill = (Color){255, 255, 85, 120},
+        .warning_dash = (Color){255, 85, 85, 120},
+        .shutdown_dash = (Color){255, 85, 85, 90},
+        .oil_shut_dash = (Color){255, 255, 85, 16},
+        .warning_tint = (Color){255, 85, 85, 18},
+        .shutdown_tint = (Color){255, 255, 85, 255},
+        .speed_paused = (Color){255, 255, 255, 255},
+        .end_notice = (Color){255, 255, 255, 200},
+        .playhead = (Color){85, 255, 255, 255},
+        .rpm = (Color){255, 170, 170, 255},
+        .temp = (Color){85, 255, 85, 255},
+        .oil = (Color){160, 200, 255, 255},
+        .ctrl = (Color){85, 255, 255, 255},
+        .slider_fill = (Color){85, 255, 255, 200},
+        .slider_ring = (Color){170, 200, 240, 255},
+        .replay_hint = (Color){170, 200, 240, 255},
+    },
+    [VISUALIZER_THEME_ONYX] = {
+        .label = "ONYX",
+        .window_bg = (Color){10, 12, 16, 255},
+        .grad_top = (Color){18, 20, 26, 255},
+        .grad_bot = (Color){6, 8, 12, 255},
+        .panel_bg = (Color){16, 19, 25, 255},
+        .nav_bg = (Color){13, 15, 21, 255},
+        .timeline_bg = (Color){14, 17, 23, 255},
+        .bar_bg = (Color){24, 28, 38, 255},
+        .badge_bg = (Color){21, 24, 33, 255},
+        .slider_track_bg = (Color){26, 30, 42, 255},
+        .knob_shadow = (Color){0, 0, 0, 140},
+        .hdr_border = (Color){58, 63, 78, 255},
+        .panel_border = (Color){52, 58, 72, 255},
+        .timeline_border = (Color){58, 64, 80, 255},
+        .section_div = (Color){40, 46, 60, 255},
+        .timeline_subdiv = (Color){44, 50, 66, 255},
+        .fault_bar_bor = (Color){56, 61, 78, 255},
+        .bar_border = (Color){60, 66, 84, 255},
+        .slider_track_bor = (Color){72, 80, 100, 255},
+        .badge_border = (Color){78, 88, 110, 255},
+        .grid_line = (Color){64, 71, 88, 110},
+        .grid_bright = (Color){140, 150, 172, 170},
+        .grid_vert = (Color){54, 60, 78, 90},
+        .caption = (Color){176, 156, 112, 255},
+        .timeline_title = (Color){190, 198, 214, 255},
+        .speed_running = (Color){90, 200, 188, 255},
+        .scen_counter = (Color){142, 150, 168, 255},
+        .sublabel = (Color){128, 136, 156, 255},
+        .key = (Color){118, 214, 202, 255},
+        .key_desc = (Color){124, 132, 150, 255},
+        .meter_label = (Color){150, 158, 176, 255},
+        .tick_counter = (Color){198, 206, 224, 255},
+        .badge_text = (Color){214, 220, 236, 255},
+        .axis_label = (Color){132, 140, 158, 255},
+        .fault_pct_text = (Color){196, 204, 220, 255},
+        .primary_text = (Color){245, 247, 250, 255},
+        .knob_fill = (Color){238, 242, 248, 255},
+        .mode_default = (Color){190, 198, 214, 255},
+        .brak = (Color){98, 106, 126, 255},
+        .ok = (Color){58, 199, 132, 255},
+        .warning = (Color){246, 189, 96, 255},
+        .shutdown = (Color){219, 78, 87, 255},
+        .warning_fill = (Color){246, 189, 96, 190},
+        .shutdown_fill = (Color){219, 78, 87, 200},
+        .warning_dash = (Color){246, 189, 96, 135},
+        .shutdown_dash = (Color){219, 78, 87, 145},
+        .oil_shut_dash = (Color){219, 78, 87, 95},
+        .warning_tint = (Color){246, 189, 96, 18},
+        .shutdown_tint = (Color){219, 78, 87, 24},
+        .speed_paused = (Color){246, 189, 96, 220},
+        .end_notice = (Color){236, 220, 174, 255},
+        .playhead = (Color){255, 255, 255, 220},
+        .rpm = (Color){79, 179, 255, 255},
+        .temp = (Color){255, 122, 122, 255},
+        .oil = (Color){78, 204, 143, 255},
+        .ctrl = (Color){94, 225, 205, 255},
+        .slider_fill = (Color){118, 214, 202, 255},
+        .slider_ring = (Color){118, 214, 202, 180},
+        .replay_hint = (Color){154, 162, 182, 255},
+    },
+    [VISUALIZER_THEME_LIGHT] = {
+        .label = "LIGHT",
+        .window_bg = (Color){244, 247, 250, 255},
+        .grad_top = (Color){252, 253, 255, 255},
+        .grad_bot = (Color){232, 237, 243, 255},
+        .panel_bg = (Color){250, 252, 255, 255},
+        .nav_bg = (Color){240, 244, 249, 255},
+        .timeline_bg = (Color){248, 250, 253, 255},
+        .bar_bg = (Color){226, 232, 240, 255},
+        .badge_bg = (Color){236, 241, 247, 255},
+        .slider_track_bg = (Color){216, 224, 234, 255},
+        .knob_shadow = (Color){80, 98, 120, 50},
+        .hdr_border = (Color){173, 183, 198, 255},
+        .panel_border = (Color){180, 190, 204, 255},
+        .timeline_border = (Color){173, 184, 198, 255},
+        .section_div = (Color){194, 202, 214, 255},
+        .timeline_subdiv = (Color){198, 206, 218, 255},
+        .fault_bar_bor = (Color){168, 179, 193, 255},
+        .bar_border = (Color){160, 171, 186, 255},
+        .slider_track_bor = (Color){150, 163, 180, 255},
+        .badge_border = (Color){145, 158, 176, 255},
+        .grid_line = (Color){182, 191, 204, 130},
+        .grid_bright = (Color){108, 121, 141, 200},
+        .grid_vert = (Color){190, 198, 210, 120},
+        .caption = (Color){86, 97, 114, 255},
+        .timeline_title = (Color){70, 80, 98, 255},
+        .speed_running = (Color){39, 121, 118, 255},
+        .scen_counter = (Color){92, 102, 120, 255},
+        .sublabel = (Color){95, 106, 124, 255},
+        .key = (Color){36, 118, 180, 255},
+        .key_desc = (Color){90, 101, 120, 255},
+        .meter_label = (Color){66, 77, 94, 255},
+        .tick_counter = (Color){62, 73, 91, 255},
+        .badge_text = (Color){66, 77, 94, 255},
+        .axis_label = (Color){84, 95, 114, 255},
+        .fault_pct_text = (Color){70, 81, 96, 255},
+        .primary_text = (Color){32, 43, 56, 255},
+        .knob_fill = (Color){252, 253, 255, 255},
+        .mode_default = (Color){85, 97, 114, 255},
+        .brak = (Color){118, 129, 146, 255},
+        .ok = (Color){34, 146, 88, 255},
+        .warning = (Color){190, 132, 20, 255},
+        .shutdown = (Color){190, 60, 76, 255},
+        .warning_fill = (Color){190, 132, 20, 180},
+        .shutdown_fill = (Color){190, 60, 76, 190},
+        .warning_dash = (Color){190, 132, 20, 140},
+        .shutdown_dash = (Color){190, 60, 76, 150},
+        .oil_shut_dash = (Color){190, 60, 76, 110},
+        .warning_tint = (Color){190, 132, 20, 18},
+        .shutdown_tint = (Color){190, 60, 76, 22},
+        .speed_paused = (Color){176, 120, 24, 255},
+        .end_notice = (Color){129, 99, 23, 255},
+        .playhead = (Color){46, 59, 79, 220},
+        .rpm = (Color){38, 132, 214, 255},
+        .temp = (Color){230, 96, 114, 255},
+        .oil = (Color){42, 162, 92, 255},
+        .ctrl = (Color){89, 106, 214, 255},
+        .slider_fill = (Color){49, 124, 199, 255},
+        .slider_ring = (Color){49, 124, 199, 170},
+        .replay_hint = (Color){92, 103, 121, 255},
+    },
+};
+
+static VisualizerThemeId g_visualizer_theme = VISUALIZER_THEME_MIDNIGHT;
+
+static const VisualizerTheme *visualizer_active_theme(void)
+{
+    return &k_visualizer_themes[g_visualizer_theme];
+}
+
 /* Background layers */
-#define COL_WINDOW_BG ((Color){9, 11, 18, 255})
-#define COL_GRAD_TOP ((Color){11, 14, 22, 255})
-#define COL_GRAD_BOT ((Color){7, 9, 16, 255})
-#define COL_PANEL_BG ((Color){13, 16, 26, 255})
-#define COL_NAV_BG ((Color){10, 12, 20, 255})
-#define COL_TIMELINE_BG ((Color){12, 15, 24, 255})
-#define COL_BAR_BG ((Color){18, 22, 34, 255})
-#define COL_BADGE_BG ((Color){20, 25, 40, 255})
-#define COL_SLIDER_TRACK_BG ((Color){22, 27, 44, 255})
-#define COL_KNOB_SHADOW ((Color){8, 10, 18, 180})
+#define COL_WINDOW_BG (visualizer_active_theme()->window_bg)
+#define COL_GRAD_TOP (visualizer_active_theme()->grad_top)
+#define COL_GRAD_BOT (visualizer_active_theme()->grad_bot)
+#define COL_PANEL_BG (visualizer_active_theme()->panel_bg)
+#define COL_NAV_BG (visualizer_active_theme()->nav_bg)
+#define COL_TIMELINE_BG (visualizer_active_theme()->timeline_bg)
+#define COL_BAR_BG (visualizer_active_theme()->bar_bg)
+#define COL_BADGE_BG (visualizer_active_theme()->badge_bg)
+#define COL_SLIDER_TRACK_BG (visualizer_active_theme()->slider_track_bg)
+#define COL_KNOB_SHADOW (visualizer_active_theme()->knob_shadow)
 /* Borders / dividers */
-#define COL_HDR_BORDER ((Color){30, 36, 58, 255})
-#define COL_PANEL_BORDER ((Color){30, 36, 56, 255})
-#define COL_TIMELINE_BORDER ((Color){32, 38, 58, 255})
-#define COL_SECTION_DIV ((Color){24, 29, 48, 255})
-#define COL_TIMELINE_SUBDIV ((Color){26, 31, 50, 255})
-#define COL_FAULT_BAR_BOR ((Color){38, 44, 64, 255})
-#define COL_BAR_BORDER ((Color){40, 46, 66, 255})
-#define COL_SLIDER_TRACK_BOR ((Color){44, 52, 76, 255})
-#define COL_BADGE_BORDER ((Color){44, 54, 84, 255})
+#define COL_HDR_BORDER (visualizer_active_theme()->hdr_border)
+#define COL_PANEL_BORDER (visualizer_active_theme()->panel_border)
+#define COL_TIMELINE_BORDER (visualizer_active_theme()->timeline_border)
+#define COL_SECTION_DIV (visualizer_active_theme()->section_div)
+#define COL_TIMELINE_SUBDIV (visualizer_active_theme()->timeline_subdiv)
+#define COL_FAULT_BAR_BOR (visualizer_active_theme()->fault_bar_bor)
+#define COL_BAR_BORDER (visualizer_active_theme()->bar_border)
+#define COL_SLIDER_TRACK_BOR (visualizer_active_theme()->slider_track_bor)
+#define COL_BADGE_BORDER (visualizer_active_theme()->badge_border)
 /* Grid */
-#define COL_GRID_LINE ((Color){44, 49, 63, 180})
-#define COL_GRID_BRIGHT ((Color){96, 104, 122, 220})
-#define COL_GRID_VERT ((Color){38, 43, 58, 170})
+#define COL_GRID_LINE (visualizer_active_theme()->grid_line)
+#define COL_GRID_BRIGHT (visualizer_active_theme()->grid_bright)
+#define COL_GRID_VERT (visualizer_active_theme()->grid_vert)
 /* Text - dark to light */
-#define COL_CAPTION ((Color){68, 82, 118, 255})
-#define COL_TIMELINE_TITLE ((Color){72, 85, 120, 255})
-#define COL_SPEED_RUNNING ((Color){72, 86, 120, 255})
-#define COL_SCEN_COUNTER ((Color){78, 94, 136, 255})
-#define COL_SUBLABEL ((Color){90, 106, 148, 255})
-#define COL_KEY ((Color){90, 170, 255, 255})
-#define COL_KEY_DESC ((Color){110, 124, 155, 255})
-#define COL_METER_LABEL ((Color){120, 134, 165, 255})
-#define COL_TICK_COUNTER ((Color){140, 155, 186, 255})
-#define COL_BADGE_TEXT ((Color){148, 165, 205, 255})
-#define COL_AXIS_LABEL ((Color){160, 168, 184, 255})
-#define COL_FAULT_PCT_TEXT ((Color){170, 182, 212, 255})
-#define COL_KNOB_FILL ((Color){220, 228, 245, 255})
-#define COL_MODE_DEFAULT ((Color){180, 186, 200, 255})
-#define COL_BRAK ((Color){50, 62, 94, 255})
+#define COL_CAPTION (visualizer_active_theme()->caption)
+#define COL_TIMELINE_TITLE (visualizer_active_theme()->timeline_title)
+#define COL_SPEED_RUNNING (visualizer_active_theme()->speed_running)
+#define COL_SCEN_COUNTER (visualizer_active_theme()->scen_counter)
+#define COL_SUBLABEL (visualizer_active_theme()->sublabel)
+#define COL_KEY (visualizer_active_theme()->key)
+#define COL_KEY_DESC (visualizer_active_theme()->key_desc)
+#define COL_METER_LABEL (visualizer_active_theme()->meter_label)
+#define COL_TICK_COUNTER (visualizer_active_theme()->tick_counter)
+#define COL_BADGE_TEXT (visualizer_active_theme()->badge_text)
+#define COL_AXIS_LABEL (visualizer_active_theme()->axis_label)
+#define COL_FAULT_PCT_TEXT (visualizer_active_theme()->fault_pct_text)
+#define COL_PRIMARY_TEXT (visualizer_active_theme()->primary_text)
+#define COL_KNOB_FILL (visualizer_active_theme()->knob_fill)
+#define COL_MODE_DEFAULT (visualizer_active_theme()->mode_default)
+#define COL_BRAK (visualizer_active_theme()->brak)
 /* Semantic status */
-#define COL_OK ((Color){40, 167, 69, 255})
-#define COL_WARNING ((Color){255, 193, 7, 255})
-#define COL_SHUTDOWN ((Color){220, 53, 69, 255})
-#define COL_WARNING_FILL ((Color){255, 193, 7, 200})
-#define COL_SHUTDOWN_FILL ((Color){220, 53, 69, 210})
-#define COL_WARNING_DASH ((Color){255, 193, 7, 160})
-#define COL_SHUTDOWN_DASH ((Color){220, 53, 69, 170})
-#define COL_OIL_SHUT_DASH ((Color){220, 53, 69, 120})
-#define COL_WARNING_TINT ((Color){255, 193, 7, 26})
-#define COL_SHUTDOWN_TINT ((Color){220, 53, 69, 34})
-#define COL_SPEED_PAUSED ((Color){255, 193, 7, 220})
-#define COL_END_NOTICE ((Color){255, 220, 100, 255})
-#define COL_PLAYHEAD ((Color){255, 255, 255, 210})
+#define COL_OK (visualizer_active_theme()->ok)
+#define COL_WARNING (visualizer_active_theme()->warning)
+#define COL_SHUTDOWN (visualizer_active_theme()->shutdown)
+#define COL_WARNING_FILL (visualizer_active_theme()->warning_fill)
+#define COL_SHUTDOWN_FILL (visualizer_active_theme()->shutdown_fill)
+#define COL_WARNING_DASH (visualizer_active_theme()->warning_dash)
+#define COL_SHUTDOWN_DASH (visualizer_active_theme()->shutdown_dash)
+#define COL_OIL_SHUT_DASH (visualizer_active_theme()->oil_shut_dash)
+#define COL_WARNING_TINT (visualizer_active_theme()->warning_tint)
+#define COL_SHUTDOWN_TINT (visualizer_active_theme()->shutdown_tint)
+#define COL_SPEED_PAUSED (visualizer_active_theme()->speed_paused)
+#define COL_END_NOTICE (visualizer_active_theme()->end_notice)
+#define COL_PLAYHEAD (visualizer_active_theme()->playhead)
 /* Signal / sensor lines */
-#define COL_RPM ((Color){52, 152, 219, 255})
-#define COL_TEMP ((Color){255, 99, 132, 255})
-#define COL_OIL ((Color){46, 204, 113, 255})
-#define COL_CTRL ((Color){176, 132, 255, 255})
+#define COL_RPM (visualizer_active_theme()->rpm)
+#define COL_TEMP (visualizer_active_theme()->temp)
+#define COL_OIL (visualizer_active_theme()->oil)
+#define COL_CTRL (visualizer_active_theme()->ctrl)
 /* Slider accent */
-#define COL_SLIDER_FILL ((Color){48, 128, 220, 255})
-#define COL_SLIDER_RING ((Color){48, 128, 220, 200})
+#define COL_SLIDER_FILL (visualizer_active_theme()->slider_fill)
+#define COL_SLIDER_RING (visualizer_active_theme()->slider_ring)
 
 #define FS_TINY 11.0f
 #define FS_SMALL 12.0f
@@ -97,7 +415,73 @@
 #define LAYOUT_SLIDER_INSET 30.0f
 #define LAYOUT_SLIDER_H 24.0f
 
-#define COL_REPLAY_HINT ((Color){160, 174, 210, 255})
+#define COL_REPLAY_HINT (visualizer_active_theme()->replay_hint)
+
+int visualizer_parse_theme_id(const char *name, VisualizerThemeId *theme_id)
+{
+    if ((name == NULL) || (theme_id == NULL))
+    {
+        return 0;
+    }
+
+    if ((strcmp(name, "default") == 0) || (strcmp(name, "midnight") == 0))
+    {
+        *theme_id = VISUALIZER_THEME_MIDNIGHT;
+        return 1;
+    }
+
+    if ((strcmp(name, "dos") == 0) || (strcmp(name, "dos-blue") == 0) || (strcmp(name, "dos_blue") == 0))
+    {
+        *theme_id = VISUALIZER_THEME_DOS_BLUE;
+        return 1;
+    }
+
+    if ((strcmp(name, "onyx") == 0) || (strcmp(name, "modern") == 0) || (strcmp(name, "premium") == 0))
+    {
+        *theme_id = VISUALIZER_THEME_ONYX;
+        return 1;
+    }
+
+    if ((strcmp(name, "light") == 0) || (strcmp(name, "light-mode") == 0) || (strcmp(name, "day") == 0))
+    {
+        *theme_id = VISUALIZER_THEME_LIGHT;
+        return 1;
+    }
+
+    return 0;
+}
+
+const char *visualizer_theme_label(VisualizerThemeId theme_id)
+{
+    if ((theme_id < 0) || (theme_id >= VISUALIZER_THEME_COUNT))
+    {
+        return k_visualizer_themes[VISUALIZER_THEME_MIDNIGHT].label;
+    }
+
+    return k_visualizer_themes[theme_id].label;
+}
+
+VisualizerThemeId visualizer_theme_get(void)
+{
+    return g_visualizer_theme;
+}
+
+VisualizerThemeId visualizer_theme_cycle(void)
+{
+    g_visualizer_theme = (VisualizerThemeId)((g_visualizer_theme + 1) % VISUALIZER_THEME_COUNT);
+    return g_visualizer_theme;
+}
+
+void visualizer_theme_set(VisualizerThemeId theme_id)
+{
+    if ((theme_id < 0) || (theme_id >= VISUALIZER_THEME_COUNT))
+    {
+        g_visualizer_theme = VISUALIZER_THEME_MIDNIGHT;
+        return;
+    }
+
+    g_visualizer_theme = theme_id;
+}
 
 static void draw_text_font(const Font *font, const char *text, float x, float y, float size, Color color)
 {
@@ -187,15 +571,15 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
     draw_text_font(font, title,
                    box_x + (box_w - sz.x) * 0.5f,
                    box_y + 14.0f * scale,
-                   title_fs, RAYWHITE);
+                   title_fs, COL_PRIMARY_TEXT);
 
     DrawLine((int)(box_x + 16.0f * scale), (int)(box_y + 54.0f * scale),
              (int)(box_x + box_w - 16.0f * scale), (int)(box_y + 54.0f * scale),
              COL_SECTION_DIV);
 
     yes_bg = COL_BADGE_BG;
-    yes_bor = (selection == 1) ? RAYWHITE : COL_BADGE_BORDER;
-    yes_txt = RAYWHITE;
+    yes_bor = (selection == 1) ? COL_PRIMARY_TEXT : COL_BADGE_BORDER;
+    yes_txt = COL_PRIMARY_TEXT;
     DrawRectangle((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bg);
     DrawRectangleLines((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bor);
     sz = MeasureTextEx(*font, "YES", opt_fs, 1.0f);
@@ -205,8 +589,8 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
                    opt_fs, yes_txt);
 
     no_bg = COL_BADGE_BG;
-    no_bor = (selection == 0) ? RAYWHITE : COL_BADGE_BORDER;
-    no_txt = RAYWHITE;
+    no_bor = (selection == 0) ? COL_PRIMARY_TEXT : COL_BADGE_BORDER;
+    no_txt = COL_PRIMARY_TEXT;
     DrawRectangle((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bg);
     DrawRectangleLines((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bor);
     sz = MeasureTextEx(*font, "NO", opt_fs, 1.0f);
@@ -299,7 +683,7 @@ static void draw_meter(const Font *font,
         value_x = value_area.x;
     }
     value_y = bar_area.y + (bar_area.height - val_fs) * 0.5f;
-    draw_text_font(font, value_text, value_x, value_y, val_fs, RAYWHITE);
+    draw_text_font(font, value_text, value_x, value_y, val_fs, COL_PRIMARY_TEXT);
 }
 
 static void draw_dashed_hline(int x0, int x1, int y, int dash, int gap, Color color)
@@ -503,25 +887,36 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         float dot_r = LAYOUT_DOT_R;
         float lx = area.x + area.width - 12.0f;
         Vector2 lsz;
-        static const struct
-        {
-            const char *name;
-            Color col;
-        } k_legend[] = {
-            {"CTRL", COL_CTRL},
-            {"OIL", COL_OIL},
-            {"TEMP", COL_TEMP},
-            {"RPM", COL_RPM},
+        static const char *k_legend_names[] = {
+            "CTRL",
+            "OIL",
+            "TEMP",
+            "RPM",
         };
         int li;
 
         for (li = 0; li < 4; ++li)
         {
-            lsz = MeasureTextEx(*font, k_legend[li].name, lfs2, 1.0f);
+            Color legend_color = COL_CTRL;
+
+            if (li == 1)
+            {
+                legend_color = COL_OIL;
+            }
+            else if (li == 2)
+            {
+                legend_color = COL_TEMP;
+            }
+            else if (li == 3)
+            {
+                legend_color = COL_RPM;
+            }
+
+            lsz = MeasureTextEx(*font, k_legend_names[li], lfs2, 1.0f);
             lx -= lsz.x;
-            draw_text_font(font, k_legend[li].name, lx, ley, lfs2, k_legend[li].col);
+            draw_text_font(font, k_legend_names[li], lx, ley, lfs2, legend_color);
             lx -= dot_r * 2.0f + LAYOUT_LEGEND_DOT_GAP;
-            DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, k_legend[li].col);
+            DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, legend_color);
             lx -= LAYOUT_LEGEND_COL_GAP;
         }
     }
@@ -674,13 +1069,17 @@ void visualizer_draw_frame(const Font *font,
         char scen_label[48];
         char meta_text[96];
         char tick_str[48];
+        char theme_str[48];
         Vector2 tick_sz;
         Vector2 scen_sz;
+        Vector2 theme_sz;
         float meta_x;
         float meta_y;
         float badge_w;
         float badge_x;
         float badge_y;
+        float theme_badge_w;
+        float theme_badge_x;
         float badge_h = LAYOUT_BADGE_H * layout->scale;
 
         (void)snprintf(scen_label, sizeof(scen_label),
@@ -694,7 +1093,12 @@ void visualizer_draw_frame(const Font *font,
         badge_x = (float)screen_w - badge_w - layout->pad;
         badge_y = (layout->hdr_h - badge_h) * 0.5f;
 
-        draw_text_font(font, scenario->scenario, layout->pad, 21.0f * layout->scale, FS_SCEN_NAME * layout->scale, RAYWHITE);
+        (void)snprintf(theme_str, sizeof(theme_str), "THEME  %s", visualizer_theme_label(visualizer_theme_get()));
+        theme_sz = MeasureTextEx(*font, theme_str, FS_BADGE * layout->scale, 1.0f);
+        theme_badge_w = theme_sz.x + 20.0f * layout->scale;
+        theme_badge_x = badge_x - theme_badge_w - 10.0f * layout->scale;
+
+        draw_text_font(font, scenario->scenario, layout->pad, 21.0f * layout->scale, FS_SCEN_NAME * layout->scale, COL_PRIMARY_TEXT);
         scen_sz = MeasureTextEx(*font, scenario->scenario, FS_SCEN_NAME * layout->scale, 1.0f);
         (void)snprintf(meta_text, sizeof(meta_text), "%s   EXPECTED: %s",
                        scenario->requirement_id, scenario->expected);
@@ -711,6 +1115,16 @@ void visualizer_draw_frame(const Font *font,
                        badge_x + 10.0f * layout->scale,
                        badge_y + (badge_h - FS_BADGE * layout->scale) * 0.5f,
                        FS_BADGE * layout->scale, COL_BADGE_TEXT);
+
+        if (theme_badge_x > (meta_x + 24.0f * layout->scale))
+        {
+            DrawRectangle((int)theme_badge_x, (int)badge_y, (int)theme_badge_w, (int)badge_h, COL_BADGE_BG);
+            DrawRectangleLines((int)theme_badge_x, (int)badge_y, (int)theme_badge_w, (int)badge_h, COL_BADGE_BORDER);
+            draw_text_font(font, theme_str,
+                           theme_badge_x + 10.0f * layout->scale,
+                           badge_y + (badge_h - FS_BADGE * layout->scale) * 0.5f,
+                           FS_BADGE * layout->scale, COL_BADGE_TEXT);
+        }
     }
 
     DrawRectangle(0, (int)layout->hdr_h, screen_w, (int)layout->nav_h, COL_NAV_BG);
@@ -728,6 +1142,7 @@ void visualizer_draw_frame(const Font *font,
         kx += draw_key_hint(font, "UP DN", "Speed", kx, ky, kfs) + gap2;
         kx += draw_key_hint(font, "LT RT", "Step", kx, ky, kfs) + gap2;
         kx += draw_key_hint(font, "TAB", "Switch", kx, ky, kfs) + gap2;
+        kx += draw_key_hint(font, "T", "Theme", kx, ky, kfs) + gap2;
         kx += draw_key_hint(font, "F11", "Fullscreen", kx, ky, kfs) + gap2;
         kx += draw_key_hint(font, "ESC", "Quit", kx, ky, kfs);
         (void)kx;

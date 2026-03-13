@@ -121,6 +121,11 @@ static void handle_playback_input(ScenarioSet *scenario_set,
         return;
     }
 
+    if (IsKeyPressed(KEY_T))
+    {
+        (void)visualizer_theme_cycle();
+    }
+
     if (IsKeyPressed(KEY_SPACE))
     {
         state->paused = (state->paused == 0) ? 1 : 0;
@@ -211,7 +216,7 @@ static void update_playback(const ScenarioData *scenario, VisualizerAppState *st
     }
 }
 
-void visualizer_run(ScenarioSet *scenario_set)
+void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
 {
     VisualizerAppState state;
 
@@ -230,6 +235,7 @@ void visualizer_run(ScenarioSet *scenario_set)
     SetTargetFPS(60);
     SetExitKey(KEY_NULL);
 
+    visualizer_theme_set(initial_theme);
     initialize_ui_font(&state);
     reset_for_active_scenario(scenario_set, &state);
 
