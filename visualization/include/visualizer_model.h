@@ -30,15 +30,13 @@
 
 #define FONT_PATH "visualization/PxPlus_IBM_EGA_8x14.ttf"
 
-typedef enum
-{
-    LEVEL_OK = 0,
-    LEVEL_WARNING = 1,
-    LEVEL_SHUTDOWN = 2
+typedef enum { 
+    LEVEL_OK = 0, 
+    LEVEL_WARNING = 1, 
+    LEVEL_SHUTDOWN = 2 
 } SeverityLevel;
 
-typedef struct
-{
+typedef struct {
     unsigned int tick;
     float rpm;
     float temp;
@@ -49,8 +47,7 @@ typedef struct
     char engine_mode[MAX_MODE_NAME];
 } TickData;
 
-typedef struct
-{
+typedef struct {
     char scenario[MAX_SCENARIO_NAME];
     char requirement_id[MAX_REQUIREMENT_ID];
     char expected[MAX_EXPECTED_VALUE];
@@ -58,8 +55,7 @@ typedef struct
     unsigned int tick_count;
 } ScenarioData;
 
-typedef struct
-{
+typedef struct {
     ScenarioData scenarios[MAX_SCENARIOS];
     unsigned int count;
     unsigned int active_index;

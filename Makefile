@@ -14,6 +14,7 @@ VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind
 
 VISUALIZER_SRC = visualization/src/main.c \
 	visualization/src/visualizer_app.c \
+	visualization/src/visualizer_config.c \
 	visualization/src/visualizer_loader.c \
 	visualization/src/visualizer_playback.c \
 	visualization/src/visualizer_ui.c
@@ -302,7 +303,7 @@ check-viz-boundary:
 	@echo "=== Visualization Boundary Audit ==="; \
 	violations=0; \
 	for hdr in config.h control.h engine.h hal.h status.h script_parser.h scenario_contract.h test_runner.h; do \
-		if grep -rn "#include.*$$hdr" visualization/ > /dev/null 2>&1; then \
+		if grep -Ern '#include[[:space:]]*[<"]'"$$hdr"'[>"]' visualization/ > /dev/null 2>&1; then \
 			echo "FAIL: visualizer includes simulator header $$hdr"; \
 			violations=1; \
 		fi; \

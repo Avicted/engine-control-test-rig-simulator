@@ -1,36 +1,46 @@
+#include <stdio.h>
 #include <string.h>
 
 #include "visualizer_playback.h"
 
+static int string_matches(const char *value, const char *expected)
+{
+    return (value != NULL) && (strcmp(value, expected) == 0);
+}
+
+static void copy_tick_text(char *dst, size_t dst_size, const char *src)
+{
+    if ((dst == NULL) || (dst_size == 0U)) {
+        return;
+    }
+
+    if (src == NULL) {
+        dst[0] = '\0';
+        return;
+    }
+
+    (void)snprintf(dst, dst_size, "%s", src);
+}
+
 SeverityLevel visualizer_mode_to_level(const char *mode, const char *result)
 {
-    if ((mode != NULL) && (strcmp(mode, "SHUTDOWN") == 0))
-    {
+    if (string_matches(mode, "SHUTDOWN") || string_matches(result, "SHUTDOWN")) {
         return LEVEL_SHUTDOWN;
     }
-    if ((result != NULL) && (strcmp(result, "SHUTDOWN") == 0))
-    {
-        return LEVEL_SHUTDOWN;
-    }
-    if ((mode != NULL) && (strcmp(mode, "WARNING") == 0))
-    {
+
+    if (string_matches(mode, "WARNING") || string_matches(result, "WARNING")) {
         return LEVEL_WARNING;
     }
-    if ((result != NULL) && (strcmp(result, "WARNING") == 0))
-    {
-        return LEVEL_WARNING;
-    }
+
     return LEVEL_OK;
 }
 
 SeverityLevel visualizer_temp_to_level(float temp)
 {
-    if (temp > TEMP_SHUTDOWN_THRESHOLD)
-    {
+    if (temp > TEMP_SHUTDOWN_THRESHOLD) {
         return LEVEL_SHUTDOWN;
     }
-    if (temp >= TEMP_WARNING_THRESHOLD)
-    {
+    if (temp >= TEMP_WARNING_THRESHOLD) {
         return LEVEL_WARNING;
     }
     return LEVEL_OK;
@@ -38,8 +48,7 @@ SeverityLevel visualizer_temp_to_level(float temp)
 
 SeverityLevel visualizer_oil_to_level(float oil)
 {
-    if (oil < OIL_SHUTDOWN_THRESHOLD)
-    {
+    if (oil < OIL_SHUTDOWN_THRESHOLD) {
         return LEVEL_SHUTDOWN;
     }
     return LEVEL_OK;
@@ -47,8 +56,7 @@ SeverityLevel visualizer_oil_to_level(float oil)
 
 SeverityLevel visualizer_rpm_to_level(float rpm, float temp)
 {
-    if ((rpm >= RPM_WARNING_THRESHOLD) && (temp >= TEMP_WARNING_THRESHOLD))
-    {
+    if ((rpm >= RPM_WARNING_THRESHOLD) && (temp >= TEMP_WARNING_THRESHOLD)) {
         return LEVEL_WARNING;
     }
     return LEVEL_OK;
@@ -56,12 +64,10 @@ SeverityLevel visualizer_rpm_to_level(float rpm, float temp)
 
 float visualizer_clamp01(float value)
 {
-    if (value < 0.0f)
-    {
+    if (value < 0.0f) {
         return 0.0f;
     }
-    if (value > 1.0f)
-    {
+    if (value > 1.0f) {
         return 1.0f;
     }
     return value;
@@ -69,8 +75,7 @@ float visualizer_clamp01(float value)
 
 float visualizer_default_ticks_per_second(const ScenarioData *scenario)
 {
-    if ((scenario != NULL) && (scenario->tick_count <= 8U))
-    {
+    if ((scenario != NULL) && (scenario->tick_count <= 8U)) {
         return SHORT_SCENARIO_TICKS_PER_SECOND;
     }
 
@@ -88,19 +93,16 @@ void visualizer_interpolate_tick(const ScenarioData *scenario, float playhead, T
     unsigned int next_index = 0U;
     float phase = 0.0f;
 
-    if ((scenario == NULL) || (out_tick == NULL) || (scenario->tick_count == 0U))
-    {
+    if ((scenario == NULL) || (out_tick == NULL) || (scenario->tick_count == 0U)) {
         return;
     }
 
-    if (playhead <= 0.0f)
-    {
+    if (playhead <= 0.0f) {
         *out_tick = scenario->ticks[0U];
         return;
     }
 
-    if (playhead >= (float)(scenario->tick_count - 1U))
-    {
+    if (playhead >= (float)(scenario->tick_count - 1U)) {
         *out_tick = scenario->ticks[scenario->tick_count - 1U];
         return;
     }
@@ -115,16 +117,13 @@ void visualizer_interpolate_tick(const ScenarioData *scenario, float playhead, T
     out_tick->oil = lerp_float(scenario->ticks[base_index].oil, scenario->ticks[next_index].oil, phase);
     out_tick->control = lerp_float(scenario->ticks[base_index].control, scenario->ticks[next_index].control, phase);
 
-    if (phase >= 0.5f)
-    {
-        out_tick->tick = scenario->ticks[next_index].tick;
-        out_tick->run = scenario->ticks[next_index].run;
-        (void)strncpy(out_tick->result, scenario->ticks[next_index].result, sizeof(out_tick->result) - 1U);
-        out_tick->result[sizeof(out_tick->result) - 1U] = '\0';
-        (void)strncpy(out_tick->engine_mode,
-                      scenario->ticks[next_index].engine_mode,
-                      sizeof(out_tick->engine_mode) - 1U);
-        out_tick->engine_mode[sizeof(out_tick->engine_mode) - 1U] = '\0';
+    if (phase >= 0.5f) {
+        const TickData *next_tick = &scenario->ticks[next_index];
+
+        out_tick->tick = next_tick->tick;
+        out_tick->run = next_tick->run;
+        copy_tick_text(out_tick->result, sizeof(out_tick->result), next_tick->result);
+        copy_tick_text(out_tick->engine_mode, sizeof(out_tick->engine_mode), next_tick->engine_mode);
     }
 }
 
@@ -138,26 +137,20 @@ void visualizer_compute_cumulative_metrics(const ScenarioData *scenario,
     unsigned int shut_count = 0U;
     unsigned int active_count = 0U;
 
-    if ((scenario == NULL) || (warning_pct == NULL) || (shutdown_pct == NULL) || (scenario->tick_count == 0U))
-    {
+    if ((scenario == NULL) || (warning_pct == NULL) || (shutdown_pct == NULL) || (scenario->tick_count == 0U)) {
         return;
     }
 
     active_count = (unsigned int)(playhead + 0.5f) + 1U;
-    if (active_count > scenario->tick_count)
-    {
+    if (active_count > scenario->tick_count) {
         active_count = scenario->tick_count;
     }
 
-    for (i = 0U; i < active_count; ++i)
-    {
+    for (i = 0U; i < active_count; ++i) {
         SeverityLevel level = visualizer_mode_to_level(scenario->ticks[i].engine_mode, scenario->ticks[i].result);
-        if (level == LEVEL_WARNING)
-        {
+        if (level == LEVEL_WARNING) {
             warn_count++;
-        }
-        else if (level == LEVEL_SHUTDOWN)
-        {
+        } else if (level == LEVEL_SHUTDOWN) {
             shut_count++;
         }
     }
