@@ -239,7 +239,7 @@ coverage-clean:
 	rm -f $(BUILD_DIR)/unit_tests_cov* $(BUILD_DIR)/testrig_cov* $(BUILD_DIR)/coverage.info $(BUILD_DIR)/coverage-src.info
 	rm -rf $(COVERAGE_DIR)
 
-validate-json-contract: $(TARGET)
+validate-json-contract: validate-requirements $(TARGET)
 	@tmp_json="$(BUILD_DIR)/contract-check.contract.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
 	grep -q '"schema_version": "1.0.0"' "$$tmp_json"; \
@@ -251,9 +251,35 @@ validate-json-contract: $(TARGET)
 	grep -q '"passed":' "$$tmp_json"; \
 	grep -q '"total":' "$$tmp_json"
 
-validate-json: $(TARGET)
+validate-json: validate-requirements $(TARGET)
 	@tmp_json="$(BUILD_DIR)/contract-check.schema.json"; \
 	$(TARGET) --run-all --json > "$$tmp_json"; \
+	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
+
+validate-requirements:
+	python3 tools/check_requirements_registry.py
+	python3 tools/check_requirements_coverage.py
+
+validate-scripted-scenarios: validate-requirements $(TARGET)
+	@tmp_json="$(BUILD_DIR)/scripted-scenarios.contract.json"; \
+	python3 tools/generate_visualization_scenario_json.py --testrig "$(TARGET)" --output "$$tmp_json"; \
+	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
+
+validate-runtime-config: validate-requirements $(TARGET)
+	@tmp_json="$(BUILD_DIR)/runtime-config.contract.json"; \
+	$(TARGET) --run-all --config calibration.json --json > "$$tmp_json"; \
+	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
+
+validate-json-error-contract: validate-requirements $(TARGET)
+	@tmp_json="$(BUILD_DIR)/json-error.contract.json"; \
+	if $(TARGET) --script tests/integration/invalid_script.txt --json > "$$tmp_json"; then \
+		echo "Expected scripted error path to fail"; \
+		exit 1; \
+	fi; \
+	grep -q '"error":' "$$tmp_json"; \
+	grep -q '"code": "STATUS_PARSE_ERROR"' "$$tmp_json"; \
+	grep -q '"severity": "ERROR"' "$$tmp_json"; \
+	grep -q '"module": "script_parser"' "$$tmp_json"; \
 	python3 tools/validate_json_contract.py "$$tmp_json" "schema/engine_test_rig.schema.json"
 
 analyze-sanitizers: debug
@@ -274,7 +300,7 @@ analyze-valgrind: $(VALGRIND_TARGET) $(VALGRIND_UNIT_TEST_TARGET)
 
 analyze: analyze-cppcheck analyze-clang-tidy analyze-misra analyze-layering analyze-sanitizers
 
-test-all: test-unit $(TARGET) validate-json-contract validate-json
+test-all: validate-requirements test-unit $(TARGET) validate-json-contract validate-json validate-scripted-scenarios validate-runtime-config validate-json-error-contract
 	$(TARGET) --run-all --json > /dev/null
 
 # --- Determinism Replay Test (Section 2.2) ---

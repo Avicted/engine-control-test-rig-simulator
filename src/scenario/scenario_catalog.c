@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "scenario/requirements.h"
+#include <requirements.h>
 #include "scenario/scenario_catalog.h"
 #include "scenario/scenario_profiles.h"
 

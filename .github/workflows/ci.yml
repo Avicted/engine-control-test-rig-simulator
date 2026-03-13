@@ -42,7 +42,7 @@ jobs:
 
       - name: Static analysis - clang-tidy
         if: matrix.compiler == 'clang'
-        run: make analyze-clang-tidy || true  # advisory
+        run: make analyze-clang-tidy || true  # advisory check - don't fail the build
 
       - name: Layering check
         run: make analyze-layering

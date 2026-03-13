@@ -422,7 +422,10 @@ int main(int argc, char **argv)
                                                             strict_mode);
             if (script_status != STATUS_OK)
             {
-                (void)print_usage(argv[0]);
+                if (json_output == 0)
+                {
+                    (void)print_usage(argv[0]);
+                }
                 return 1;
             }
             return 0;

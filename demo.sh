@@ -207,7 +207,7 @@ show_visualizer() {
 		warn "Continuing without the visualizer."
 		return 0
 	fi
-	if ! run_optional_cmd "Launch the visualizer" make --no-print-directory run-visualizer JSON=visualization/scenario.json; then
+	if ! run_optional_cmd "Launch the visualizer" make --no-print-directory run-visualizer JSON=visualization/scenarios.json; then
 		warn "The rest of the demo is still complete without the visualizer."
 		return 0
 	fi

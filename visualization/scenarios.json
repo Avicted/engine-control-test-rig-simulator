@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
   "software_version": "1.3.1",
-  "build_commit": "9a9e4f5",
+  "build_commit": "7c76285",
   "scenarios": [
     {
       "scenario": "cold_start_warmup_and_ramp_high_temp_shutdown",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -414,7 +414,7 @@
     },
     {
       "scenario": "combined_warning_persistence",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -463,7 +463,7 @@
     },
     {
       "scenario": "high_load_warning_then_recovery",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -662,7 +662,7 @@
     },
     {
       "scenario": "intermittent_oil_then_combined_fault",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -841,7 +841,7 @@
     },
     {
       "scenario": "normal_operation",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -900,7 +900,7 @@
     },
     {
       "scenario": "oil_low_persistent_shutdown",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -959,7 +959,7 @@
     },
     {
       "scenario": "oil_pressure_gradual_drain",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -1138,7 +1138,7 @@
     },
     {
       "scenario": "overheat_persistent_shutdown",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,
@@ -1197,7 +1197,7 @@
     },
     {
       "scenario": "thermal_runaway_with_load_surge",
-      "requirement_id": "REQ-ENG-SCRIPT",
+      "requirement_id": "REQ-ENG-SCRIPT-001",
       "ticks": [
         {
           "tick": 0,

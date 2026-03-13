@@ -6,7 +6,7 @@
 #include "hal.h"
 #include "reporting/logger.h"
 #include "reporting/output.h"
-#include "scenario/requirements.h"
+#include <requirements.h>
 #include "scenario/scenario_catalog.h"
 #include "scenario/scenario_profiles.h"
 #include "scenario/scenario_report.h"
@@ -571,7 +571,7 @@ StatusCode run_scripted_scenario_with_json(const char *script_path,
         }
 
         if (scenario_report_print_json_scenario_object("scripted_scenario",
-                                                       REQ_ENG_SCRIPT,
+                                                       REQ_ENG_SCRIPT_001,
                                                        tick_reports,
                                                        tick_report_count,
                                                        result,

@@ -31,7 +31,7 @@ _Static_assert(MAX_SCENARIO_NAME_LEN >= 16, "MAX_SCENARIO_NAME_LEN too small for
 typedef struct
 {
     const char *test_name;      /**< Human-readable test name. */
-    const char *requirement_id; /**< Traced requirement (e.g., "REQ-ENG-001"). */
+    const char *requirement_id; /**< Traced requirement from requirements.h (e.g., "REQ-ENG-001"). */
     /**
      * @brief Scenario callback.
      * @note Contract: deterministic, no dynamic allocation, bounded ticks.

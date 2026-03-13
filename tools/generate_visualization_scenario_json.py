@@ -9,7 +9,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate visualization/scenario.json from all scripted scenario .txt files."
+        description="Generate visualization/scenarios.json from all scripted scenario .txt files."
     )
     parser.add_argument(
         "--testrig",
@@ -23,8 +23,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output",
-        default="./visualization/scenario.json",
-        help="Output JSON path (default: ./visualization/scenario.json)",
+        default="./visualization/scenarios.json",
+        help="Output JSON path (default: ./visualization/scenarios.json)",
     )
     return parser.parse_args()
 
