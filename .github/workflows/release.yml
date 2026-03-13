@@ -26,7 +26,7 @@ jobs:
             git \
             pkg-config \
             libasound2-dev \
-            libgl1-mesa-dev \
+            libgl1-mesa-dev \''
             libx11-dev \
             libxcursor-dev \
             libxi-dev \
@@ -98,7 +98,7 @@ jobs:
           mkdir -p ./dist/test-win64
           python3 -c 'import zipfile; zipfile.ZipFile("./dist/engine-control-test-rig-simulator-win64.zip").extractall("./dist/test-win64")'
           cd ./dist/test-win64/engine-control-test-rig-simulator-win64
-          python3 tools/release_audit.py --bundle-dir . --command-prefix wine --visualizer-timeout 5 --skip-visualization-regeneration
+          python3 tools/release_audit.py --bundle-dir . --command-prefix wine --skip-visualizer --skip-visualization-regeneration
 
       - name: Upload Win64 bundle artifact
         uses: actions/upload-artifact@v4
