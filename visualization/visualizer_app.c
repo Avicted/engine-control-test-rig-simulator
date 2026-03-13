@@ -24,7 +24,7 @@ typedef struct
 
 static void initialize_ui_font(VisualizerAppState *state)
 {
-    state->ui_font = LoadFontEx(FONT_PATH, 64, NULL, 0);
+    state->ui_font = LoadFontEx(FONT_PATH, 14, NULL, 0);
     if ((state->ui_font.texture.id > 0U) && (state->ui_font.glyphCount > 0))
     {
         SetTextureFilter(state->ui_font.texture, TEXTURE_FILTER_POINT);

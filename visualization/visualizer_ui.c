@@ -168,23 +168,23 @@ static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
         .fault_pct_text = (Color){255, 255, 255, 255},
         .primary_text = (Color){220, 230, 255, 255},
         .knob_fill = (Color){255, 255, 255, 255},
-        .mode_default = (Color){90, 170, 220, 255},
-        .brak = (Color){85, 255, 85, 255},
-        .ok = (Color){255, 255, 85, 255},
-        .warning = (Color){255, 85, 85, 255},
-        .shutdown = (Color){255, 255, 85, 160},
-        .warning_fill = (Color){255, 85, 85, 170},
-        .shutdown_fill = (Color){255, 255, 85, 120},
-        .warning_dash = (Color){255, 85, 85, 120},
-        .shutdown_dash = (Color){255, 85, 85, 90},
-        .oil_shut_dash = (Color){255, 255, 85, 16},
-        .warning_tint = (Color){255, 85, 85, 18},
-        .shutdown_tint = (Color){255, 255, 85, 255},
-        .speed_paused = (Color){255, 255, 255, 255},
-        .end_notice = (Color){255, 255, 255, 200},
-        .playhead = (Color){85, 255, 255, 255},
+        .mode_default = (Color){220, 230, 255, 255},
+        .brak = (Color){90, 170, 220, 255},
+        .ok = (Color){85, 255, 85, 255},
+        .warning = (Color){255, 220, 90, 255},
+        .shutdown = (Color){255, 96, 96, 255},
+        .warning_fill = (Color){255, 220, 90, 200},
+        .shutdown_fill = (Color){255, 96, 96, 210},
+        .warning_dash = (Color){255, 220, 90, 170},
+        .shutdown_dash = (Color){255, 96, 96, 170},
+        .oil_shut_dash = (Color){255, 96, 96, 140},
+        .warning_tint = (Color){255, 196, 64, 72},
+        .shutdown_tint = (Color){255, 64, 64, 88},
+        .speed_paused = (Color){255, 220, 90, 220},
+        .end_notice = (Color){255, 240, 120, 255},
+        .playhead = (Color){255, 255, 255, 220},
         .rpm = (Color){255, 170, 170, 255},
-        .temp = (Color){85, 255, 85, 255},
+        .temp = (Color){255, 220, 90, 255},
         .oil = (Color){160, 200, 255, 255},
         .ctrl = (Color){85, 255, 255, 255},
         .slider_fill = (Color){85, 255, 255, 200},
@@ -387,19 +387,22 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define COL_SLIDER_FILL (visualizer_active_theme()->slider_fill)
 #define COL_SLIDER_RING (visualizer_active_theme()->slider_ring)
 
-#define FS_TINY 11.0f
-#define FS_SMALL 12.0f
-#define FS_KEY_HINT 13.0f
-#define FS_VALUE 16.0f
-#define FS_BADGE 15.0f
-#define FS_MODE 22.0f
-#define FS_SCEN_NAME 20.0f
-#define FS_TL_TITLE 18.0f
-#define FS_TL_LEGEND 17.0f
+#define FS_TINY 14.0f
+#define FS_SMALL 14.0f
+#define FS_KEY_HINT 14.0f
+#define FS_VALUE 14.0f
+#define FS_BADGE 14.0f
+#define FS_MODE 28.0f
+#define FS_SCEN_NAME 28.0f
+#define FS_TL_TITLE 14.0f
+#define FS_TL_LEGEND 14.0f
 #define FS_TL_AXIS 14.0f
 
+#define PIXEL_FONT_HEIGHT 14.0f
+#define PIXEL_FONT_SPACING 0.0f
+
 #define LAYOUT_PAD 16.0f
-#define LAYOUT_HDR_H 50.0f
+#define LAYOUT_HDR_H 64.0f
 #define LAYOUT_NAV_H 30.0f
 #define LAYOUT_MAIN_H 252.0f
 #define LAYOUT_STATUS_W 310.0f
@@ -412,8 +415,36 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define LAYOUT_DOT_R 5.0f
 #define LAYOUT_LEGEND_DOT_GAP 6.0f
 #define LAYOUT_LEGEND_COL_GAP 18.0f
-#define LAYOUT_SLIDER_INSET 30.0f
+#define LAYOUT_SLIDER_INSET 40.0f
 #define LAYOUT_SLIDER_H 24.0f
+#define LAYOUT_TIMELINE_HEADER_H 28.0f
+#define LAYOUT_TIMELINE_TITLE_X 16.0f
+#define LAYOUT_TIMELINE_TITLE_Y 6.0f
+#define LAYOUT_TIMELINE_PLOT_LEFT 52.0f
+#define LAYOUT_TIMELINE_PLOT_RIGHT 18.0f
+#define LAYOUT_TIMELINE_PLOT_TOP 40.0f
+#define LAYOUT_TIMELINE_PLOT_BOTTOM 54.0f
+#define LAYOUT_TIMELINE_AXIS_X 10.0f
+#define LAYOUT_TIMELINE_AXIS_Y_NUDGE 7.0f
+#define LAYOUT_TIMELINE_XLABEL_Y 10.0f
+#define LAYOUT_TIMELINE_LEGEND_RIGHT 16.0f
+#define LAYOUT_TIMELINE_LEGEND_Y 6.0f
+#define LAYOUT_HEADER_TOP_Y 16.0f
+#define LAYOUT_HEADER_MAIN_Y 32.0f
+#define LAYOUT_HEADER_SEGMENT_GAP 24.0f
+#define LAYOUT_HEADER_META_GAP 18.0f
+#define LAYOUT_STATUS_MODE_X 14.0f
+#define LAYOUT_STATUS_RESULT_X_PCT 0.33f
+#define LAYOUT_STATUS_RUN_RIGHT 120.0f
+#define LAYOUT_STATUS_CAP_Y 40.0f
+#define LAYOUT_STATUS_VALUE_GAP 18.0f
+#define LAYOUT_STATUS_FAULT_DIV_Y 126.0f
+#define LAYOUT_STATUS_FAULT_TITLE_Y 136.0f
+#define LAYOUT_STATUS_FAULT_ROW0_Y 154.0f
+#define LAYOUT_STATUS_FAULT_ROW1_Y 170.0f
+#define LAYOUT_STATUS_END_DIV_Y 196.0f
+#define LAYOUT_STATUS_END_TITLE_Y 206.0f
+#define LAYOUT_STATUS_END_HINT_Y 222.0f
 
 #define COL_REPLAY_HINT (visualizer_active_theme()->replay_hint)
 
@@ -485,11 +516,71 @@ void visualizer_theme_set(VisualizerThemeId theme_id)
 
 static void draw_text_font(const Font *font, const char *text, float x, float y, float size, Color color)
 {
+    float snapped_size;
+
     if ((font == NULL) || (text == NULL))
     {
         return;
     }
-    DrawTextEx(*font, text, (Vector2){x, y}, size, 1.0f, color);
+
+    snapped_size = PIXEL_FONT_HEIGHT * roundf(size / PIXEL_FONT_HEIGHT);
+    if (snapped_size < PIXEL_FONT_HEIGHT)
+    {
+        snapped_size = PIXEL_FONT_HEIGHT;
+    }
+
+    DrawTextEx(*font, text, (Vector2){roundf(x), roundf(y)}, snapped_size, PIXEL_FONT_SPACING, color);
+}
+
+static Vector2 measure_text_font(const Font *font, const char *text, float size)
+{
+    float snapped_size;
+
+    if ((font == NULL) || (text == NULL))
+    {
+        return (Vector2){0.0f, 0.0f};
+    }
+
+    snapped_size = PIXEL_FONT_HEIGHT * roundf(size / PIXEL_FONT_HEIGHT);
+    if (snapped_size < PIXEL_FONT_HEIGHT)
+    {
+        snapped_size = PIXEL_FONT_HEIGHT;
+    }
+
+    return MeasureTextEx(*font, text, snapped_size, PIXEL_FONT_SPACING);
+}
+
+static float pick_header_name_font_size(const Font *font,
+                                        const char *scenario_name,
+                                        const char *requirement_id,
+                                        const char *expected,
+                                        float available_width,
+                                        float scale)
+{
+    char expected_text[64];
+    Vector2 name_sz;
+    Vector2 req_sz;
+    Vector2 exp_sz;
+    float preferred_fs = FS_SCEN_NAME * scale;
+    float compact_fs = FS_TINY * scale;
+
+    if ((font == NULL) || (scenario_name == NULL) || (requirement_id == NULL) || (expected == NULL))
+    {
+        return compact_fs;
+    }
+
+    (void)snprintf(expected_text, sizeof(expected_text), "EXPECTED: %s", expected);
+    name_sz = measure_text_font(font, scenario_name, preferred_fs);
+    req_sz = measure_text_font(font, requirement_id, compact_fs);
+    exp_sz = measure_text_font(font, expected_text, compact_fs);
+
+    if ((name_sz.x + LAYOUT_HEADER_SEGMENT_GAP * scale + req_sz.x +
+         LAYOUT_HEADER_META_GAP * scale + exp_sz.x) <= available_width)
+    {
+        return preferred_fs;
+    }
+
+    return compact_fs;
 }
 
 static Color level_color(SeverityLevel level)
@@ -567,7 +658,7 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
     DrawRectangle((int)box_x, (int)box_y, (int)box_w, (int)box_h, COL_PANEL_BG);
     DrawRectangleLines((int)box_x, (int)box_y, (int)box_w, (int)box_h, COL_PANEL_BORDER);
 
-    sz = MeasureTextEx(*font, title, title_fs, 1.0f);
+    sz = measure_text_font(font, title, title_fs);
     draw_text_font(font, title,
                    box_x + (box_w - sz.x) * 0.5f,
                    box_y + 14.0f * scale,
@@ -582,7 +673,7 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
     yes_txt = COL_PRIMARY_TEXT;
     DrawRectangle((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bg);
     DrawRectangleLines((int)yes_x, (int)btn_y, (int)btn_w, (int)btn_h, yes_bor);
-    sz = MeasureTextEx(*font, "YES", opt_fs, 1.0f);
+    sz = measure_text_font(font, "YES", opt_fs);
     draw_text_font(font, "YES",
                    yes_x + (btn_w - sz.x) * 0.5f,
                    btn_y + (btn_h - sz.y) * 0.5f,
@@ -593,13 +684,13 @@ static void draw_quit_modal(const Font *font, int selection, int screen_w, int s
     no_txt = COL_PRIMARY_TEXT;
     DrawRectangle((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bg);
     DrawRectangleLines((int)no_x, (int)btn_y, (int)btn_w, (int)btn_h, no_bor);
-    sz = MeasureTextEx(*font, "NO", opt_fs, 1.0f);
+    sz = measure_text_font(font, "NO", opt_fs);
     draw_text_font(font, "NO",
                    no_x + (btn_w - sz.x) * 0.5f,
                    btn_y + (btn_h - sz.y) * 0.5f,
                    opt_fs, no_txt);
 
-    sz = MeasureTextEx(*font, hint, hint_fs, 1.0f);
+    sz = measure_text_font(font, hint, hint_fs);
     draw_text_font(font, hint,
                    box_x + (box_w - sz.x) * 0.5f,
                    box_y + box_h - 20.0f * scale,
@@ -616,16 +707,16 @@ static float draw_key_hint(const Font *font,
     float cx = x;
     float w;
 
-    w = MeasureTextEx(*font, "[", font_size, 1.0f).x;
+    w = measure_text_font(font, "[", font_size).x;
     draw_text_font(font, "[", cx, y, font_size, COL_BRAK);
     cx += w;
-    w = MeasureTextEx(*font, key, font_size, 1.0f).x;
+    w = measure_text_font(font, key, font_size).x;
     draw_text_font(font, key, cx, y, font_size, COL_KEY);
     cx += w;
-    w = MeasureTextEx(*font, "]", font_size, 1.0f).x;
+    w = measure_text_font(font, "]", font_size).x;
     draw_text_font(font, "]", cx, y, font_size, COL_BRAK);
     cx += w + 4.0f;
-    w = MeasureTextEx(*font, desc, font_size, 1.0f).x;
+    w = measure_text_font(font, desc, font_size).x;
     draw_text_font(font, desc, cx, y, font_size, COL_KEY_DESC);
     cx += w;
     return cx - x;
@@ -676,7 +767,7 @@ static void draw_meter(const Font *font,
     }
 
     (void)snprintf(value_text, sizeof(value_text), "%.2f %s", value, unit);
-    value_size = MeasureTextEx(*font, value_text, val_fs, 1.0f);
+    value_size = measure_text_font(font, value_text, val_fs);
     value_x = value_area.x + value_area.width - value_size.x;
     if (value_x < value_area.x)
     {
@@ -758,9 +849,15 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
     DrawRectangleRec(area, COL_TIMELINE_BG);
     DrawRectangleLines((int)area.x, (int)area.y, (int)area.width, (int)area.height, COL_TIMELINE_BORDER);
 
-    draw_text_font(font, "TIMELINE", area.x + 14.0f, area.y + 8.0f, FS_TL_TITLE, COL_TIMELINE_TITLE);
-    DrawLine((int)(area.x + 1), (int)(area.y + 32.0f),
-             (int)(area.x + area.width - 1), (int)(area.y + 32.0f),
+    {
+        float title_fs = FS_TL_TITLE * scale;
+        draw_text_font(font, "TIMELINE",
+                       area.x + LAYOUT_TIMELINE_TITLE_X * scale,
+                       area.y + LAYOUT_TIMELINE_TITLE_Y * scale,
+                       title_fs, COL_TIMELINE_TITLE);
+    }
+    DrawLine((int)(area.x + 1), (int)(area.y + LAYOUT_TIMELINE_HEADER_H * scale),
+             (int)(area.x + area.width - 1), (int)(area.y + LAYOUT_TIMELINE_HEADER_H * scale),
              COL_TIMELINE_SUBDIV);
 
     {
@@ -768,30 +865,38 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         char tick_label[48];
         Vector2 tl_sz;
         float tl_x;
+        float title_fs = FS_TL_TITLE * scale;
         (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick,
                        scenario->ticks[scenario->tick_count - 1U].tick);
-        tl_sz = MeasureTextEx(*font, tick_label, FS_TL_TITLE, 1.0f);
+        tl_sz = measure_text_font(font, tick_label, title_fs);
         tl_x = area.x + area.width * 0.5f - tl_sz.x * 0.5f;
-        draw_text_font(font, tick_label, tl_x, area.y + 8.0f, FS_TL_TITLE, COL_TICK_COUNTER);
+        draw_text_font(font, tick_label,
+                       tl_x,
+                       area.y + LAYOUT_TIMELINE_TITLE_Y * scale,
+                       title_fs, COL_TICK_COUNTER);
     }
 
-    plot_left = (int)area.x + 52;
-    plot_right = (int)(area.x + area.width) - 24;
-    plot_top = (int)area.y + 48;
-    plot_bottom = (int)(area.y + area.height - 30.0f * scale - 30.0f);
+    plot_left = (int)(area.x + LAYOUT_TIMELINE_PLOT_LEFT * scale);
+    plot_right = (int)(area.x + area.width - LAYOUT_TIMELINE_PLOT_RIGHT * scale);
+    plot_top = (int)(area.y + LAYOUT_TIMELINE_PLOT_TOP * scale);
+    plot_bottom = (int)(area.y + area.height - LAYOUT_TIMELINE_PLOT_BOTTOM * scale);
     plot_w = plot_right - plot_left;
     plot_h = plot_bottom - plot_top;
 
     for (i = 0; i <= 8; ++i)
     {
         int gy = plot_top + (i * plot_h) / 8;
+        float axis_fs = FS_TL_AXIS * scale;
         Color grid_color = (i == 8) ? COL_GRID_BRIGHT : COL_GRID_LINE;
         DrawLine(plot_left, gy, plot_right, gy, grid_color);
         if ((i % 2) == 0)
         {
             char y_label[16];
             (void)snprintf(y_label, sizeof(y_label), "%d%%", 100 - ((i * 100) / 8));
-            draw_text_font(font, y_label, area.x + 8.0f, (float)gy - 8.0f, FS_TL_AXIS, COL_AXIS_LABEL);
+            draw_text_font(font, y_label,
+                           area.x + LAYOUT_TIMELINE_AXIS_X * scale,
+                           (float)gy - LAYOUT_TIMELINE_AXIS_Y_NUDGE * scale,
+                           axis_fs, COL_AXIS_LABEL);
         }
     }
 
@@ -805,9 +910,13 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             int gx = plot_left + (int)(t * (float)plot_w);
             unsigned int tick_idx = (unsigned int)(t * (float)(scenario->tick_count - 1U));
             char x_label[16];
+            float axis_fs = FS_TL_AXIS * scale;
             DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
             (void)snprintf(x_label, sizeof(x_label), "%u", scenario->ticks[tick_idx].tick);
-            draw_text_font(font, x_label, (float)gx - 8.0f, (float)plot_bottom + 8.0f, FS_TL_AXIS, COL_AXIS_LABEL);
+            draw_text_font(font, x_label,
+                           (float)gx - 8.0f * scale,
+                           (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
+                           axis_fs, COL_AXIS_LABEL);
         }
     }
 
@@ -882,10 +991,10 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
     }
 
     {
-        float ley = area.y + 8.0f;
-        float lfs2 = FS_TL_LEGEND;
-        float dot_r = LAYOUT_DOT_R;
-        float lx = area.x + area.width - 12.0f;
+        float ley = area.y + LAYOUT_TIMELINE_LEGEND_Y * scale;
+        float lfs2 = FS_TL_LEGEND * scale;
+        float dot_r = LAYOUT_DOT_R * scale;
+        float lx = area.x + area.width - LAYOUT_TIMELINE_LEGEND_RIGHT * scale;
         Vector2 lsz;
         static const char *k_legend_names[] = {
             "CTRL",
@@ -912,12 +1021,12 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
                 legend_color = COL_RPM;
             }
 
-            lsz = MeasureTextEx(*font, k_legend_names[li], lfs2, 1.0f);
+            lsz = measure_text_font(font, k_legend_names[li], lfs2);
             lx -= lsz.x;
             draw_text_font(font, k_legend_names[li], lx, ley, lfs2, legend_color);
-            lx -= dot_r * 2.0f + LAYOUT_LEGEND_DOT_GAP;
+            lx -= dot_r * 2.0f + LAYOUT_LEGEND_DOT_GAP * scale;
             DrawCircle((int)(lx + dot_r), (int)(ley + lfs2 * 0.5f), dot_r, legend_color);
-            lx -= LAYOUT_LEGEND_COL_GAP;
+            lx -= LAYOUT_LEGEND_COL_GAP * scale;
         }
     }
 }
@@ -1024,7 +1133,7 @@ void visualizer_compute_layout(int screen_w, int screen_h, VisualizerLayout *lay
     layout->oil_bar = (Rectangle){gc_x, m_row2_y, bar_col_w, bar_h};
     layout->oil_val = (Rectangle){val_col_x, m_row2_y, val_col_w, bar_h};
 
-    timeline_y = content_y + main_h + 10.0f * layout->scale;
+    timeline_y = content_y + main_h + 14.0f * layout->scale;
     timeline_h_val = (float)screen_h - timeline_y - layout->pad;
     layout->timeline = (Rectangle){layout->pad, timeline_y, (float)screen_w - 2.0f * layout->pad, timeline_h_val};
     layout->slider = (Rectangle){layout->timeline.x + 52.0f,
@@ -1067,14 +1176,22 @@ void visualizer_draw_frame(const Font *font,
     DrawLine(0, (int)layout->hdr_h - 1, screen_w, (int)layout->hdr_h - 1, COL_HDR_BORDER);
     {
         char scen_label[48];
-        char meta_text[96];
+        char expected_text[64];
         char tick_str[48];
         char theme_str[48];
+        Vector2 req_sz;
+        Vector2 exp_sz;
         Vector2 tick_sz;
         Vector2 scen_sz;
         Vector2 theme_sz;
+        float header_text_right;
+        float scen_fs;
+        float meta_fs;
+        float req_x;
+        float exp_x;
+        float main_row_y;
+        float meta_row_y;
         float meta_x;
-        float meta_y;
         float badge_w;
         float badge_x;
         float badge_y;
@@ -1085,28 +1202,64 @@ void visualizer_draw_frame(const Font *font,
         (void)snprintf(scen_label, sizeof(scen_label),
                        "SCENARIO  %u / %u",
                        scenario_set->active_index + 1U, scenario_set->count);
-        draw_text_font(font, scen_label, layout->pad, 7.0f * layout->scale, FS_TINY * layout->scale, COL_SCEN_COUNTER);
+        draw_text_font(font, scen_label,
+                       layout->pad,
+                       LAYOUT_HEADER_TOP_Y * layout->scale,
+                       FS_TINY * layout->scale,
+                       COL_SCEN_COUNTER);
         (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
                        tick->tick, scenario->tick_count);
-        tick_sz = MeasureTextEx(*font, tick_str, FS_BADGE * layout->scale, 1.0f);
+        tick_sz = measure_text_font(font, tick_str, FS_BADGE * layout->scale);
         badge_w = tick_sz.x + 20.0f * layout->scale;
         badge_x = (float)screen_w - badge_w - layout->pad;
-        badge_y = (layout->hdr_h - badge_h) * 0.5f;
+        badge_y = 8.0f * layout->scale;
 
         (void)snprintf(theme_str, sizeof(theme_str), "THEME  %s", visualizer_theme_label(visualizer_theme_get()));
-        theme_sz = MeasureTextEx(*font, theme_str, FS_BADGE * layout->scale, 1.0f);
+        theme_sz = measure_text_font(font, theme_str, FS_BADGE * layout->scale);
         theme_badge_w = theme_sz.x + 20.0f * layout->scale;
         theme_badge_x = badge_x - theme_badge_w - 10.0f * layout->scale;
 
-        draw_text_font(font, scenario->scenario, layout->pad, 21.0f * layout->scale, FS_SCEN_NAME * layout->scale, COL_PRIMARY_TEXT);
-        scen_sz = MeasureTextEx(*font, scenario->scenario, FS_SCEN_NAME * layout->scale, 1.0f);
-        (void)snprintf(meta_text, sizeof(meta_text), "%s   EXPECTED: %s",
-                       scenario->requirement_id, scenario->expected);
-        meta_x = layout->pad + scen_sz.x + 32.0f * layout->scale;
-        meta_y = 18.0f * layout->scale + (FS_SCEN_NAME - FS_KEY_HINT) * 0.5f * layout->scale;
-        if (meta_x < (badge_x - 220.0f * layout->scale))
+        header_text_right = theme_badge_x - 20.0f * layout->scale;
+        meta_fs = FS_TINY * layout->scale;
+        scen_fs = pick_header_name_font_size(font,
+                                             scenario->scenario,
+                                             scenario->requirement_id,
+                                             scenario->expected,
+                                             header_text_right - layout->pad,
+                                             layout->scale);
+        main_row_y = LAYOUT_HEADER_MAIN_Y * layout->scale;
+        meta_row_y = main_row_y + (scen_fs - meta_fs);
+
+        draw_text_font(font, scenario->scenario,
+                       layout->pad,
+                       main_row_y,
+                       scen_fs,
+                       COL_PRIMARY_TEXT);
+        scen_sz = measure_text_font(font, scenario->scenario, scen_fs);
+        req_x = layout->pad + scen_sz.x + LAYOUT_HEADER_SEGMENT_GAP * layout->scale;
+        exp_x = req_x;
+
+        req_sz = measure_text_font(font, scenario->requirement_id, meta_fs);
+        if ((req_x + req_sz.x) < header_text_right)
         {
-            draw_text_font(font, meta_text, meta_x, meta_y, FS_SCEN_NAME * layout->scale, COL_SCEN_COUNTER);
+            draw_text_font(font, scenario->requirement_id,
+                           req_x,
+                           meta_row_y,
+                           meta_fs,
+                           COL_SCEN_COUNTER);
+            exp_x = req_x + req_sz.x + LAYOUT_HEADER_META_GAP * layout->scale;
+        }
+
+        (void)snprintf(expected_text, sizeof(expected_text), "EXPECTED: %s", scenario->expected);
+        exp_sz = measure_text_font(font, expected_text, meta_fs);
+        meta_x = exp_x;
+        if ((meta_x + exp_sz.x) < header_text_right)
+        {
+            draw_text_font(font, expected_text,
+                           meta_x,
+                           meta_row_y,
+                           meta_fs,
+                           COL_SCEN_COUNTER);
         }
 
         DrawRectangle((int)badge_x, (int)badge_y, (int)badge_w, (int)badge_h, COL_BADGE_BG);
@@ -1149,7 +1302,7 @@ void visualizer_draw_frame(const Font *font,
 
         (void)snprintf(speed_str, sizeof(speed_str), "%.0f tk/s%s",
                        ticks_per_second, (paused != 0) ? "  PAUSED" : "");
-        sp_sz = MeasureTextEx(*font, speed_str, kfs, 1.0f);
+        sp_sz = measure_text_font(font, speed_str, kfs);
         draw_text_font(font, speed_str,
                        (float)screen_w - sp_sz.x - layout->pad, ky, kfs,
                        (paused != 0) ? COL_SPEED_PAUSED : COL_SPEED_RUNNING);
@@ -1172,15 +1325,12 @@ void visualizer_draw_frame(const Font *font,
     draw_panel_header(font, layout->metrics_area, "ENGINE STATUS", layout->scale);
 
     {
-        float lx = layout->metrics_area.x + 14.0f * layout->scale;
-        float right_cols_x0 = layout->metrics_area.x + layout->metrics_area.width * 0.45f;
-        float right_cols_x1 = layout->metrics_area.x + layout->metrics_area.width - 8.0f * layout->scale;
-        float right_col_w = (right_cols_x1 - right_cols_x0) * 0.8f;
-        float rx = right_cols_x0;
-        float run_col_x = right_cols_x0 + right_col_w;
-        float cap_y = layout->metrics_area.y + 38.0f * layout->scale;
+        float lx = layout->metrics_area.x + LAYOUT_STATUS_MODE_X * layout->scale;
+        float rx = layout->metrics_area.x + layout->metrics_area.width * LAYOUT_STATUS_RESULT_X_PCT;
+        float run_col_x = layout->metrics_area.x + layout->metrics_area.width - LAYOUT_STATUS_RUN_RIGHT * layout->scale;
+        float cap_y = layout->metrics_area.y + LAYOUT_STATUS_CAP_Y * layout->scale;
         float cap_fs = FS_TINY * layout->scale;
-        float mode_fs = FS_MODE * layout->scale;
+        float mode_fs = FS_VALUE * layout->scale;
         char run_text[16];
         float result_y;
         Color result_c;
@@ -1197,20 +1347,20 @@ void visualizer_draw_frame(const Font *font,
 
         draw_text_font(font, "RESULT", rx, cap_y, cap_fs, COL_CAPTION);
         draw_text_font(font, "RUN", run_col_x, cap_y, cap_fs, COL_CAPTION);
-        result_y = cap_y + cap_fs + 4.0f * layout->scale;
+        result_y = cap_y + LAYOUT_STATUS_VALUE_GAP * layout->scale;
         draw_text_font(font, tick->result, rx, result_y, mode_fs, result_c);
 
         (void)snprintf(run_text, sizeof(run_text), "%d", tick->run);
         draw_text_font(font, run_text, run_col_x, result_y, mode_fs, result_c);
     }
 
-    DrawLine((int)(layout->metrics_area.x + 14.0f * layout->scale), (int)(layout->metrics_area.y + 110.0f * layout->scale),
+    DrawLine((int)(layout->metrics_area.x + 14.0f * layout->scale), (int)(layout->metrics_area.y + LAYOUT_STATUS_FAULT_DIV_Y * layout->scale),
              (int)(layout->metrics_area.x + layout->metrics_area.width - 14.0f * layout->scale),
-             (int)(layout->metrics_area.y + 110.0f * layout->scale),
+             (int)(layout->metrics_area.y + LAYOUT_STATUS_FAULT_DIV_Y * layout->scale),
              COL_SECTION_DIV);
 
     draw_text_font(font, "SESSION FAULT RATE",
-                   layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + 118.0f * layout->scale,
+                   layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + LAYOUT_STATUS_FAULT_TITLE_Y * layout->scale,
                    FS_TINY * layout->scale, COL_CAPTION);
     {
         float bx2 = layout->metrics_area.x + 14.0f * layout->scale;
@@ -1222,25 +1372,25 @@ void visualizer_draw_frame(const Font *font,
 
         draw_fault_rate_row(font, "WARNING", warning_pct,
                             bx2, tr_x, tr_w, bh2,
-                            layout->metrics_area.y + 134.0f * layout->scale,
+                            layout->metrics_area.y + LAYOUT_STATUS_FAULT_ROW0_Y * layout->scale,
                             COL_WARNING_FILL, layout->scale);
         draw_fault_rate_row(font, "SHUTDOWN", shutdown_pct,
                             bx2, tr_x, tr_w, bh2,
-                            layout->metrics_area.y + 148.0f * layout->scale,
+                            layout->metrics_area.y + LAYOUT_STATUS_FAULT_ROW1_Y * layout->scale,
                             COL_SHUTDOWN_FILL, layout->scale);
     }
 
     if (playhead >= (float)(scenario->tick_count - 1U))
     {
-        DrawLine((int)(layout->metrics_area.x + 14.0f * layout->scale), (int)(layout->metrics_area.y + 172.0f * layout->scale),
+        DrawLine((int)(layout->metrics_area.x + 14.0f * layout->scale), (int)(layout->metrics_area.y + LAYOUT_STATUS_END_DIV_Y * layout->scale),
                  (int)(layout->metrics_area.x + layout->metrics_area.width - 14.0f * layout->scale),
-                 (int)(layout->metrics_area.y + 172.0f * layout->scale),
+                 (int)(layout->metrics_area.y + LAYOUT_STATUS_END_DIV_Y * layout->scale),
                  COL_SECTION_DIV);
         draw_text_font(font, "End of scenario",
-                       layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + 180.0f * layout->scale,
+                       layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + LAYOUT_STATUS_END_TITLE_Y * layout->scale,
                        FS_SMALL * layout->scale, COL_END_NOTICE);
         draw_text_font(font, "Press  R  to replay",
-                       layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + 194.0f * layout->scale,
+                       layout->metrics_area.x + 14.0f * layout->scale, layout->metrics_area.y + LAYOUT_STATUS_END_HINT_Y * layout->scale,
                        FS_SMALL * layout->scale, COL_REPLAY_HINT);
     }
 
