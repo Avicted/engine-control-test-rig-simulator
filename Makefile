@@ -122,6 +122,9 @@ run-visualizer: $(VISUALIZER_TARGET)
 	fi
 	$(VISUALIZER_TARGET) "$(JSON)"
 
+generate-visualization-json: $(TARGET)
+	python3 tools/generate_visualization_scenario_json.py
+
 analyze-cppcheck:
 	cppcheck --enable=all --std=c11 --error-exitcode=1 \
 		-Iinclude -Isrc \

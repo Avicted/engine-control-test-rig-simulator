@@ -971,23 +971,83 @@ static void draw_timeline(const Font *font,
 
     if (scenario->tick_count > 1U)
     {
-        unsigned int x_steps = (scenario->tick_count < 9U) ? (scenario->tick_count - 1U) : 8U;
-        unsigned int s;
-        for (s = 0U; s <= x_steps; ++s)
+        float axis_fs = FS_TL_AXIS * scale;
+        if (scenario->tick_count > 32U)
         {
-            float t = (x_steps == 0U) ? 0.0f : ((float)s / (float)x_steps);
-            int gx = plot_left + (int)(t * (float)plot_w);
-            unsigned int tick_idx = (unsigned int)(t * (float)(scenario->tick_count - 1U));
-            char x_label[16];
-            float axis_fs = FS_TL_AXIS * scale;
-            Vector2 label_sz;
-            DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
-            (void)snprintf(x_label, sizeof(x_label), "%u", scenario->ticks[tick_idx].tick);
-            label_sz = measure_text_font(font, x_label, axis_fs);
-            draw_text_font(font, x_label,
-                           (float)gx - label_sz.x * 0.5f,
-                           (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
-                           axis_fs, COL_AXIS_LABEL);
+            unsigned int tick_idx;
+
+            for (tick_idx = 0U; tick_idx < scenario->tick_count; tick_idx += 2U)
+            {
+                int gx = plot_left + (int)roundf(((float)tick_idx / (float)(scenario->tick_count - 1U)) * (float)plot_w);
+                char x_label[16];
+                Vector2 label_sz;
+
+                DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
+                (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx + 1U);
+                label_sz = measure_text_font(font, x_label, axis_fs);
+                draw_text_font(font, x_label,
+                               (float)gx - label_sz.x * 0.5f,
+                               (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
+                               axis_fs, COL_AXIS_LABEL);
+            }
+
+            if (((scenario->tick_count - 1U) % 2U) != 0U)
+            {
+                unsigned int tick_idx_last = scenario->tick_count - 1U;
+                int gx = plot_left + (int)roundf(((float)tick_idx_last / (float)(scenario->tick_count - 1U)) * (float)plot_w);
+                char x_label[16];
+                Vector2 label_sz;
+
+                DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
+                (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx_last + 1U);
+                label_sz = measure_text_font(font, x_label, axis_fs);
+                draw_text_font(font, x_label,
+                               (float)gx - label_sz.x * 0.5f,
+                               (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
+                               axis_fs, COL_AXIS_LABEL);
+            }
+        }
+        else
+        {
+            char max_tick_label[16];
+            float min_label_spacing;
+            Vector2 max_label_sz;
+            unsigned int max_labels;
+            unsigned int x_steps;
+            unsigned int s;
+
+            (void)snprintf(max_tick_label, sizeof(max_tick_label), "%u",
+                           scenario->tick_count);
+            max_label_sz = measure_text_font(font, max_tick_label, axis_fs);
+            min_label_spacing = max_label_sz.x + 12.0f * scale;
+            if (min_label_spacing < (28.0f * scale))
+            {
+                min_label_spacing = 28.0f * scale;
+            }
+
+            max_labels = (unsigned int)((float)plot_w / min_label_spacing) + 1U;
+            if (max_labels < 2U)
+            {
+                max_labels = 2U;
+            }
+
+            x_steps = (scenario->tick_count <= max_labels) ? (scenario->tick_count - 1U) : (max_labels - 1U);
+
+            for (s = 0U; s <= x_steps; ++s)
+            {
+                float t = (x_steps == 0U) ? 0.0f : ((float)s / (float)x_steps);
+                unsigned int tick_idx = (unsigned int)roundf(t * (float)(scenario->tick_count - 1U));
+                int gx = plot_left + (int)roundf(((float)tick_idx / (float)(scenario->tick_count - 1U)) * (float)plot_w);
+                char x_label[16];
+                Vector2 label_sz;
+                DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
+                (void)snprintf(x_label, sizeof(x_label), "%u", tick_idx + 1U);
+                label_sz = measure_text_font(font, x_label, axis_fs);
+                draw_text_font(font, x_label,
+                               (float)gx - label_sz.x * 0.5f,
+                               (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
+                               axis_fs, COL_AXIS_LABEL);
+            }
         }
     }
 
@@ -1054,7 +1114,7 @@ static void draw_timeline(const Font *font,
 
         {
             float marker_t = visualizer_clamp01(playhead / (float)(scenario->tick_count - 1U));
-            int marker_x = plot_left + (int)(marker_t * (float)plot_w);
+            int marker_x = plot_left + (int)roundf(marker_t * (float)plot_w);
             DrawLineEx((Vector2){(float)marker_x, (float)plot_top},
                        (Vector2){(float)marker_x, (float)plot_bottom},
                        2.0f, COL_PLAYHEAD);
