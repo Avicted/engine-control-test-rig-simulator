@@ -14,6 +14,7 @@ typedef struct
     float restart_feedback_timer;
     int paused;
     int dragging_slider;
+    int speed_overridden;
     int quit_modal_open;
     int quit_modal_selection;
     int should_quit;
@@ -45,7 +46,10 @@ static void reset_for_active_scenario(const ScenarioSet *scenario_set, Visualize
     state->paused = 0;
     state->dragging_slider = 0;
     state->restart_feedback_timer = 0.6f;
-    state->ticks_per_second = visualizer_default_ticks_per_second(scenario);
+    if (state->speed_overridden == 0)
+    {
+        state->ticks_per_second = visualizer_default_ticks_per_second(scenario);
+    }
     state->animated_mode_color = visualizer_mode_color(scenario->ticks[0U].engine_mode);
 }
 
@@ -161,6 +165,7 @@ static void handle_playback_input(ScenarioSet *scenario_set,
         {
             state->ticks_per_second = 20.0f;
         }
+        state->speed_overridden = 1;
     }
     if (IsKeyPressed(KEY_DOWN))
     {
@@ -169,6 +174,7 @@ static void handle_playback_input(ScenarioSet *scenario_set,
         {
             state->ticks_per_second = 1.0f;
         }
+        state->speed_overridden = 1;
     }
     if (IsKeyPressed(KEY_TAB) && (scenario_set->count > 1U))
     {
@@ -191,7 +197,7 @@ static void handle_playback_input(ScenarioSet *scenario_set,
     {
         float rel = (GetMousePosition().x - layout->slider.x) / layout->slider.width;
         rel = visualizer_clamp01(rel);
-        state->playhead = rel * (float)(scenario->tick_count - 1U);
+        state->playhead = roundf(rel * (float)(scenario->tick_count - 1U));
     }
 }
 
@@ -229,6 +235,7 @@ void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
     state.quit_modal_open = 0;
     state.quit_modal_selection = 0;
     state.custom_font_loaded = 0;
+    state.speed_overridden = 0;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Engine Control Scenario Visualizer");

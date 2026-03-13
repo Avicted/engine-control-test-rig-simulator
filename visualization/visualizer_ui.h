@@ -16,6 +16,7 @@ typedef struct
     Rectangle oil_bar;
     Rectangle oil_val;
     Rectangle timeline;
+    Rectangle timeline_plot;
     Rectangle slider;
     float scale;
     float pad;

@@ -293,8 +293,8 @@ static const VisualizerTheme k_visualizer_themes[VISUALIZER_THEME_COUNT] = {
         .mode_default = (Color){85, 97, 114, 255},
         .brak = (Color){118, 129, 146, 255},
         .ok = (Color){34, 146, 88, 255},
-        .warning = (Color){190, 132, 20, 255},
-        .shutdown = (Color){190, 60, 76, 255},
+        .warning = (Color){255, 193, 7, 255},
+        .shutdown = (Color){219, 78, 87, 255},
         .warning_fill = (Color){190, 132, 20, 180},
         .shutdown_fill = (Color){190, 60, 76, 190},
         .warning_dash = (Color){190, 132, 20, 140},
@@ -393,7 +393,7 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define FS_VALUE 14.0f
 #define FS_BADGE 14.0f
 #define FS_MODE 28.0f
-#define FS_SCEN_NAME 28.0f
+#define FS_SCEN_NAME 14.0f
 #define FS_TL_TITLE 14.0f
 #define FS_TL_LEGEND 14.0f
 #define FS_TL_AXIS 14.0f
@@ -402,7 +402,7 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define PIXEL_FONT_SPACING 0.0f
 
 #define LAYOUT_PAD 16.0f
-#define LAYOUT_HDR_H 64.0f
+#define LAYOUT_HDR_H 50.0f
 #define LAYOUT_NAV_H 30.0f
 #define LAYOUT_MAIN_H 252.0f
 #define LAYOUT_STATUS_W 310.0f
@@ -417,20 +417,21 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define LAYOUT_LEGEND_COL_GAP 18.0f
 #define LAYOUT_SLIDER_INSET 40.0f
 #define LAYOUT_SLIDER_H 24.0f
-#define LAYOUT_TIMELINE_HEADER_H 28.0f
+#define LAYOUT_TIMELINE_HEADER_H 26.0f
 #define LAYOUT_TIMELINE_TITLE_X 16.0f
 #define LAYOUT_TIMELINE_TITLE_Y 6.0f
 #define LAYOUT_TIMELINE_PLOT_LEFT 52.0f
 #define LAYOUT_TIMELINE_PLOT_RIGHT 18.0f
 #define LAYOUT_TIMELINE_PLOT_TOP 40.0f
-#define LAYOUT_TIMELINE_PLOT_BOTTOM 54.0f
 #define LAYOUT_TIMELINE_AXIS_X 10.0f
 #define LAYOUT_TIMELINE_AXIS_Y_NUDGE 7.0f
-#define LAYOUT_TIMELINE_XLABEL_Y 10.0f
+#define LAYOUT_TIMELINE_XLABEL_Y 6.0f
+#define LAYOUT_TIMELINE_XLABEL_BAND 20.0f
 #define LAYOUT_TIMELINE_LEGEND_RIGHT 16.0f
 #define LAYOUT_TIMELINE_LEGEND_Y 6.0f
-#define LAYOUT_HEADER_TOP_Y 16.0f
-#define LAYOUT_HEADER_MAIN_Y 32.0f
+#define LAYOUT_TIMELINE_SLIDER_BOTTOM_PAD 8.0f
+#define LAYOUT_HEADER_TOP_Y 10.0f
+#define LAYOUT_HEADER_MAIN_Y 26.0f
 #define LAYOUT_HEADER_SEGMENT_GAP 24.0f
 #define LAYOUT_HEADER_META_GAP 18.0f
 #define LAYOUT_STATUS_MODE_X 14.0f
@@ -440,8 +441,9 @@ static const VisualizerTheme *visualizer_active_theme(void)
 #define LAYOUT_STATUS_VALUE_GAP 18.0f
 #define LAYOUT_STATUS_FAULT_DIV_Y 126.0f
 #define LAYOUT_STATUS_FAULT_TITLE_Y 136.0f
-#define LAYOUT_STATUS_FAULT_ROW0_Y 154.0f
-#define LAYOUT_STATUS_FAULT_ROW1_Y 170.0f
+#define LAYOUT_STATUS_FAULT_ROW0_Y 160.0f
+#define LAYOUT_STATUS_FAULT_ROW1_Y 176.0f
+#define LAYOUT_STATUS_FAULT_LABEL_GAP 10.0f
 #define LAYOUT_STATUS_END_DIV_Y 196.0f
 #define LAYOUT_STATUS_END_TITLE_Y 206.0f
 #define LAYOUT_STATUS_END_HINT_Y 222.0f
@@ -532,6 +534,16 @@ static void draw_text_font(const Font *font, const char *text, float x, float y,
     DrawTextEx(*font, text, (Vector2){roundf(x), roundf(y)}, snapped_size, PIXEL_FONT_SPACING, color);
 }
 
+static Color with_min_alpha(Color color, unsigned char min_alpha)
+{
+    if (color.a < min_alpha)
+    {
+        color.a = min_alpha;
+    }
+
+    return color;
+}
+
 static Vector2 measure_text_font(const Font *font, const char *text, float size)
 {
     float snapped_size;
@@ -594,6 +606,54 @@ static Color level_color(SeverityLevel level)
         return COL_WARNING;
     }
     return COL_OK;
+}
+
+static unsigned int active_tick_index(const ScenarioData *scenario, float playhead)
+{
+    unsigned int index;
+
+    if ((scenario == NULL) || (scenario->tick_count == 0U))
+    {
+        return 0U;
+    }
+
+    index = (unsigned int)(playhead + 0.5f);
+    if (index >= scenario->tick_count)
+    {
+        index = scenario->tick_count - 1U;
+    }
+
+    return index;
+}
+
+static void draw_threshold_marker(Rectangle bar_area, float threshold_ratio, SeverityLevel level, float scale)
+{
+    int marker_x;
+    int border_w;
+    int rect_w;
+    int rect_h;
+    int top_y;
+    int rect_x;
+    int gap_y;
+    Color border_color = with_min_alpha(COL_BAR_BORDER, 255U);
+    Color fill_color;
+
+    if ((threshold_ratio <= 0.0f) || (threshold_ratio >= 1.0f))
+    {
+        return;
+    }
+
+    marker_x = (int)roundf(bar_area.x + (threshold_ratio * bar_area.width));
+    border_w = ((int)roundf(scale) < 1) ? 1 : (int)roundf(scale);
+    rect_w = 8 + ((int)roundf(scale) * 2);
+    rect_h = 4 + border_w;
+    gap_y = 2 + border_w;
+    rect_x = marker_x - (rect_w / 2);
+    top_y = (int)roundf(bar_area.y) - rect_h - gap_y;
+    fill_color = (level == LEVEL_SHUTDOWN) ? with_min_alpha(COL_SHUTDOWN, 235U) : with_min_alpha(COL_WARNING, 235U);
+
+    DrawRectangle(rect_x - border_w, top_y - border_w, rect_w + (border_w * 2), rect_h + (border_w * 2), border_color);
+    DrawRectangle(rect_x, top_y, rect_w, rect_h, fill_color);
 }
 
 Color visualizer_mode_color(const char *engine_mode)
@@ -757,13 +817,11 @@ static void draw_meter(const Font *font,
 
     if ((warn_threshold > 0.0f) && (warn_threshold < max_value))
     {
-        int warn_x = (int)(bar_area.x + (warn_threshold / max_value) * bar_area.width);
-        DrawLine(warn_x, (int)(bar_area.y + 2), warn_x, (int)(bar_area.y + bar_area.height - 2), COL_WARNING_FILL);
+        draw_threshold_marker(bar_area, warn_threshold / max_value, LEVEL_WARNING, scale);
     }
     if ((shutdown_threshold > 0.0f) && (shutdown_threshold < max_value))
     {
-        int shut_x = (int)(bar_area.x + (shutdown_threshold / max_value) * bar_area.width);
-        DrawLine(shut_x, (int)(bar_area.y + 2), shut_x, (int)(bar_area.y + bar_area.height - 2), COL_SHUTDOWN_FILL);
+        draw_threshold_marker(bar_area, shutdown_threshold / max_value, LEVEL_SHUTDOWN, scale);
     }
 
     (void)snprintf(value_text, sizeof(value_text), "%.2f %s", value, unit);
@@ -777,18 +835,15 @@ static void draw_meter(const Font *font,
     draw_text_font(font, value_text, value_x, value_y, val_fs, COL_PRIMARY_TEXT);
 }
 
-static void draw_dashed_hline(int x0, int x1, int y, int dash, int gap, Color color)
+static void draw_dotted_hline(int x0, int x1, int y, int step, float radius, Color color)
 {
     int x = x0;
+    Color stroke = with_min_alpha(color, 160U);
+
     while (x < x1)
     {
-        int end = x + dash;
-        if (end > x1)
-        {
-            end = x1;
-        }
-        DrawLine(x, y, end, y, color);
-        x = end + gap;
+        DrawCircle(x, y, radius, stroke);
+        x += step;
     }
 }
 
@@ -819,19 +874,33 @@ static void draw_fault_rate_row(const Font *font,
                                 float scale)
 {
     char pct_text[20];
+    float label_y;
+    float pct_y;
+    float label_fs = FS_TINY * scale;
+    Vector2 label_sz;
+    Vector2 pct_sz;
     float text_x = bar_x + bar_w + 6.0f * scale;
 
-    draw_text_font(font, label, label_x, row_y, FS_TINY * scale, COL_SUBLABEL);
+    label_sz = measure_text_font(font, label, label_fs);
+    label_y = row_y + (bar_h - label_sz.y) * 0.5f;
+    draw_text_font(font, label, label_x, label_y, label_fs, COL_SUBLABEL);
 
     DrawRectangle((int)bar_x, (int)row_y, (int)bar_w, (int)bar_h, COL_BAR_BG);
     DrawRectangle((int)bar_x, (int)row_y, (int)(bar_w * (value_pct / 100.0f)), (int)bar_h, fill_color);
     DrawRectangleLines((int)bar_x, (int)row_y, (int)bar_w, (int)bar_h, COL_FAULT_BAR_BOR);
 
     (void)snprintf(pct_text, sizeof(pct_text), "%.1f%%", value_pct);
-    draw_text_font(font, pct_text, text_x, row_y, FS_TINY * scale, COL_FAULT_PCT_TEXT);
+    pct_sz = measure_text_font(font, pct_text, label_fs);
+    pct_y = row_y + (bar_h - pct_sz.y) * 0.5f;
+    draw_text_font(font, pct_text, text_x, pct_y, label_fs, COL_FAULT_PCT_TEXT);
 }
 
-static void draw_timeline(const Font *font, const ScenarioData *scenario, float playhead, Rectangle area, float scale)
+static void draw_timeline(const Font *font,
+                          const ScenarioData *scenario,
+                          float playhead,
+                          Rectangle area,
+                          Rectangle plot_area,
+                          float scale)
 {
     int i;
     int plot_left;
@@ -861,13 +930,13 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
              COL_TIMELINE_SUBDIV);
 
     {
-        unsigned int active_tick = scenario->ticks[(unsigned int)(playhead + 0.5f)].tick;
+        unsigned int tick_index = active_tick_index(scenario, playhead);
         char tick_label[48];
         Vector2 tl_sz;
         float tl_x;
         float title_fs = FS_TL_TITLE * scale;
-        (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", active_tick,
-                       scenario->ticks[scenario->tick_count - 1U].tick);
+        (void)snprintf(tick_label, sizeof(tick_label), "Tick %u / %u", tick_index + 1U,
+                       scenario->tick_count);
         tl_sz = measure_text_font(font, tick_label, title_fs);
         tl_x = area.x + area.width * 0.5f - tl_sz.x * 0.5f;
         draw_text_font(font, tick_label,
@@ -876,10 +945,10 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
                        title_fs, COL_TICK_COUNTER);
     }
 
-    plot_left = (int)(area.x + LAYOUT_TIMELINE_PLOT_LEFT * scale);
-    plot_right = (int)(area.x + area.width - LAYOUT_TIMELINE_PLOT_RIGHT * scale);
-    plot_top = (int)(area.y + LAYOUT_TIMELINE_PLOT_TOP * scale);
-    plot_bottom = (int)(area.y + area.height - LAYOUT_TIMELINE_PLOT_BOTTOM * scale);
+    plot_left = (int)roundf(plot_area.x);
+    plot_right = (int)roundf(plot_area.x + plot_area.width);
+    plot_top = (int)roundf(plot_area.y);
+    plot_bottom = (int)roundf(plot_area.y + plot_area.height);
     plot_w = plot_right - plot_left;
     plot_h = plot_bottom - plot_top;
 
@@ -911,10 +980,12 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
             unsigned int tick_idx = (unsigned int)(t * (float)(scenario->tick_count - 1U));
             char x_label[16];
             float axis_fs = FS_TL_AXIS * scale;
+            Vector2 label_sz;
             DrawLine(gx, plot_top, gx, plot_bottom, COL_GRID_VERT);
             (void)snprintf(x_label, sizeof(x_label), "%u", scenario->ticks[tick_idx].tick);
+            label_sz = measure_text_font(font, x_label, axis_fs);
             draw_text_font(font, x_label,
-                           (float)gx - 8.0f * scale,
+                           (float)gx - label_sz.x * 0.5f,
                            (float)plot_bottom + LAYOUT_TIMELINE_XLABEL_Y * scale,
                            axis_fs, COL_AXIS_LABEL);
         }
@@ -924,9 +995,9 @@ static void draw_timeline(const Font *font, const ScenarioData *scenario, float 
         int temp_warn_y = plot_bottom - (int)((TEMP_WARNING_THRESHOLD / 120.0f) * (float)plot_h);
         int temp_shutdown_y = plot_bottom - (int)((TEMP_SHUTDOWN_THRESHOLD / 120.0f) * (float)plot_h);
         int oil_shutdown_y = plot_bottom - (int)((OIL_SHUTDOWN_THRESHOLD / 5.0f) * (float)plot_h);
-        draw_dashed_hline(plot_left, plot_right, temp_warn_y, 10, 5, COL_WARNING_DASH);
-        draw_dashed_hline(plot_left, plot_right, temp_shutdown_y, 10, 5, COL_SHUTDOWN_DASH);
-        draw_dashed_hline(plot_left, plot_right, oil_shutdown_y, 10, 5, COL_OIL_SHUT_DASH);
+        draw_dotted_hline(plot_left, plot_right, temp_warn_y, 12, 2.0f, COL_WARNING_DASH);
+        draw_dotted_hline(plot_left, plot_right, temp_shutdown_y, 12, 2.0f, COL_SHUTDOWN_DASH);
+        draw_dotted_hline(plot_left, plot_right, oil_shutdown_y, 12, 2.0f, COL_OIL_SHUT_DASH);
     }
 
     if (scenario->tick_count > 1U)
@@ -1093,6 +1164,13 @@ void visualizer_compute_layout(int screen_w, int screen_h, VisualizerLayout *lay
     float m_row2_y;
     float timeline_y;
     float timeline_h_val;
+    float timeline_plot_x;
+    float timeline_plot_y;
+    float timeline_plot_w;
+    float slider_y;
+    float slider_h;
+    float slider_bottom_pad;
+    float xlabel_band;
 
     if (layout == NULL)
     {
@@ -1136,10 +1214,24 @@ void visualizer_compute_layout(int screen_w, int screen_h, VisualizerLayout *lay
     timeline_y = content_y + main_h + 14.0f * layout->scale;
     timeline_h_val = (float)screen_h - timeline_y - layout->pad;
     layout->timeline = (Rectangle){layout->pad, timeline_y, (float)screen_w - 2.0f * layout->pad, timeline_h_val};
-    layout->slider = (Rectangle){layout->timeline.x + 52.0f,
-                                 layout->timeline.y + layout->timeline.height - LAYOUT_SLIDER_INSET * layout->scale,
-                                 layout->timeline.width - 76.0f,
-                                 LAYOUT_SLIDER_H * layout->scale};
+
+    timeline_plot_x = layout->timeline.x + LAYOUT_TIMELINE_PLOT_LEFT * layout->scale;
+    timeline_plot_y = layout->timeline.y + LAYOUT_TIMELINE_PLOT_TOP * layout->scale;
+    timeline_plot_w = layout->timeline.width -
+                      ((LAYOUT_TIMELINE_PLOT_LEFT + LAYOUT_TIMELINE_PLOT_RIGHT) * layout->scale);
+    slider_h = LAYOUT_SLIDER_H * layout->scale;
+    slider_bottom_pad = LAYOUT_TIMELINE_SLIDER_BOTTOM_PAD * layout->scale;
+    xlabel_band = LAYOUT_TIMELINE_XLABEL_BAND * layout->scale;
+    slider_y = layout->timeline.y + layout->timeline.height - slider_h - slider_bottom_pad;
+
+    layout->timeline_plot = (Rectangle){timeline_plot_x,
+                                        timeline_plot_y,
+                                        timeline_plot_w,
+                                        slider_y - xlabel_band - timeline_plot_y};
+    layout->slider = (Rectangle){layout->timeline_plot.x,
+                                 slider_y,
+                                 layout->timeline_plot.width,
+                                 slider_h};
 }
 
 void visualizer_draw_frame(const Font *font,
@@ -1179,6 +1271,7 @@ void visualizer_draw_frame(const Font *font,
         char expected_text[64];
         char tick_str[48];
         char theme_str[48];
+        unsigned int tick_index;
         Vector2 req_sz;
         Vector2 exp_sz;
         Vector2 tick_sz;
@@ -1207,8 +1300,9 @@ void visualizer_draw_frame(const Font *font,
                        LAYOUT_HEADER_TOP_Y * layout->scale,
                        FS_TINY * layout->scale,
                        COL_SCEN_COUNTER);
+        tick_index = active_tick_index(scenario, playhead);
         (void)snprintf(tick_str, sizeof(tick_str), "Tick  %u / %u",
-                       tick->tick, scenario->tick_count);
+                       tick_index + 1U, scenario->tick_count);
         tick_sz = measure_text_font(font, tick_str, FS_BADGE * layout->scale);
         badge_w = tick_sz.x + 20.0f * layout->scale;
         badge_x = (float)screen_w - badge_w - layout->pad;
@@ -1367,8 +1461,8 @@ void visualizer_draw_frame(const Font *font,
         float bw2 = layout->metrics_area.width - 28.0f * layout->scale;
         float bh2 = 9.0f * layout->scale;
         float lbl_w2 = 68.0f * layout->scale;
-        float tr_x = bx2 + lbl_w2;
-        float tr_w = bw2 - lbl_w2 - 52.0f * layout->scale;
+        float tr_x = bx2 + lbl_w2 + LAYOUT_STATUS_FAULT_LABEL_GAP * layout->scale;
+        float tr_w = bw2 - lbl_w2 - LAYOUT_STATUS_FAULT_LABEL_GAP * layout->scale - 52.0f * layout->scale;
 
         draw_fault_rate_row(font, "WARNING", warning_pct,
                             bx2, tr_x, tr_w, bh2,
@@ -1394,7 +1488,7 @@ void visualizer_draw_frame(const Font *font,
                        FS_SMALL * layout->scale, COL_REPLAY_HINT);
     }
 
-    draw_timeline(font, scenario, playhead, layout->timeline, layout->scale);
+    draw_timeline(font, scenario, playhead, layout->timeline, layout->timeline_plot, layout->scale);
     draw_slider(font, layout->slider, scenario, playhead, restart_feedback_timer);
 
     if (quit_modal_open != 0)
