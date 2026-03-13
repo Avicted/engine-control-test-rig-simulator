@@ -249,6 +249,16 @@ Theme selection:
 - Start with `--theme default`, `--theme dos`, `--theme onyx`, `--theme gruvbox`, or `--theme light`
 - Press `T` while the visualizer is running to cycle between themes
 
+### Release bundles
+
+Release packaging, shipped audit flow, local artifact testing, and VS Code tasks are documented in [docs/release_artifacts.md](docs/release_artifacts.md).
+
+At a high level:
+
+- tags matching `v*` publish Linux and Win64 runnable artifacts
+- each bundle includes a shipped simulator audit entry point via `tools/release_audit.py`
+- local Linux and Wine-based Win64 artifact tests execute that packaged audit before release, with the Wine path using a lighter audit mode to avoid repeated slow Wine startups
+
 
 
 ## Module API Overview
@@ -397,6 +407,7 @@ Usage:
 | [docs/static_analysis_baseline_policy.md](docs/static_analysis_baseline_policy.md) | Zero-warning baseline policy |
 | [docs/determinism_guarantee.md](docs/determinism_guarantee.md) | Determinism implementation and CI enforcement via SHA-256 replay check |
 | [docs/schema_evolution.md](docs/schema_evolution.md) | Semantic versioning policy for JSON output schema |
+| [docs/release_artifacts.md](docs/release_artifacts.md) | Release packaging, shipped audit flow, local artifact testing, and VS Code tasks |
 | [docs/message_map.md](docs/message_map.md) | BusFrame ID registry documentation with payload layouts |
 | [docs/error_severity_model.md](docs/error_severity_model.md) | Structured severity/recoverability classification reference |
 | [docs/MISRA_C:2012_Supported_Rules.md](docs/MISRA_C:2012_Supported_Rules.md) | List of supported MISRA C:2012 rules |

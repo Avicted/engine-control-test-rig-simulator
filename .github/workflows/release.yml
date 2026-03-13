@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux release dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make python3 libraylib-dev
+
+      - name: Build Linux release bundle
+        run: |
+          make package-release-linux \
+            CC=gcc \
+            PYTHON=python3 \
+            RELEASE_PLATFORM=linux-x64 \
+            RELEASE_ARCHIVE=./dist/engine-control-test-rig-simulator-linux-x64.tar.gz
+
+      - name: Audit Linux release bundle
+        run: |
+          rm -rf ./dist/test-linux
+          mkdir -p ./dist/test-linux
+          tar -xzf ./dist/engine-control-test-rig-simulator-linux-x64.tar.gz -C ./dist/test-linux
+          cd ./dist/test-linux/engine-control-test-rig-simulator-linux-x64
+          python3 tools/release_audit.py --bundle-dir . --skip-visualizer
+
+      - name: Upload Linux bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-x64
+          path: dist/engine-control-test-rig-simulator-linux-x64.tar.gz
+
+  build-win64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MSYS2 toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-raylib
+
+      - name: Build Win64 release bundle
+        shell: msys2 {0}
+        run: |
+          make all visualizer CC=gcc PYTHON=python
+          make generate-visualization-json CC=gcc PYTHON=python
+
+          rm -rf dist/win64-runtime
+          mkdir -p dist/win64-runtime
+          python tools/collect_mingw_runtime_dlls.py \
+            --output-dir ./dist/win64-runtime \
+            --binary ./build/testrig.exe \
+            --binary ./build/visualizer.exe \
+            --search-dir /mingw64/bin \
+            --objdump objdump
+
+          python tools/package_release.py \
+            --platform win64 \
+            --testrig ./build/testrig.exe \
+            --visualizer ./build/visualizer.exe \
+            --archive ./dist/engine-control-test-rig-simulator-win64.zip \
+            --extra-tree ./dist/win64-runtime:.
+
+      - name: Audit Win64 release bundle
+        shell: msys2 {0}
+        run: |
+          rm -rf ./dist/test-win64
+          mkdir -p ./dist/test-win64
+          python -c 'import zipfile; zipfile.ZipFile("./dist/engine-control-test-rig-simulator-win64.zip").extractall("./dist/test-win64")'
+          cd ./dist/test-win64/engine-control-test-rig-simulator-win64
+          python tools/release_audit.py --bundle-dir . --skip-visualizer
+
+      - name: Upload Win64 bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-win64
+          path: dist/engine-control-test-rig-simulator-win64.zip
+
+  publish:
+    needs:
+      - build-linux-x64
+      - build-win64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/engine-control-test-rig-simulator-linux-x64.tar.gz
+            dist/engine-control-test-rig-simulator-win64.zip
+          generate_release_notes: true
