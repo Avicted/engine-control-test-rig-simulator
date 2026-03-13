@@ -7,14 +7,21 @@
 #include "visualizer_playback.h"
 #include "visualizer_ui.h"
 
+#define KEY_SCRUB_DEBOUNCE_SECONDS 0.5f
+#define KEY_SCRUB_TICKS_PER_SECOND 14.0f
+#define KEY_SCRUB_ACCEL_TICKS_PER_SECOND 18.0f
+#define KEY_SCRUB_MAX_TICKS_PER_SECOND 42.0f
+
 typedef struct
 {
     float playhead;
     float ticks_per_second;
     float restart_feedback_timer;
+    float key_scrub_hold_timer;
     int paused;
     int dragging_slider;
     int speed_overridden;
+    int key_scrub_direction;
     int quit_modal_open;
     int quit_modal_selection;
     int should_quit;
@@ -46,6 +53,8 @@ static void reset_for_active_scenario(const ScenarioSet *scenario_set, Visualize
     state->paused = 0;
     state->dragging_slider = 0;
     state->restart_feedback_timer = 0.6f;
+    state->key_scrub_hold_timer = 0.0f;
+    state->key_scrub_direction = 0;
     if (state->speed_overridden == 0)
     {
         state->ticks_per_second = visualizer_default_ticks_per_second(scenario);
@@ -69,6 +78,26 @@ static void handle_window_commands(void)
             SetWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         }
     }
+}
+
+static float current_key_scrub_speed(float hold_timer)
+{
+    float accelerated_hold_time;
+    float scrub_speed;
+
+    accelerated_hold_time = hold_timer - KEY_SCRUB_DEBOUNCE_SECONDS;
+    if (accelerated_hold_time < 0.0f)
+    {
+        accelerated_hold_time = 0.0f;
+    }
+
+    scrub_speed = KEY_SCRUB_TICKS_PER_SECOND + (accelerated_hold_time * KEY_SCRUB_ACCEL_TICKS_PER_SECOND);
+    if (scrub_speed > KEY_SCRUB_MAX_TICKS_PER_SECOND)
+    {
+        scrub_speed = KEY_SCRUB_MAX_TICKS_PER_SECOND;
+    }
+
+    return scrub_speed;
 }
 
 static void handle_quit_modal_input(VisualizerAppState *state)
@@ -119,9 +148,16 @@ static void handle_playback_input(ScenarioSet *scenario_set,
                                   const VisualizerLayout *layout)
 {
     ScenarioData *scenario = &scenario_set->scenarios[scenario_set->active_index];
+    int right_pressed = IsKeyPressed(KEY_RIGHT);
+    int left_pressed = IsKeyPressed(KEY_LEFT);
+    int right_down = IsKeyDown(KEY_RIGHT);
+    int left_down = IsKeyDown(KEY_LEFT);
+    float max_playhead = (float)(scenario->tick_count - 1U);
 
     if (state->quit_modal_open != 0)
     {
+        state->key_scrub_hold_timer = 0.0f;
+        state->key_scrub_direction = 0;
         return;
     }
 
@@ -140,16 +176,40 @@ static void handle_playback_input(ScenarioSet *scenario_set,
         state->paused = 0;
         state->restart_feedback_timer = 0.6f;
     }
-    if (IsKeyPressed(KEY_RIGHT))
+    if (right_pressed != 0)
     {
         state->playhead = ceilf(state->playhead + 0.0001f);
-        if (state->playhead > (float)(scenario->tick_count - 1U))
+        if (state->playhead > max_playhead)
         {
-            state->playhead = (float)(scenario->tick_count - 1U);
+            state->playhead = max_playhead;
         }
         state->paused = 1;
+        state->key_scrub_hold_timer = 0.0f;
+        state->key_scrub_direction = 1;
     }
-    if (IsKeyPressed(KEY_LEFT))
+    else if (right_down != 0)
+    {
+        if (state->key_scrub_direction != 1)
+        {
+            state->key_scrub_hold_timer = 0.0f;
+            state->key_scrub_direction = 1;
+        }
+        else
+        {
+            state->key_scrub_hold_timer += GetFrameTime();
+        }
+
+        if (state->key_scrub_hold_timer >= KEY_SCRUB_DEBOUNCE_SECONDS)
+        {
+            state->playhead += GetFrameTime() * current_key_scrub_speed(state->key_scrub_hold_timer);
+            if (state->playhead > max_playhead)
+            {
+                state->playhead = max_playhead;
+            }
+            state->paused = 1;
+        }
+    }
+    else if (left_pressed != 0)
     {
         state->playhead = floorf(state->playhead - 0.0001f);
         if (state->playhead < 0.0f)
@@ -157,6 +217,35 @@ static void handle_playback_input(ScenarioSet *scenario_set,
             state->playhead = 0.0f;
         }
         state->paused = 1;
+        state->key_scrub_hold_timer = 0.0f;
+        state->key_scrub_direction = -1;
+    }
+    else if (left_down != 0)
+    {
+        if (state->key_scrub_direction != -1)
+        {
+            state->key_scrub_hold_timer = 0.0f;
+            state->key_scrub_direction = -1;
+        }
+        else
+        {
+            state->key_scrub_hold_timer += GetFrameTime();
+        }
+
+        if (state->key_scrub_hold_timer >= KEY_SCRUB_DEBOUNCE_SECONDS)
+        {
+            state->playhead -= GetFrameTime() * current_key_scrub_speed(state->key_scrub_hold_timer);
+            if (state->playhead < 0.0f)
+            {
+                state->playhead = 0.0f;
+            }
+            state->paused = 1;
+        }
+    }
+    else
+    {
+        state->key_scrub_hold_timer = 0.0f;
+        state->key_scrub_direction = 0;
     }
     if (IsKeyPressed(KEY_UP))
     {
@@ -235,6 +324,8 @@ void visualizer_run(ScenarioSet *scenario_set, VisualizerThemeId initial_theme)
     state.quit_modal_open = 0;
     state.quit_modal_selection = 0;
     state.custom_font_loaded = 0;
+    state.key_scrub_hold_timer = 0.0f;
+    state.key_scrub_direction = 0;
     state.speed_overridden = 0;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
