@@ -187,11 +187,11 @@ Expected CLI behavior:
 
 ## Raylib Visualization (Read-Only)
 
-![Theme default](visualization/visualizer_example_theme_default.png)
-![Theme dos](visualization/visualizer_example_theme_dos.png)
-![Theme onyx](visualization/visualizer_example_theme_onyx.png)
-![Theme gruvbox](visualization/visualizer_example_theme_gruvbox.png)
-![Theme light](visualization/visualizer_example_theme_light.png)
+![Theme default](visualization/docs/visualizer_example_theme_default.png)
+![Theme dos](visualization/docs/visualizer_example_theme_dos.png)
+![Theme onyx](visualization/docs/visualizer_example_theme_onyx.png)
+![Theme gruvbox](visualization/docs/visualizer_example_theme_gruvbox.png)
+![Theme light](visualization/docs/visualizer_example_theme_light.png)
 
 The visualization program reads JSON output only - it cannot call simulator internals or modify simulation state.
 

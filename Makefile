@@ -12,11 +12,12 @@ UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests
 VALGRIND_TARGET = $(BUILD_DIR)/testrig_valgrind
 VALGRIND_UNIT_TEST_TARGET = $(BUILD_DIR)/unit_tests_valgrind
 
-VISUALIZER_SRC = visualization/main.c \
-	visualization/visualizer_app.c \
-	visualization/visualizer_loader.c \
-	visualization/visualizer_playback.c \
-	visualization/visualizer_ui.c
+VISUALIZER_SRC = visualization/src/main.c \
+	visualization/src/visualizer_app.c \
+	visualization/src/visualizer_config.c \
+	visualization/src/visualizer_loader.c \
+	visualization/src/visualizer_playback.c \
+	visualization/src/visualizer_ui.c
 UNIT_TEST_SRCS = $(shell find tests/unit -type f -name '*.c' | sort)
 TIDY_SRCS = $(shell find src -type f -name '*.c' | sort)
 
@@ -48,7 +49,7 @@ DEBUG_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fsanitize=address,undefined -fno-omit-fr
 COVERAGE_CFLAGS = $(COMMON_CFLAGS) -O0 --coverage
 VALGRIND_CFLAGS = $(COMMON_CFLAGS) -O0 -g -fno-omit-frame-pointer
 
-CPPFLAGS = -I./include -I./src -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
+CPPFLAGS = -I./include -I./src -I./visualization/include -DSIM_BUILD_COMMIT_OVERRIDE=\"$(BUILD_COMMIT)\"
 LDFLAGS = -lm
 RAYLIB_LIBS = -lraylib -lm -lpthread -ldl
 VALGRIND ?= valgrind
@@ -302,7 +303,7 @@ check-viz-boundary:
 	@echo "=== Visualization Boundary Audit ==="; \
 	violations=0; \
 	for hdr in config.h control.h engine.h hal.h status.h script_parser.h scenario_contract.h test_runner.h; do \
-		if grep -rn "#include.*$$hdr" visualization/ > /dev/null 2>&1; then \
+		if grep -Ern '#include[[:space:]]*[<"]'"$$hdr"'[>"]' visualization/ > /dev/null 2>&1; then \
 			echo "FAIL: visualizer includes simulator header $$hdr"; \
 			violations=1; \
 		fi; \
