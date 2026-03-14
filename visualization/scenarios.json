@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "software_version": "1.4.0",
-  "build_commit": "2c38a09",
+  "software_version": "1.4.4",
+  "build_commit": "4708e70",
   "scenarios": [
     {
       "scenario": "cold_start_warmup_and_ramp_high_temp_shutdown",

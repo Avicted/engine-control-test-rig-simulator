@@ -81,14 +81,25 @@ def write_run_notes(destination: Path,
                     testrig_name: str,
                     visualizer_name: str,
                     has_linux_launchers: bool) -> None:
+    is_windows_bundle = testrig_name.endswith(".exe")
     testrig_cmd = f"./{testrig_name} --run-all"
+    testrig_version_cmd = f"./{testrig_name} --version"
     testrig_script_cmd = f"./{testrig_name} --script scenarios/normal_operation.txt --json"
     visualizer_cmd = f"./{visualizer_name} visualization/scenarios.json"
+    audit_cmd = "python3 tools/release_audit.py"
 
     if has_linux_launchers:
+        testrig_version_cmd = "./run-testrig.sh --version"
         testrig_cmd = "./run-testrig.sh --run-all"
         testrig_script_cmd = "./run-testrig.sh --script scenarios/normal_operation.txt --json"
         visualizer_cmd = "./run-visualizer.sh visualization/scenarios.json"
+
+    if is_windows_bundle:
+        testrig_version_cmd = f".\\{testrig_name} --version"
+        testrig_cmd = f".\\{testrig_name} --run-all"
+        testrig_script_cmd = f".\\{testrig_name} --script scenarios\\normal_operation.txt --json"
+        visualizer_cmd = f".\\{visualizer_name} visualization\\scenarios.json"
+        audit_cmd = "py -3 tools\\release_audit.py"
 
     lines = [
         f"{bundle_name}",
@@ -105,17 +116,29 @@ def write_run_notes(destination: Path,
         "- visualization/PxPlus_IBM_EGA_8x14.ttf: visualizer font asset",
         "",
         "Quick start:",
-        f"- Run the simulator: {testrig_cmd}",
-        f"- Run a script: {testrig_script_cmd}",
-        f"- Start the visualizer: {visualizer_cmd}",
-        "- Run the shipped audit suite with Python 3: python3 tools/release_audit.py",
+        f"- Show the simulator version: {testrig_version_cmd}",
+        f"- Run the packaged validation sweep: {testrig_cmd}",
+        f"- Run a scripted scenario and emit JSON: {testrig_script_cmd}",
+        f"- Start the visualizer with the shipped scenario bundle: {visualizer_cmd}",
+        f"- Run the shipped audit suite: {audit_cmd}",
         "",
         "Notes:",
+        "- Running the simulator or visualizer with no arguments prints usage; pass one of the commands above.",
+        "- The visualizer always needs at least one scenarios.json path, and the shipped bundle is visualization/scenarios.json.",
         "- The visualizer loads visualization/PxPlus_IBM_EGA_8x14.ttf via a relative path, so keep the shipped directory layout intact.",
-        "- On Windows, use py -3 tools\\release_audit.py or python tools\\release_audit.py to run the audit suite.",
     ]
     if has_linux_launchers:
         lines.append("- Linux launchers set LD_LIBRARY_PATH so the bundled shared libraries are used first.")
+    if is_windows_bundle:
+        lines.extend([
+            "- This Win64 bundle does not ship run-*.sh wrappers.",
+            f"- On Windows, use {testrig_cmd} and {visualizer_cmd} from Command Prompt or PowerShell.",
+            "- On Linux, launch the Win64 binaries with Wine: wine ./testrig.exe --run-all and wine ./visualizer.exe visualization/scenarios.json.",
+            "- On Linux, run the shipped audit with: python3 tools/release_audit.py --bundle-dir . --command-prefix wine --skip-visualizer --skip-visualization-regeneration",
+        ])
+    else:
+        lines.append("- On Linux, the run-*.sh wrappers are the supported entry points for the packaged binaries.")
+        lines.append("- On Windows, use py -3 tools\\release_audit.py or python tools\\release_audit.py to run the audit suite.")
     destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
