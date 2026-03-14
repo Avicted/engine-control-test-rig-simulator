@@ -3,6 +3,10 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.4.6] - 2026-03-14
+### Fixed
+- CD -> Linux and Win64 release artifacts now work on Arch Linux hosts through wine.
+
 ## [1.4.4] - 2026-03-14
 
 ### Fixed
