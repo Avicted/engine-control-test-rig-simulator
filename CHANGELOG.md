@@ -3,6 +3,13 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.4.2] - 2026-03-14
+
+### Fixed
+- GitHub Release workflow portability and packaging fixes for Linux and Win64 artifacts.
+- Win64 runtime DLL collection during release packaging.
+- Headless CI release audit behavior for Win64 Wine runs.
+
 ## [1.4.0] - 2026-03-13
 
 ### Added
