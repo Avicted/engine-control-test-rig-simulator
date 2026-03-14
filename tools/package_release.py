@@ -101,6 +101,25 @@ def write_run_notes(destination: Path,
         visualizer_cmd = f".\\{visualizer_name} visualization\\scenarios.json"
         audit_cmd = "py -3 tools\\release_audit.py"
 
+    linux_review_cmds = [
+        "./run-testrig.sh --version" if has_linux_launchers else f"./{testrig_name} --version",
+        "./run-testrig.sh --run-all" if has_linux_launchers else f"./{testrig_name} --run-all",
+        "./run-testrig.sh --script scenarios/normal_operation.txt --json" if has_linux_launchers else f"./{testrig_name} --script scenarios/normal_operation.txt --json",
+        "./run-visualizer.sh visualization/scenarios.json" if has_linux_launchers else f"./{visualizer_name} visualization/scenarios.json",
+    ]
+    windows_review_cmds = [
+        f".\\{testrig_name} --version",
+        f".\\{testrig_name} --run-all",
+        f".\\{testrig_name} --script scenarios\\normal_operation.txt --json",
+        f".\\{visualizer_name} visualization\\scenarios.json",
+    ]
+    wine_review_cmds = [
+        "wine ./testrig.exe --version",
+        "wine ./testrig.exe --run-all",
+        "wine ./testrig.exe --script scenarios/normal_operation.txt --json",
+        "wine ./visualizer.exe visualization/scenarios.json",
+    ]
+
     lines = [
         f"{bundle_name}",
         "",
@@ -122,11 +141,24 @@ def write_run_notes(destination: Path,
         f"- Start the visualizer with the shipped scenario bundle: {visualizer_cmd}",
         f"- Run the shipped audit suite: {audit_cmd}",
         "",
+        "Reviewer commands:",
         "Notes:",
         "- Running the simulator or visualizer with no arguments prints usage; pass one of the commands above.",
         "- The visualizer always needs at least one scenarios.json path, and the shipped bundle is visualization/scenarios.json.",
         "- The visualizer loads visualization/PxPlus_IBM_EGA_8x14.ttf via a relative path, so keep the shipped directory layout intact.",
     ]
+    if is_windows_bundle:
+        lines.extend([
+            "- Windows Command Prompt or PowerShell:",
+            *(f"  {command}" for command in windows_review_cmds),
+            "- Linux with Wine:",
+            *(f"  {command}" for command in wine_review_cmds),
+        ])
+    else:
+        lines.extend([
+            "- Linux shell:",
+            *(f"  {command}" for command in linux_review_cmds),
+        ])
     if has_linux_launchers:
         lines.append("- Linux launchers set LD_LIBRARY_PATH so the bundled shared libraries are used first.")
     if is_windows_bundle:
