@@ -58,6 +58,52 @@ python tools\release_audit.py
 
 The GitHub Release workflow runs the packaged simulator audit in both the Linux and Win64 jobs before uploading artifacts. Those CI audits use `--skip-visualizer` because hosted runners are headless.
 
+## Reviewer quick start
+
+The released binaries are command-line tools. Running them with no arguments prints usage; reviewers should use the exact commands below.
+
+Linux bundle review:
+
+```bash
+cd engine-control-test-rig-simulator-linux-x64
+
+./run-testrig.sh --version
+./run-testrig.sh --run-all
+./run-testrig.sh --script scenarios/normal_operation.txt --json
+./run-visualizer.sh visualization/scenarios.json
+python3 tools/release_audit.py --bundle-dir .
+```
+
+Win64 bundle review on Windows:
+
+```powershell
+cd engine-control-test-rig-simulator-win64
+
+.\testrig.exe --version
+.\testrig.exe --run-all
+.\testrig.exe --script scenarios\normal_operation.txt --json
+.\visualizer.exe visualization\scenarios.json
+py -3 tools\release_audit.py
+```
+
+Win64 bundle review on Linux with Wine:
+
+```bash
+cd engine-control-test-rig-simulator-win64
+
+wine ./testrig.exe --version
+wine ./testrig.exe --run-all
+wine ./testrig.exe --script scenarios/normal_operation.txt --json
+wine ./visualizer.exe visualization/scenarios.json
+python3 tools/release_audit.py --bundle-dir . --command-prefix wine --skip-visualizer --skip-visualization-regeneration
+```
+
+Reviewer notes:
+
+- The Linux bundle uses `run-testrig.sh` and `run-visualizer.sh` as the supported entry points because they set `LD_LIBRARY_PATH` for the bundled runtime library directory.
+- The Win64 bundle does not include `run-*.sh` wrappers. On Windows, launch the `.exe` files directly; on Linux, launch them with `wine`.
+- The visualizer always needs at least one JSON input path, and the shipped bundle is `visualization/scenarios.json`.
+
 ## Local artifact testing
 
 Local artifact testing exercises the packaged bundles, not just the build tree:
