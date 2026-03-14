@@ -3,6 +3,11 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.4.3] - 2026-03-14
+
+### Fixed
+- Linux release artifacts no longer bundle glibc and other distro system libraries that break the visualizer on non-Ubuntu hosts.
+
 ## [1.4.2] - 2026-03-14
 
 ### Fixed

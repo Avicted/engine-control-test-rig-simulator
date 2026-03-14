@@ -17,6 +17,17 @@ SKIP_NAMES = (
     "ld-musl",
 )
 
+BUNDLE_NAME_PREFIXES = (
+    "libraylib.so",
+)
+
+SYSTEM_LIBRARY_DIRS = (
+    "/lib",
+    "/lib64",
+    "/usr/lib",
+    "/usr/lib64",
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -28,11 +39,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def should_skip(name: str, resolved_path: str) -> bool:
+    resolved_name = Path(resolved_path).name
+    if any(resolved_name.startswith(prefix) for prefix in BUNDLE_NAME_PREFIXES):
+        return False
     if any(name.startswith(prefix) for prefix in SKIP_PREFIXES):
         return True
     if any(part in name for part in SKIP_NAMES):
         return True
     if any(part in resolved_path for part in SKIP_NAMES):
+        return True
+    if any(resolved_path.startswith(prefix + "/") for prefix in SYSTEM_LIBRARY_DIRS):
         return True
     return False
 
