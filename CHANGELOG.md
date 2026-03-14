@@ -3,6 +3,11 @@
 All notable changes to the Engine Control Test Rig Simulator are documented here.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
+## [1.4.4] - 2026-03-14
+
+### Fixed
+- Release bundle `RUNNING.txt` now documents the exact simulator, visualizer, audit, and Wine commands reviewers should use.
+
 ## [1.4.3] - 2026-03-14
 
 ### Fixed
