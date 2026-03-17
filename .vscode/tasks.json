@@ -2,6 +2,84 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "build: debug (clang)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "debug",
+                "CC=clang"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build: debug (gcc)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "debug",
+                "CC=gcc"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build: unit tests (clang)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test-unit",
+                "CC=clang"
+            ],
+            "group": "test",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build: unit tests binary (clang)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "./build/unit_tests",
+                "CC=clang"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "test: all (clang)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test-all",
+                "CC=clang"
+            ],
+            "group": "test",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "quality: ci-check (clang)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "ci-check",
+                "CC=clang"
+            ],
+            "group": "test",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
             "label": "release: test linux artifact",
             "type": "shell",
             "command": "make",

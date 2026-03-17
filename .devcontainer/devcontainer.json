@@ -1,0 +1,33 @@
+{
+    "name": "engine-control-test-rig-simulator",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "remoteUser": "vscode",
+    "init": true,
+    "runArgs": [
+        "--cap-add=SYS_PTRACE",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "containerEnv": {
+        "CC": "clang",
+        "PYTHON": "python3"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.makefile-tools"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
+            }
+        }
+    },
+    "postCreateCommand": "make debug && make test-unit"
+}

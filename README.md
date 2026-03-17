@@ -161,6 +161,33 @@ On Arch Linux:
 sudo pacman -S clang llvm make git cppcheck clang-tidy python lcov valgrind gdb glibc-debug
 ```
 
+### Dev container for Windows and other non-Linux hosts
+
+For a consistent Linux toolchain on Windows, open the repository in a VS Code dev container.
+
+Host requirements:
+
+- Docker Desktop with Linux containers enabled
+- VS Code
+- Dev Containers extension (`ms-vscode-remote.remote-containers`)
+
+Workflow:
+
+1. Open the repository in VS Code.
+2. Run `Dev Containers: Reopen in Container`.
+3. Wait for the image build and `postCreateCommand` to finish.
+4. Use `Terminal` or the provided VS Code tasks/launch configurations to build, test, and debug inside the container.
+
+The container installs the local README toolchain plus release-side extras used in this repo: `clang`, `gcc`, `gdb`, `make`, `cppcheck`, `clang-tidy`, `llvm`, `lcov`, `valgrind`, `python3`, `jq`, Win64 cross-compilers, `wine64`, and Raylib development libraries.
+
+Inside the container:
+
+- Press `F5` and choose `Debug testrig (--run-all)`, `Debug testrig scenario`, or `Debug unit tests`.
+- Run `make`, `make test-unit`, `make test-all`, or `make ci-check` exactly as documented below.
+- Use the `build: debug (clang)` task if you want to rebuild the sanitizer-enabled binary without launching the debugger.
+
+The Raylib visualizer can be built inside the container, but launching it still depends on host GUI support. On Windows that usually means running the dev container through WSL2/WSLg or another X-capable setup.
+
 ### Quick start
 
 ```bash
